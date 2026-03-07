@@ -8,10 +8,10 @@ import multer from "multer";
 import fs from "fs";
 import nodemailer from "nodemailer";
 import { createRequire } from "module";
-
+import dns from "dns";
 const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
-
+dns.setDefaultResultOrder("ipv4first");
 dotenv.config();
 
 const app = express();

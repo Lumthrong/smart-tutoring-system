@@ -62,7 +62,7 @@ const transporter = nodemailer.createTransport({
 
 /* ================= SEND OTP ================= */
 
-app.post("/send-otp", async (req, res) => {
+app.post("https://smart-tutoring-system.onrender.com/send-otp", async (req, res) => {
 
   const { email } = req.body;
 
@@ -93,7 +93,7 @@ app.post("/send-otp", async (req, res) => {
 
 /* ================= VERIFY OTP ================= */
 
-app.post("/verify-otp", (req, res) => {
+app.post("https://smart-tutoring-system.onrender.com/verify-otp", (req, res) => {
 
   const { email, otp } = req.body;
 

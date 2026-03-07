@@ -93,7 +93,7 @@ app.post("/send-otp", async (req, res) => {
 
 /* ================= VERIFY OTP ================= */
 
-app.post("https://smart-tutoring-system.onrender.com/verify-otp", (req, res) => {
+app.post("/verify-otp", (req, res) => {
 
   const { email, otp } = req.body;
 

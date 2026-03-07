@@ -53,10 +53,9 @@ const upload = multer({
 const otpStore = new Map();
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
+  host: "74.125.69.108", // Gmail IPv4 SMTP
   port: 587,
-  secure: false, // important for port 587
-  family: 4,
+  secure: false,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS

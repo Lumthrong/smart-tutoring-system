@@ -1,0 +1,598 @@
+/* ================= DASHBOARD LAYOUT ================= */
+
+.dashboard {
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* ================= CARD STYLE ================= */
+
+.card {
+  background: rgba(255,255,255,0.08);
+  backdrop-filter: blur(20px);
+  border-radius: 18px;
+  padding: 25px;
+  margin-bottom: 40px;
+  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+  border: 1px solid rgba(255,255,255,0.1);
+  animation: fadeUp 0.8s ease forwards;
+}
+
+.card h3 {
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+/* ================= FORM STYLING ================= */
+
+#uploadLectureForm {
+  display: grid;
+  gap: 15px;
+}
+
+#uploadLectureForm select,
+#uploadLectureForm input[type="text"],
+#uploadLectureForm input[type="file"] {
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+  transition: 0.3s ease;
+}
+
+#uploadLectureForm select:focus,
+#uploadLectureForm input[type="text"]:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 10px rgba(79,70,229,0.2);
+}
+
+/* File label styling */
+#uploadLectureForm label {
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 10px;
+}
+
+/* Upload Button */
+
+#uploadLectureForm button {
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+#uploadLectureForm button:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 25px rgba(79,70,229,0.3);
+}
+
+/* ================= MY LECTURES GRID ================= */
+
+#myLectures {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
+}
+
+/* Lecture Card */
+
+#myLectures > div {
+  background: white;
+  padding: 18px;
+  border-radius: 15px;
+  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+  transition: 0.3s ease;
+}
+
+#myLectures > div:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+}
+
+/* Department & Semester Headers */
+
+#myLectures h4 {
+  font-size: 18px;
+  margin-top: 25px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+#myLectures h5 {
+  font-size: 14px;
+  margin-bottom: 15px;
+  opacity: 0.7;
+}
+
+/* PDF Button */
+
+#myLectures a {
+  display: inline-block;
+  padding: 6px 10px;
+  background: #2b7cff;
+  color: white;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 13px;
+  margin-top: 8px;
+}
+
+/* Video */
+
+#myLectures video {
+  width: 100%;
+  border-radius: 10px;
+  margin-top: 10px;
+}
+/* Delete Button */
+
+.deleteBtn {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: none;
+  background: #ef4444;
+  color: white;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.deleteBtn:hover {
+  background: #dc2626;
+}
+/* ================= CHAT BOX ================= */
+
+.chatBox{
+  margin-top:15px;
+  border:1px solid #e4e4e4;
+  border-radius:10px;
+  background:#ffffff;
+
+  display:flex;
+  flex-direction:column;
+
+  height:320px;
+}
+
+/* hidden */
+
+.chatBox.hidden{
+  display:none;
+}
+
+/* ================= HEADER ================= */
+
+.chatHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding:10px 12px;
+
+  background:#4f46e5;
+  color:white;
+
+  border-radius:10px 10px 0 0;
+}
+
+.chatClose{
+  background:none;
+  border:none;
+  color:white;
+  font-size:16px;
+  cursor:pointer;
+}
+
+/* ================= OPEN BUTTON ================= */
+
+.chatToggle{
+  margin-top:10px;
+  padding:8px 14px;
+
+  border:none;
+  background:#4f46e5;
+  color:white;
+
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.chatToggle:hover{
+  background:#4338ca;
+}
+
+/* ================= MESSAGES ================= */
+
+.chatMessages{
+  flex:1;
+  padding:12px;
+  overflow-y:auto;
+
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+/* ================= MESSAGE BUBBLE ================= */
+
+.chatMsg{
+  max-width:75%;
+  padding:10px 12px;
+
+  border-radius:10px;
+  font-size:14px;
+
+  display:flex;
+  flex-direction:column;
+}
+
+/* student message */
+
+.chatMsg.student{
+  background:#e8f0ff;
+  align-self:flex-start;
+}
+
+/* teacher message */
+
+.chatMsg.teacher{
+  background:#e6ffe9;
+  align-self:flex-end;
+}
+
+/* name */
+
+.chatMsg strong{
+  font-size:12px;
+  margin-bottom:3px;
+  color:#444;
+}
+
+/* text */
+
+.chatMsg p{
+  margin:0;
+}
+
+/* ================= INPUT ================= */
+
+.chatInput{
+  display:flex;
+  border-top:1px solid #eee;
+}
+
+.chatInput input{
+  flex:1;
+  border:none;
+  padding:10px;
+  font-size:14px;
+}
+
+.chatInput input:focus{
+  outline:none;
+}
+
+.chatInput button{
+  border:none;
+  background:#4f46e5;
+  color:white;
+  padding:0 16px;
+  cursor:pointer;
+}
+
+.chatInput button:hover{
+  background:#4338ca;
+}/* ================= CHAT BOX ================= */
+
+.chatBox{
+  margin-top:15px;
+  border:1px solid #e4e4e4;
+  border-radius:10px;
+  background:#ffffff;
+
+  display:flex;
+  flex-direction:column;
+
+  height:320px;
+}
+
+/* hidden */
+
+.chatBox.hidden{
+  display:none;
+}
+
+/* ================= HEADER ================= */
+
+.chatHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding:10px 12px;
+
+  background:#4f46e5;
+  color:white;
+
+  border-radius:10px 10px 0 0;
+}
+
+.chatClose{
+  background:none;
+  border:none;
+  color:white;
+  font-size:16px;
+  cursor:pointer;
+}
+
+/* ================= OPEN BUTTON ================= */
+
+.chatToggle{
+  margin-top:10px;
+  padding:8px 14px;
+
+  border:none;
+  background:#4f46e5;
+  color:white;
+
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.chatToggle:hover{
+  background:#4338ca;
+}
+
+/* ================= MESSAGES ================= */
+
+.chatMessages{
+  flex:1;
+  padding:12px;
+  overflow-y:auto;
+
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+/* ================= MESSAGE BUBBLE ================= */
+
+.chatMsg{
+  max-width:75%;
+  padding:10px 12px;
+
+  border-radius:10px;
+  font-size:14px;
+
+  display:flex;
+  flex-direction:column;
+}
+
+/* student message */
+
+.chatMsg.student{
+  background: #e6ffe9;
+  align-self:flex-start;
+}
+
+/* teacher message */
+
+.chatMsg.teacher{
+  background:#e8f0ff;
+  align-self:flex-end;
+}
+
+/* name */
+
+.chatMsg strong{
+  font-size:12px;
+  margin-bottom:3px;
+  color:#444;
+}
+
+/* text */
+
+.chatMsg p{
+  margin:0;
+}
+
+/* ================= INPUT ================= */
+
+.chatInput{
+  display:flex;
+  border-top:1px solid #eee;
+}
+
+.chatInput input{
+  flex:1;
+  border:none;
+  padding:10px;
+  font-size:14px;
+}
+
+.chatInput input:focus{
+  outline:none;
+}
+
+.chatInput button{
+  border:none;
+  background:#4f46e5;
+  color:white;
+  padding:0 16px;
+  cursor:pointer;
+}
+
+.chatInput button:hover{
+  background:#4338ca;
+}/* ================= CHAT BOX ================= */
+
+.chatBox{
+  margin-top:15px;
+  border:1px solid #e4e4e4;
+  border-radius:10px;
+  background:#ffffff;
+
+  display:flex;
+  flex-direction:column;
+
+  height:320px;
+}
+
+/* hidden */
+
+.chatBox.hidden{
+  display:none;
+}
+
+/* ================= HEADER ================= */
+
+.chatHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding:10px 12px;
+
+  background:#4f46e5;
+  color:white;
+
+  border-radius:10px 10px 0 0;
+}
+
+.chatClose{
+  background:none;
+  border:none;
+  color:white;
+  font-size:16px;
+  cursor:pointer;
+}
+
+/* ================= OPEN BUTTON ================= */
+
+.chatToggle{
+  margin-top:10px;
+  padding:8px 14px;
+
+  border:none;
+  background:#4f46e5;
+  color:white;
+
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.chatToggle:hover{
+  background:#4338ca;
+}
+
+/* ================= MESSAGES ================= */
+
+.chatMessages{
+  flex:1;
+  padding:12px;
+  overflow-y:auto;
+
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+/* ================= MESSAGE BUBBLE ================= */
+
+.chatMsg{
+  max-width:75%;
+  padding:10px 12px;
+
+  border-radius:10px;
+  font-size:14px;
+
+  display:flex;
+  flex-direction:column;
+}
+
+/* student message */
+
+.chatMsg.student{
+  background:#e8f0ff;
+  align-self:flex-start;
+}
+
+/* teacher message */
+
+.chatMsg.teacher{
+  background:#e6ffe9;
+  align-self:flex-end;
+}
+
+/* name */
+
+.chatMsg strong{
+  font-size:12px;
+  margin-bottom:3px;
+  color:#444;
+}
+
+/* text */
+
+.chatMsg p{
+  margin:0;
+}
+
+/* ================= INPUT ================= */
+
+.chatInput{
+  display:flex;
+  border-top:1px solid #eee;
+}
+
+.chatInput input{
+  flex:1;
+  border:none;
+  padding:10px;
+  font-size:14px;
+}
+
+.chatInput input:focus{
+  outline:none;
+}
+
+.chatInput button{
+  border:none;
+  background:#4f46e5;
+  color:white;
+  padding:0 16px;
+  cursor:pointer;
+}
+
+.chatInput button:hover{
+  background:#4338ca;
+}
+/* ================= ANIMATION ================= */
+
+@keyframes fadeUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 768px) {
+  .dashboard {
+    padding: 20px;
+  }
+}

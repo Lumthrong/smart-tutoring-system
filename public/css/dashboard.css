@@ -1,0 +1,291 @@
+
+.dashboard {
+  padding: 30px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ================= CARD STYLE ================= */
+
+.card {
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
+  padding: 20px;
+  border-radius: 20px;
+  box-shadow: 0 15px 30px rgba(0,0,0,0.25);
+  transition: 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card h3 {
+  margin-bottom: 15px;
+  font-weight: 600;
+}
+
+/* ================= SELECT DROPDOWN ================= */
+
+#courseSelect {
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+  font-size: 14px;
+  outline: none;
+  background: #fff;
+  color: #333;
+  box-shadow: 0 5px 10px rgba(0,0,0,0.2);
+}
+
+/* ================= BUTTON ================= */
+
+button {
+  padding: 10px 18px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: #4f46e5;
+  color: #fff;
+  font-weight: 500;
+  transition: 0.3s ease;
+  box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+}
+
+button:hover {
+  background: #4338ca;
+  transform: translateY(-3px);
+}
+
+button:disabled {
+  background: #888;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ================= QUIZ STYLE ================= */
+
+.question-block {
+  margin-bottom: 20px;
+}
+
+.question-block p {
+  margin-bottom: 8px;
+}
+
+.question-block label {
+  display: block;
+  padding: 5px 0;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.question-block label:hover {
+  padding-left: 5px;
+}
+
+.explanation {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(0,0,0,0.2);
+  font-size: 14px;
+}
+
+/* ================= ENROLLED COURSES ================= */
+
+#enrolledCourses div {
+  margin-bottom: 10px;
+}
+
+#enrolledCourses a {
+  display: inline-block;
+  margin-top: 5px;
+  font-size: 13px;
+  color: #e0e7ff;
+  text-decoration: none;
+}
+
+#enrolledCourses a:hover {
+  text-decoration: underline;
+}
+
+/* ================= PROGRESS CHART ================= */
+
+canvas {
+  background: rgba(255,255,255,0.15);
+  padding: 15px;
+  border-radius: 15px;
+}
+
+/* ================= CHAT BOX ================= */
+
+.chatBox{
+  margin-top:15px;
+  border:1px solid #e4e4e4;
+  border-radius:10px;
+  background:#ffffff;
+
+  display:flex;
+  flex-direction:column;
+
+  height:320px;
+}
+
+/* hidden */
+
+.chatBox.hidden{
+  display:none;
+}
+
+/* ================= HEADER ================= */
+
+.chatHeader{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+
+  padding:10px 12px;
+
+  background:#4f46e5;
+  color:white;
+
+  border-radius:10px 10px 0 0;
+}
+
+.chatClose{
+  background:none;
+  border:none;
+  color:white;
+  font-size:16px;
+  cursor:pointer;
+}
+
+/* ================= OPEN BUTTON ================= */
+
+.chatToggle{
+  margin-top:10px;
+  padding:8px 14px;
+
+  border:none;
+  background:#4f46e5;
+  color:white;
+
+  border-radius:6px;
+  cursor:pointer;
+}
+
+.chatToggle:hover{
+  background:#4338ca;
+}
+
+/* ================= MESSAGES ================= */
+
+.chatMessages{
+  flex:1;
+  padding:12px;
+  overflow-y:auto;
+
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+/* ================= MESSAGE BUBBLE ================= */
+
+.chatMsg{
+  max-width:75%;
+  padding:10px 12px;
+
+  border-radius:10px;
+  font-size:14px;
+
+  display:flex;
+  flex-direction:column;
+}
+
+/* student message */
+
+.chatMsg.student{
+  background:#e8f0ff;
+  align-self:flex-start;
+}
+
+/* teacher message */
+
+.chatMsg.teacher{
+  background:#e6ffe9;
+  align-self:flex-end;
+}
+
+/* name */
+
+.chatMsg strong{
+  font-size:12px;
+  margin-bottom:3px;
+  color:#444;
+}
+
+/* text */
+
+.chatMsg p{
+  margin:0;
+}
+
+/* ================= INPUT ================= */
+
+.chatInput{
+  display:flex;
+  border-top:1px solid #eee;
+}
+
+.chatInput input{
+  flex:1;
+  border:none;
+  padding:10px;
+  font-size:14px;
+}
+
+.chatInput input:focus{
+  outline:none;
+}
+
+.chatInput button{
+  border:none;
+  background:#4f46e5;
+  color:white;
+  padding:0 16px;
+  cursor:pointer;
+}
+
+.chatInput button:hover{
+  background:#4338ca;
+}
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 768px) {
+
+  .dashboard {
+    padding: 20px 15px;
+  }
+
+  .card {
+    padding: 15px;
+  }
+
+  header h1 {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+
+  button {
+    width: 100%;
+  }
+
+  #courseSelect {
+    width: 100%;
+  }
+}

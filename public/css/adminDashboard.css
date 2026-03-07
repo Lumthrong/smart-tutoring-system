@@ -1,0 +1,207 @@
+/* ================= DASHBOARD LAYOUT ================= */
+
+.dashboard {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  padding: 40px;
+}
+
+/* ================= CARD DESIGN ================= */
+
+.card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  border-radius: 18px;
+  padding: 30px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+  transition: 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+/* ================= FORM STYLING ================= */
+
+#uploadForm {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+#uploadForm input[type="text"],
+#uploadForm input[type="file"] {
+  padding: 12px 15px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  outline: none;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+#uploadForm input:focus {
+  border-color: #4e73df;
+  box-shadow: 0 0 0 3px rgba(78, 115, 223, 0.2);
+}
+
+#uploadForm button {
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #4e73df, #1cc88a);
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+#uploadForm button:hover {
+  opacity: 0.9;
+  transform: scale(1.02);
+}
+
+/* ================= RECENT UPLOADS ================= */
+
+#courseList {
+  margin-top: 15px;
+}
+
+#courseList .course-item {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 12px 15px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  transition: 0.2s ease;
+}
+
+#courseList .course-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ================= HEADER ================= */
+
+header {
+  background: linear-gradient(135deg, #4e73df, #1cc88a);
+  padding: 15px 20px;
+  color: white;
+  text-align: center;
+  font-weight: 600;
+  font-size: 18px;
+}
+/* ================= FOLDER STYLE ================= */
+
+.folder {
+  margin-bottom: 20px;
+  padding: 15px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(8px);
+}
+
+.department h3 {
+  margin: 0 0 10px 0;
+  font-size: 18px;
+}
+
+.semester {
+  margin-left: 20px;
+  margin-top: 10px;
+  background: rgba(255,255,255,0.04);
+}
+
+.semester h4 {
+  margin: 0 0 8px 0;
+  font-size: 15px;
+}
+
+.course-item {
+  padding: 6px 10px;
+  margin: 5px 0;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.08);
+  font-size: 14px;
+  transition: 0.2s;
+}
+
+.course-item:hover {
+  background: rgba(255,255,255,0.15);
+  cursor: pointer;
+}
+select {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+}
+
+#searchInput {
+  width: 100%;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+  margin-bottom: 15px;
+  font-size: 14px;
+}
+
+/* Folder collapsible */
+.department-header {
+  cursor: pointer;
+  font-weight: 600;
+  padding: 8px;
+  border-radius: 8px;
+  background: rgba(255,255,255,0.08);
+}
+
+.semester-header {
+  cursor: pointer;
+  margin-left: 15px;
+  padding: 6px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.05);
+}
+
+.hidden {
+  display: none;
+}
+
+.delete-btn {
+  float: right;
+  background: #ff4d4f;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.delete-btn:hover {
+  opacity: 0.8;
+}
+/* ================= RESPONSIVE DESIGN ================= */
+
+@media (max-width: 1024px) {
+  .dashboard {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+
+  .dashboard {
+    padding: 20px;
+  }
+
+  .card {
+    padding: 20px;
+  }
+
+  #uploadForm input,
+  #uploadForm button {
+    font-size: 13px;
+  }
+
+}

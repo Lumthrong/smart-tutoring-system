@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin Dashboard</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/admin.css">
+</head>
+<body data-role="admin">
+
+<div class="sidebar" id="sidebar">
+
+  <!-- USER MINI HEADER -->
+  <div class="profile-mini">
+    <div class="avatar-circle">
+  <img id="miniProfileImg" src="" alt="Avatar">
+  <span id="avatarCircle">U</span>
+</div>
+    <div class="profile-info">
+      <p id="profileName">Guest</p>
+      <small id="profileEmail"></small>
+    </div>
+  </div>
+
+  <a href="index.html">Home</a>
+
+  <!-- PROFILE DROPDOWN -->
+  <div class="profile-wrapper">
+    <div class="profile-toggle" id="profileToggle">
+      Profile ▾
+    </div>
+
+    <div class="profile-dropdown" id="profileDropdown">
+      <a href="dashboard.html" id="dashboardLink">Dashboard</a>
+      <a href="accsettings.html">Profile Settings</a>
+      <a href="#" id="logoutLink">Logout</a>
+    </div>
+  </div>
+
+  <a href="login.html" id="loginLink">Login</a>
+
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<header>
+  <button class="menu-btn" id="menuBtn">☰</button>
+  <h1>Admin Dashboard</h1>
+</header>
+
+<section class="dashboard">
+
+  <!-- 🔥 STATS -->
+  <div class="stats-grid">
+    <div class="card">
+      <h3>Total Users</h3>
+      <h2 id="totalUsers">0</h2>
+    </div>
+
+    <div class="card">
+      <h3>Total Teachers</h3>
+      <h2 id="totalTeachers">0</h2>
+    </div>
+
+    <div class="card">
+      <h3>Total Lectures</h3>
+      <h2 id="totalLectures">0</h2>
+    </div>
+  </div>
+
+  <!-- 🔥 Pending Teacher Requests -->
+  <div class="card">
+    <h3>Pending Teacher Requests</h3>
+    <div id="pendingTeachers"></div>
+  </div>
+
+  <!-- 🔥 Upload Course -->
+  <div class="card">
+<form id="uploadForm" enctype="multipart/form-data">
+
+  <select name="department" required>
+    <option value="">Select Department</option>
+    <option value="CSE">CSE</option>
+    <option value="ECE">ECE</option>
+    <option value="IT">IT</option>
+    <option value="ME">ME</option>
+  </select>
+
+  <select name="semester" required>
+    <option value="">Select Semester</option>
+    <option value="1">Semester 1</option>
+    <option value="2">Semester 2</option>
+    <option value="3">Semester 3</option>
+    <option value="4">Semester 4</option>
+    <option value="5">Semester 5</option>
+    <option value="6">Semester 6</option>
+    <option value="7">Semester 7</option>
+    <option value="8">Semester 8</option>
+  </select>
+
+  <input type="text" name="course" placeholder="Course Name" required>
+
+  <label>Upload PDF (Required)</label>
+  <input type="file" name="pdf" accept="application/pdf" required>
+
+  <label>Upload Video (Optional)</label>
+  <input type="file" name="video" accept="video/*">
+
+  <button type="submit">Upload</button>
+</form>
+  </div>
+
+  <!-- 🔥 Search + Course Display -->
+  <div class="card">
+    <input type="text" id="searchInput" placeholder="Search course...">
+    <div id="bookContainer"></div>
+  </div>
+
+</section>
+
+<script type="module" src="js/admin.js"></script>
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/script.js"></script>
+</body>
+</html>

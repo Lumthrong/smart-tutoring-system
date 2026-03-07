@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Tutor</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/accsettings.css">
+<link rel="stylesheet" href="https://unpkg.com/cropperjs/dist/cropper.css">
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+
+  <!-- USER MINI HEADER -->
+  <div class="profile-mini">
+    <div class="avatar-circle">
+  <img id="miniProfileImg" src="" alt="Avatar">
+  <span id="avatarCircle">U</span>
+</div>
+    <div class="profile-info">
+      <p id="profileName">Guest</p>
+      <small id="profileEmail"></small>
+    </div>
+  </div>
+
+  <a href="index.html">Home</a>
+
+  <!-- PROFILE DROPDOWN -->
+  <div class="profile-wrapper">
+    <div class="profile-toggle" id="profileToggle">
+      Profile ▾
+    </div>
+
+    <div class="profile-dropdown" id="profileDropdown">
+      <a href="dashboard.html" id="dashboardLink">Dashboard</a>
+      <a href="accsettings.html">Profile Settings</a>
+      <a href="#" id="logoutLink">Logout</a>
+    </div>
+  </div>
+
+  <a href="login.html" id="loginLink">Login</a>
+
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<header>
+  <button class="menu-btn" id="menuBtn">☰</button>
+  <h1>Smart Tutoring System</h1>
+</header>
+<section class="profile-section" id="profileSection" style="display:none;">
+  <div class="profile-card">
+
+    <h3>My Profile</h3>
+
+    <div class="profile-display">
+      <p><strong>Name:</strong> <span id="displayName">-</span></p>
+      <p><strong>Email:</strong> <span id="displayEmail">-</span></p>
+      <p><strong>Department:</strong> <span id="displayDepartment">-</span></p>
+    </div>
+
+    <hr>
+  </div>
+</section>
+
+<section class="settings-section">
+
+  <div class="settings-card">
+
+    <h2>Profile Settings</h2>
+
+    <!-- PROFILE PICTURE -->
+    <div class="profile-pic-wrapper">
+      <img id="profilePreview" src="" alt="Profile Picture">
+      <input type="file" id="profilePicInput" accept="image/*">
+    </div>
+
+    <!-- NAME -->
+    <label>First Name *</label>
+    <input type="text" id="firstName">
+
+    <label>Last Name</label>
+    <input type="text" id="lastName">
+
+    <!-- DOB -->
+    <label>Date of Birth</label>
+    <input type="date" id="dob">
+
+    <!-- GENDER -->
+    <label>Gender</label>
+    <select id="gender">
+      <option value="">Select</option>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <!-- DEPARTMENT -->
+    <label>Department</label>
+    <select id="department">
+      <option value="">Select Department</option>
+      <option value="CSE">CSE</option>
+      <option value="ECE">ECE</option>
+      <option value="IT">IT</option>
+      <option value="ME">ME</option>
+    </select>
+
+    <!-- READ ONLY -->
+    <label>Email</label>
+    <input type="text" id="emailDisplay" disabled>
+
+    <label>Role</label>
+    <input type="text" id="roleDisplay" disabled>
+
+    <button id="saveProfileBtn">Save Profile</button>
+
+  </div>
+
+</section>
+<script type="module" src="js/script.js"></script>
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/accsettings.js"></script>
+<script src="https://unpkg.com/cropperjs/dist/cropper.js"></script>
+</body>
+</html>

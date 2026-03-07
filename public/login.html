@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login | Smart Tutor</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="sidebar" id="sidebar">
+  <h2>Smart Tutor</h2>
+  <a href="index.html">Home</a>
+  <a href="dashboard.html">Dashboard</a>
+</div>
+
+<div class="overlay" id="overlay"></div>
+
+<header>
+  <button class="menu-btn" id="menuBtn">☰</button>
+  <h1>Smart Tutoring System</h1>
+</header>
+
+<section class="auth-section">
+  <div class="auth-box">
+    <h2>Welcome Back</h2>
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <div id="formMessage" class="form-message"></div>
+    <button onclick="login()" class="btnlogin">Login</button>
+    <p>Don't have an account? <a href="signup.html">Signup</a></p>
+  </div>
+</section>
+
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/script.js"></script>
+</body>
+</html>

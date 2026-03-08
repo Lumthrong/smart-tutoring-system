@@ -116,6 +116,21 @@ app.post("/verify-otp", (req, res) => {
 
 });
 
+app.get("/test-email", async (req, res) => {
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: process.env.EMAIL_USER,
+      subject: "SMTP Test",
+      text: "Email working on Render"
+    });
+
+    res.send("Email sent successfully");
+  } catch (error) {
+    console.error(error);
+    res.send("Email failed");
+  }
+});
 /* ================= COURSE UPLOAD ================= */
 
 const multiUpload = upload.fields([

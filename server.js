@@ -1,7 +1,6 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import fetch from "node-fetch";
 import path from "path";
 import { fileURLToPath } from "url";
 import multer from "multer";
@@ -168,8 +167,8 @@ app.post("/upload", multiUpload, async (req, res) => {
     /* ================= CLOUDINARY PDF UPLOAD ================= */
 
     const pdfUpload = await cloudinary.uploader.upload(pdfFile.path,{
-      resource_type:"auto",
-      folder:"smart-tutor/pdfs"
+      resource_type:"raw",
+      folder:"uploads/pdfs"
     });
 
     /* ================= CLOUDINARY VIDEO UPLOAD ================= */
@@ -180,7 +179,7 @@ app.post("/upload", multiUpload, async (req, res) => {
 
       videoUpload = await cloudinary.uploader.upload(videoFile.path,{
         resource_type:"auto",
-        folder:"smart-tutor/videos"
+        folder:"uploads/videos"
       });
 
     }
@@ -252,7 +251,7 @@ app.post("/upload-profile", upload.single("profile"), async (req, res) => {
       return res.status(400).json({ success:false });
 
     const uploadResult = await cloudinary.uploader.upload(req.file.path,{
-      folder:"smart-tutor/profiles"
+      folder:"uploads/profiles"
     });
 
     fs.unlinkSync(req.file.path);
@@ -284,18 +283,21 @@ app.post("/generate-test", async (req, res) => {
 
   try {
 
-    /* ================= READ PDF FILE ================= */
+/* ================= READ PDF FROM CLOUDINARY ================= */
 
-    const filename = pdfURL.split("/").pop();
-    const filePath = path.join(uploadDir, filename);
+const responsePdf = await fetch(pdfURL);
 
-    if (!fs.existsSync(filePath))
-      return res.status(404).json({ error: "PDF not found" });
+if (!responsePdf.ok) {
+  console.error("Cloudinary fetch failed:", responsePdf.status);
+  return res.status(500).json({ error: "Failed to fetch PDF from Cloudinary" });
+}
 
-    const pdfBuffer = fs.readFileSync(filePath);
-    const pdfData = await pdfParse(pdfBuffer);
+const pdfArrayBuffer = await responsePdf.arrayBuffer();
+const pdfBuffer = Buffer.from(pdfArrayBuffer);
 
-    const text = pdfData.text.substring(0,4000);
+const pdfData = await pdfParse(pdfBuffer);
+
+const text = pdfData.text.substring(0, 4000);
 
     /* ================= AI REQUEST ================= */
 

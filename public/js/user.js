@@ -17,6 +17,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 let chartInstance = null;
+let activeCourseId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -26,11 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   /* COURSE SWITCH COMMENTS */
 
-  if(courseSelect){
-    courseSelect.addEventListener("change",(e)=>{
-      loadComments(e.target.value);
-    });
-  }
+
 
   onAuthStateChanged(auth, (user) => {
 
@@ -100,29 +97,40 @@ async function loadCourses(uid) {
 
       const div=document.createElement("div");
 
-      div.innerHTML=`
-      <p>
-      <strong>${data.course}</strong>
-      (${data.department} - Sem ${data.semester})
-      </p>
+div.innerHTML=`
+<p>
+<strong>${data.course}</strong>
+(${data.department} - Sem ${data.semester})
+</p>
 
-      ${data.pdfURL ?
-      `<a href="${data.pdfURL}" target="_blank">📄 View PDF</a>`:""}
+${data.pdfURL ?
+`<a href="${data.pdfURL}" target="_blank">📄 View PDF</a>`:""}
 
-      <br><br>
+<br><br>
 
-      ${data.videoURL ?
-      `<video width="350" controls>
-      <source src="${data.videoURL}">
-      </video>`:""}
+${data.videoURL ?
+`<video width="350" controls>
+<source src="${data.videoURL}">
+</video>`:""}
 
-      <br><br>
+<br><br>
 
-      ${quizButton}
+<button class="discussionBtn">💬 Discussion</button>
 
-      <hr>
-      `;
+${quizButton}
 
+<hr>
+`;
+div.querySelector(".discussionBtn").onclick = ()=>{
+
+  activeCourseId = courseId;
+
+  loadComments(courseId);
+
+  const chat = document.getElementById("chatBox");
+  chat.classList.remove("hidden");
+
+};
       if(!quizSnap.empty){
         div.querySelector(".quizBtn").onclick=()=>{
           startTeacherQuiz(courseId);
@@ -420,7 +428,7 @@ list.scrollTop = list.scrollHeight;
 document.querySelector(".sendComment").onclick = async () => {
 
   const input = document.querySelector(".commentInput");
-  const courseId = document.getElementById("courseSelect").value;
+  const courseId = activeCourseId;
 
  if(!input.value.trim()) return;
 
@@ -462,16 +470,9 @@ document.querySelector(".sendComment").onclick = async () => {
 
 const chatBox = document.getElementById("chatBox");
 const closeBtn = document.getElementById("chatClose");
-const openBtn = document.getElementById("openChat");
 
-if(chatBox && closeBtn && openBtn){
-
+if(chatBox && closeBtn){
   closeBtn.onclick = ()=>{
     chatBox.classList.add("hidden");
   };
-
-  openBtn.onclick = ()=>{
-    chatBox.classList.remove("hidden");
-  };
-
 }

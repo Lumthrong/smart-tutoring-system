@@ -7,8 +7,7 @@ import {
   onSnapshot,
   orderBy,
   updateDoc,
-  doc,
-  getDoc
+  doc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
@@ -23,80 +22,36 @@ document.addEventListener("DOMContentLoaded", () => {
   const bell = document.querySelector(".notify");
   const panel = document.getElementById("notificationPanel");
 
-  /* ================= TOGGLE PANEL ================= */
+  if (!bell || !panel) return;
 
-  if (bell && panel) {
+  bell.addEventListener("click", (e) => {
+    e.stopPropagation();
+    panel.classList.toggle("show");
+  });
 
-    bell.addEventListener("click", (e) => {
-
-      e.stopPropagation();
-      panel.classList.toggle("show");
-
-    });
-
-    /* Close when clicking outside */
-
-    document.addEventListener("click", () => {
-      panel.classList.remove("show");
-    });
-
-  }
+  document.addEventListener("click", () => {
+    panel.classList.remove("show");
+  });
 
 });
 
 
 /* ================= LOAD NOTIFICATIONS ================= */
 
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(auth, (user) => {
 
   if (!user) return;
-
-  console.log("Notification system started for:", user.uid);
 
   const badge = document.getElementById("notifyCount");
   const panel = document.getElementById("notificationPanel");
 
-  /* ================= GET USER ROLE ================= */
-
-  const userDoc = await getDoc(doc(db,"users",user.uid));
-
-  if(!userDoc.exists()){
-    console.warn("User document not found");
-    return;
-  }
-
-  const role = userDoc.data().role;
-
-  console.log("User role:",role);
-
-  let q;
-
-  try {
-
-    /* ================= ROLE BASED QUERY ================= */
-
-    q = query(
-      collection(db, "notifications"),
-      where("role","==",role),
-      where("userId", "==", user.uid),
-      orderBy("createdAt", "desc")
-    );
-
-  } catch (err) {
-
-    console.warn("OrderBy failed, fallback query used");
-
-    q = query(
-      collection(db, "notifications"),
-      where("role","==",role),
-      where("userId", "==", user.uid)
-    );
-
-  }
+  const q = query(
+    collection(db, "notifications"),
+    where("userId", "==", user.uid),
+    orderBy("createdAt", "desc")
+  );
 
   onSnapshot(q, (snapshot) => {
-
-    console.log("Notifications fetched:", snapshot.size);
 
     if (panel) panel.innerHTML = "";
 
@@ -108,48 +63,42 @@ onAuthStateChanged(auth, async (user) => {
 
       if (!data.read) unreadCount++;
 
-      if (panel) {
+      if (!panel) return;
 
-        const div = document.createElement("div");
-        div.className = "notificationItem";
+      const div = document.createElement("div");
+      div.className = "notificationItem";
 
-        div.innerHTML = `
-        <p>${data.message}</p>
+      div.innerHTML = `
+        <p>${data.message || "Notification"}</p>
         <small>${formatTime(data.createdAt)}</small>
-        `;
+      `;
 
-        if(!data.read){
-          div.classList.add("unread");
+      if(!data.read){
+        div.classList.add("unread");
+      }
+
+      div.addEventListener("click", async () => {
+
+        if (!data.read) {
+
+          await updateDoc(
+            doc(db,"notifications",docSnap.id),
+            {read:true}
+          );
+
         }
 
-        /* ================= MARK AS READ ================= */
+        if(data.link){
+          window.location.href = data.link;
+        }
 
-        div.addEventListener("click", async () => {
+      });
 
-          if (!data.read) {
-
-            await updateDoc(
-              doc(db,"notifications",docSnap.id),
-              {read:true}
-            );
-
-          }
-
-          /* open related page if link exists */
-
-          if(data.link){
-            window.location.href = data.link;
-          }
-
-        });
-
-        panel.appendChild(div);
-
-      }
+      panel.appendChild(div);
 
     });
 
-    /* ================= BADGE COUNT ================= */
+    /* UPDATE BADGE */
 
     if (badge) {
 
@@ -157,10 +106,6 @@ onAuthStateChanged(auth, async (user) => {
       badge.style.display = unreadCount > 0 ? "inline-block" : "none";
 
     }
-
-  }, (error) => {
-
-    console.error("Notification listener error:", error);
 
   });
 
@@ -173,20 +118,16 @@ function formatTime(timestamp) {
 
   if (!timestamp) return "";
 
-  const date = timestamp.toDate();
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
 
   const now = new Date();
-
   const diff = Math.floor((now - date) / 1000);
 
-  if (diff < 60)
-    return "Just now";
+  if (diff < 60) return "Just now";
 
-  if (diff < 3600)
-    return Math.floor(diff / 60) + " min ago";
+  if (diff < 3600) return Math.floor(diff / 60) + " min ago";
 
-  if (diff < 86400)
-    return Math.floor(diff / 3600) + " hr ago";
+  if (diff < 86400) return Math.floor(diff / 3600) + " hr ago";
 
   return date.toLocaleDateString();
 

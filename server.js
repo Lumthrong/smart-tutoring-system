@@ -8,11 +8,17 @@ import multer from "multer";
 import fs from "fs";
 import { createRequire } from "module";
 import sgMail from "@sendgrid/mail";
+import { v2 as cloudinary } from "cloudinary";
 
 const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
 
 dotenv.config();
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 console.log("EMAIL_USER:", process.env.EMAIL_USER);
 console.log("SENDGRID KEY exists:", !!process.env.SENDGRID_API_KEY);
@@ -147,51 +153,91 @@ app.post("/upload", multiUpload, async (req, res) => {
     const pdfFile = req.files.pdf[0];
     const videoFile = req.files.video ? req.files.video[0] : null;
 
+    /* ================= EXTRACT PDF TEXT ================= */
+
     let extractedText = null;
 
     try {
       const pdfBuffer = fs.readFileSync(pdfFile.path);
       const pdfData = await pdfParse(pdfBuffer);
-      extractedText = pdfData.text.substring(0, 15000);
-    } catch (err) {
-      console.error("PDF PARSE ERROR:", err);
+      extractedText = pdfData.text.substring(0,15000);
+    } catch(err){
+      console.error("PDF PARSE ERROR:",err);
     }
 
+    /* ================= CLOUDINARY PDF UPLOAD ================= */
+
+    const pdfUpload = await cloudinary.uploader.upload(pdfFile.path,{
+      resource_type:"auto",
+      folder:"smart-tutor/pdfs"
+    });
+
+    /* ================= CLOUDINARY VIDEO UPLOAD ================= */
+
+    let videoUpload = null;
+
+    if(videoFile){
+
+      videoUpload = await cloudinary.uploader.upload(videoFile.path,{
+        resource_type:"auto",
+        folder:"smart-tutor/videos"
+      });
+
+    }
+
+    /* ================= DELETE TEMP FILES ================= */
+
+    fs.unlinkSync(pdfFile.path);
+    if(videoFile) fs.unlinkSync(videoFile.path);
+
     res.json({
-      success: true,
+      success:true,
       department,
       semester,
       course,
-      pdfFilename: pdfFile.filename,
-      pdfURL: "/uploads/" + pdfFile.filename,
-      videoFilename: videoFile ? videoFile.filename : null,
-      videoURL: videoFile ? "/uploads/" + videoFile.filename : null,
+
+      pdfURL: pdfUpload.secure_url,
+      pdfFilename: pdfUpload.public_id,
+
+      videoURL: videoUpload ? videoUpload.secure_url : null,
+      videoFilename: videoUpload ? videoUpload.public_id : null,
+
       text: extractedText
     });
 
-  } catch (err) {
-    console.error("UPLOAD ERROR:", err);
-    res.status(500).json({ error: "Upload failed" });
+  }
+  catch(err){
+
+    console.error("UPLOAD ERROR:",err);
+    res.status(500).json({ error:"Upload failed" });
+
   }
 
 });
 
 /* ================= DELETE FILE ================= */
 
-app.delete("/delete-course/:filename", (req, res) => {
+app.delete("/delete-course/:publicId", async (req, res) => {
 
   try {
 
-    const filePath = path.join(uploadDir, req.params.filename);
+    const publicId = req.params.publicId;
 
-    if (fs.existsSync(filePath))
-      fs.unlinkSync(filePath);
+    if (!publicId)
+      return res.status(400).json({ error: "File id required" });
 
-    res.json({ success: true });
+    await cloudinary.uploader.destroy(publicId,{
+      resource_type:"auto"
+    });
 
-  } catch (err) {
-    console.error("DELETE ERROR:", err);
-    res.status(500).json({ error: "Delete failed" });
+    res.json({ success:true });
+
+  }
+  catch(err){
+
+    console.error("DELETE ERROR:",err);
+    res.status(500).json({ error:"Delete failed" });
+
   }
 
 });
@@ -205,15 +251,24 @@ app.post("/upload-profile", upload.single("profile"), async (req, res) => {
     if (!req.file)
       return res.status(400).json({ success:false });
 
-    res.json({
-      success: true,
-      fileURL: "/uploads/" + req.file.filename,
-      filename: req.file.filename
+    const uploadResult = await cloudinary.uploader.upload(req.file.path,{
+      folder:"smart-tutor/profiles"
     });
 
-  } catch (err) {
-    console.error("PROFILE UPLOAD ERROR:", err);
+    fs.unlinkSync(req.file.path);
+
+    res.json({
+      success:true,
+      fileURL: uploadResult.secure_url,
+      filename: uploadResult.public_id
+    });
+
+  }
+  catch(err){
+
+    console.error("PROFILE UPLOAD ERROR:",err);
     res.status(500).json({ success:false });
+
   }
 
 });

@@ -2,106 +2,212 @@
 <html lang="en">
 
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>User Dashboard</title>
-  <link rel="stylesheet" href="css/style.css">
-  <link rel="stylesheet" href="css/dashboard.css">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Student Dashboard</title>
+
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/dashboard.css">
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
 </head>
 
 <body data-role="student">
 
-  <div class="sidebar" id="sidebar">
+<!-- ================= SIDEBAR ================= -->
 
-    <!-- USER MINI HEADER -->
-    <div class="profile-mini">
-      <div class="avatar-circle">
-        <img id="miniProfileImg" src="" alt="Avatar">
-        <span id="avatarCircle">U</span>
-      </div>
-      <div class="profile-info">
-        <p id="profileName">Guest</p>
-        <small id="profileEmail"></small>
-      </div>
-    </div>
+<div class="sidebar" id="sidebar">
 
-    <a href="index.html">Home</a>
+<div class="profile-mini">
 
-    <!-- PROFILE DROPDOWN -->
-    <div class="profile-wrapper">
-      <div class="profile-toggle" id="profileToggle">
-        Profile ▾
-      </div>
+<div class="avatar-circle">
+<img id="miniProfileImg" src="" alt="Avatar">
+<span id="avatarCircle">U</span>
+</div>
 
-      <div class="profile-dropdown" id="profileDropdown">
-        <a href="dashboard.html" id="dashboardLink">Dashboard</a>
-        <a href="accsettings.html">Profile Settings</a>
-        <a href="#" id="logoutLink">Logout</a>
-      </div>
-    </div>
+<div class="profile-info">
+<p id="profileName">Guest</p>
+<small id="profileEmail"></small>
+</div>
 
-    <a href="login.html" id="loginLink">Login</a>
+</div>
 
-  </div>
+<a href="index.html">Home</a>
 
-  <div class="overlay" id="overlay"></div>
+<div class="profile-wrapper">
 
-  <header>
-    <button class="menu-btn" id="menuBtn">☰</button>
-    <h1>Your dashboard</h1>
+<div class="profile-toggle" id="profileToggle">
+Profile ▾
+</div>
 
-    <div class="notify" id="notifyBell">🔔
-      <span id="notifyCount">0</span>
-      <div id="notificationPanel" class="notify-panel">
-        <div class="notify-header">
-          Notifications
-        </div>
+<div class="profile-dropdown" id="profileDropdown">
 
-        <div id="notificationList"></div>
+<a href="dashboard.html" id="dashboardLink">Dashboard</a>
 
-      </div>
+<a href="accsettings.html">Profile Settings</a>
 
-    </div>
-  </header>
+<a href="#" id="logoutLink">Logout</a>
 
-  <section class="dashboard">
-    <canvas id="progressChart"></canvas>
-    <select id="courseSelect"></select>
+</div>
 
-    <button onclick="startTest()">Quick Test</button>
+</div>
 
-    <div class="card">
-      <h3>Enrolled Courses</h3>
-      <div id="enrolledCourses"></div>
-      <div class="chatBox" id="chatBox">
+<a href="login.html" id="loginLink">Login</a>
 
-        <div class="chatHeader">
-          <span>Course Discussion</span>
-          <button class="chatClose" id="chatClose">✕</button>
-        </div>
+</div>
 
-        <div class="chatMessages commentList"></div>
+<div class="overlay" id="overlay"></div>
 
-        <div class="chatInput">
-          <input class="commentInput" placeholder="write...">
-          <button class="sendComment">Send</button>
-        </div>
+<!-- ================= HEADER ================= -->
 
-      </div>
+<header>
 
-    </div>
+<button class="menu-btn" id="menuBtn">☰</button>
 
-    <div class="card">
-      <h3>Book History</h3>
-      <p>Coming soon...</p>
-    </div>
-  </section>
+<h1>Student Dashboard</h1>
 
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script type="module" src="js/script.js"></script>
-  <script type="module" src="js/user.js"></script>
-  <script type="module" src="js/auth.js"></script>
-  <script type="module" src="js/notification.js"></script>
+<div class="notify" id="notifyBell">
+
+🔔
+
+<span id="notifyCount">0</span>
+
+<div id="notificationPanel" class="notify-panel">
+
+<div class="notify-header">
+Notifications
+</div>
+
+<div id="notificationList"></div>
+
+</div>
+
+</div>
+
+</header>
+
+<!-- ================= MAIN DASHBOARD ================= -->
+
+<section class="dashboard">
+
+<!-- ===== STATS ===== -->
+
+<div class="stats-grid">
+
+<div class="stat-card">
+<h4>Courses</h4>
+<p id="courseCount">0</p>
+</div>
+
+<div class="stat-card">
+<h4>AI Quizzes</h4>
+<p id="aiQuizCount">0</p>
+</div>
+
+<div class="stat-card">
+<h4>Course Quizzes</h4>
+<p id="courseQuizCount">0</p>
+</div>
+
+</div>
+
+<!-- ===== ANALYTICS ===== -->
+
+<div class="chart-grid">
+
+<div class="card">
+
+<h3>Course Quiz Activity</h3>
+
+<canvas id="courseQuizChart"></canvas>
+
+</div>
+
+<div class="card">
+
+<h3>AI Quiz Performance</h3>
+
+<canvas id="aiQuizChart"></canvas>
+
+</div>
+
+</div>
+
+<!-- ===== QUICK ACTION ===== -->
+
+<div class="card quick-test">
+
+<h3>Quick AI Quiz</h3>
+
+<p>Generate a quiz automatically from your lecture PDF.</p>
+
+<select id="courseSelect"></select>
+
+<button onclick="startTest()" class="dashbtn">
+Start AI Quiz
+</button>
+
+</div>
+
+<!-- ===== ENROLLED COURSES ===== -->
+
+<div class="card">
+
+<h3>Enrolled Courses</h3>
+
+<div id="enrolledCourses"></div>
+
+</div>
+
+<!-- ===== LEARNING HISTORY ===== -->
+
+<div class="card">
+
+<h3>Learning History</h3>
+
+<div id="learningHistory">
+
+<p>No learning history yet.</p>
+
+</div>
+
+</div>
+
+</section>
+
+<!-- ================= DISCUSSION PANEL ================= -->
+
+<div class="chatBox hidden" id="chatBox">
+
+<div class="chatHeader">
+
+<span>Course Discussion</span>
+
+<button class="chatClose" id="chatClose">✕</button>
+
+</div>
+
+<div class="chatMessages commentList"></div>
+
+<div class="chatInput">
+
+<input class="commentInput" placeholder="Ask a question...">
+
+<button class="sendComment">Send</button>
+
+</div>
+
+</div>
+
+<!-- ================= SCRIPTS ================= -->
+
+<script type="module" src="js/script.js"></script>
+<script type="module" src="js/user.js"></script>
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/notification.js"></script>
+
 </body>
 
 </html>

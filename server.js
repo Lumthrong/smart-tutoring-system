@@ -13,6 +13,9 @@ const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
 
 dotenv.config();
+console.log("EMAIL_USER:", process.env.EMAIL_USER);
+console.log("EMAIL_PASS exists:", !!process.env.EMAIL_PASS);
+console.log("GROQ_API_KEY exists:", !!process.env.GROQ_API_KEY);
 
 const app = express();
 app.use(cors());

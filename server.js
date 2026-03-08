@@ -8,8 +8,10 @@ import multer from "multer";
 import fs from "fs";
 import nodemailer from "nodemailer";
 import { createRequire } from "module";
+
 const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
+
 dotenv.config();
 
 const app = express();
@@ -51,9 +53,7 @@ const upload = multer({
 const otpStore = new Map();
 
 const transporter = nodemailer.createTransport({
-  host: "smtp.sendgrid.net",
-  port: 587,
-  secure: false,
+  service: "gmail",
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS
@@ -298,8 +298,6 @@ app.use((req, res) => {
 
 /* ================= START SERVER ================= */
 
-const PORT = process.env.PORT || 5000;
-
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`);
+app.listen(5000, () => {
+  console.log("🚀 Server running at http://localhost:5000");
 });

@@ -6,8 +6,10 @@ import path from "path";
 import { fileURLToPath } from "url";
 import multer from "multer";
 import fs from "fs";
-import nodemailer from "nodemailer";
 import { createRequire } from "module";
+import sgMail from "@sendgrid/mail";
+
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
@@ -55,16 +57,6 @@ const upload = multer({
 
 const otpStore = new Map();
 
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
-
 /* ================= SEND OTP ================= */
 
 app.post("/send-otp", async (req, res) => {
@@ -80,12 +72,12 @@ app.post("/send-otp", async (req, res) => {
 
   try {
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
-      to: email,
-      subject: "Smart Tutor OTP Verification",
-      text: `Your verification OTP is: ${otp}`
-    });
+    await sgMail.send({
+  to: email,
+  from: process.env.EMAIL_USER, // must be verified sender in SendGrid
+  subject: "Smart Tutor OTP Verification",
+  text: `Your verification OTP is: ${otp}`
+});
 
     res.json({ success: true });
 
@@ -117,19 +109,25 @@ app.post("/verify-otp", (req, res) => {
 });
 
 app.get("/test-email", async (req, res) => {
+
   try {
-    await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+
+    await sgMail.send({
       to: process.env.EMAIL_USER,
-      subject: "SMTP Test",
+      from: process.env.EMAIL_USER,
+      subject: "SendGrid Test",
       text: "Email working on Render"
     });
 
     res.send("Email sent successfully");
+
   } catch (error) {
-    console.error(error);
+
+    console.error("SENDGRID ERROR:", error);
     res.send("Email failed");
+
   }
+
 });
 /* ================= COURSE UPLOAD ================= */
 

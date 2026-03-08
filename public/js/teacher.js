@@ -100,14 +100,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
 
       await addDoc(collection(db, "courses"), {
-        department: data.department,
-        semester: data.semester,
-        course: data.course,
-        pdfURL: data.pdfURL,
-        videoURL: data.videoURL,
-        uploadedBy: auth.currentUser.uid,
-        createdAt: new Date()
-      });
+  department: data.department,
+  semester: data.semester,
+  course: data.course,
+
+  pdfURL: data.pdfURL,
+  pdfFilename: data.pdfFilename,
+
+  videoURL: data.videoURL,
+  videoFilename: data.videoFilename,
+
+  uploadedBy: auth.currentUser.uid,
+  createdAt: new Date()
+});
 
       alert("Lecture uploaded");
       uploadForm.reset();
@@ -176,7 +181,19 @@ function loadMyCourses(){
         if(!confirm("Delete this course?")) return;
 
         try{
-          await deleteDoc(doc(db,"courses",courseId));
+          const courseData = docSnap.data();
+
+await fetch(`/delete-course/${courseData.pdfFilename}`,{
+  method:"DELETE"
+});
+
+if(courseData.videoFilename){
+  await fetch(`/delete-course/${courseData.videoFilename}`,{
+    method:"DELETE"
+  });
+}
+
+await deleteDoc(doc(db,"courses",courseId));
         }catch(err){
           console.error(err);
           alert("Delete failed. Check Firestore permissions.");

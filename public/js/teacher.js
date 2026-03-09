@@ -119,20 +119,24 @@ document.addEventListener("DOMContentLoaded", () => {
   const data = await res.json();
 
   await addDoc(collection(db, "courses"), {
-    department: data.department,
-    semester: data.semester,
-    course: data.course,
-    tags: tags,
+  department: data.department,
+  semester: data.semester,
+  course: data.course,
 
-    pdfURL: data.pdfURL,
-    pdfFilename: data.pdfFilename,
+  tags: tags,
 
-    videoURL: data.videoURL,
-    videoFilename: data.videoFilename,
+  coverURL: data.coverURL || null,
+  coverFilename: data.coverFilename || null,
 
-    uploadedBy: auth.currentUser.uid,
-    createdAt: new Date()
-  });
+  pdfURL: data.pdfURL,
+  pdfFilename: data.pdfFilename,
+
+  videoURL: data.videoURL,
+  videoFilename: data.videoFilename,
+
+  uploadedBy: auth.currentUser.uid,
+  createdAt: new Date()
+});
 
   btn.classList.remove("loading");
   btn.disabled = false;

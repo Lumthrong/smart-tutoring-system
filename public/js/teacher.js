@@ -15,7 +15,19 @@ import {
 
 import { onAuthStateChanged }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+function showMessage(text){
 
+  const msg = document.getElementById("systemMessage");
+  if(!msg) return;
+
+  msg.innerText = text;
+  msg.style.display = "block";
+
+  setTimeout(()=>{
+    msg.style.display = "none";
+  },3000);
+
+}
 let activeCourseId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -88,36 +100,48 @@ document.addEventListener("DOMContentLoaded", () => {
 
     uploadForm.addEventListener("submit", async (e) => {
 
-      e.preventDefault();
+  e.preventDefault();
 
-      const formData = new FormData(uploadForm);
+  const btn = document.getElementById("uploadBtn");
+  btn.classList.add("loading");
+  btn.disabled = true;
 
-      const res = await fetch("/upload", {
-        method: "POST",
-        body: formData
-      });
+  const formData = new FormData(uploadForm);
 
-      const data = await res.json();
+  const tagsInput = uploadForm.tags.value || "";
+  const tags = tagsInput.split(",").map(t => t.trim()).filter(t => t);
 
-      await addDoc(collection(db, "courses"), {
-  department: data.department,
-  semester: data.semester,
-  course: data.course,
+  const res = await fetch("/upload", {
+    method: "POST",
+    body: formData
+  });
 
-  pdfURL: data.pdfURL,
-  pdfFilename: data.pdfFilename,
+  const data = await res.json();
 
-  videoURL: data.videoURL,
-  videoFilename: data.videoFilename,
+  await addDoc(collection(db, "courses"), {
+    department: data.department,
+    semester: data.semester,
+    course: data.course,
+    tags: tags,
 
-  uploadedBy: auth.currentUser.uid,
-  createdAt: new Date()
+    pdfURL: data.pdfURL,
+    pdfFilename: data.pdfFilename,
+
+    videoURL: data.videoURL,
+    videoFilename: data.videoFilename,
+
+    uploadedBy: auth.currentUser.uid,
+    createdAt: new Date()
+  });
+
+  btn.classList.remove("loading");
+  btn.disabled = false;
+
+  showMessage("Lecture uploaded successfully");
+
+  uploadForm.reset();
+
 });
-
-      alert("Lecture uploaded");
-      uploadForm.reset();
-
-    });
 
   }
 
@@ -196,7 +220,7 @@ if(courseData.videoFilename){
 await deleteDoc(doc(db,"courses",courseId));
         }catch(err){
           console.error(err);
-          alert("Delete failed. Check Firestore permissions.");
+          showMessage("Delete failed. Check Firestore permissions.");
         }
 
       };
@@ -328,11 +352,11 @@ function loadMyQuizzes(){
 
          await deleteDoc(doc(db,"quizzes",quizDoc.id));
 
-         alert("Quiz deleted");
+         showMessage("Quiz deleted");
 
        }catch(err){
          console.error(err);
-         alert("Delete failed. Firestore permission blocked.");
+         showMessage("Delete failed. Firestore permission blocked.");
        }
 
      };

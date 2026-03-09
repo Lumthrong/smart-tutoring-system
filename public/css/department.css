@@ -1,0 +1,179 @@
+.dept-sect{
+  padding: 20px;
+}
+#deptTitle{
+  color:rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+}
+/* ================= COURSE CARD ================= */
+.course-card{
+
+  background:linear-gradient(180deg,#4f46e5,#1e1b4b);
+
+  border-radius:18px;
+
+  padding:20px;
+
+  height:260px;
+
+  color:white;
+
+  display:flex;
+
+  flex-direction:column;
+
+  justify-content:flex-end;
+
+  align-items:flex-start;   /* add this */
+
+}
+
+.course-card:hover{
+
+  transform:translateY(-8px);
+
+  box-shadow:0 15px 40px rgba(0,0,0,0.35);
+
+}
+
+.course-card h3{
+  font-size:17px;
+  margin-bottom:5px;
+}
+
+.course-card p{
+
+  font-size:13px;
+
+  opacity:.8;
+
+}
+.course-card a{
+  text-decoration: none;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  color:#fff;
+  padding:5px;
+  font-size:10px;
+  border-radius:8px;
+}
+/* ================= DEPARTMENT COURSE GRID ================= */
+
+#deptCourses{
+
+  display:grid;
+
+  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
+
+  gap:25px;
+
+  padding:20px 0;
+
+}
+
+.j-btn{
+
+  margin-top:12px;
+
+  padding:8px 14px;
+
+  border:none;
+
+  border-radius:8px;
+
+  background:#10b981;
+
+  color:black;
+
+  font-weight:600;
+
+  cursor:pointer;
+
+  transition:.2s;
+
+}
+
+.j-btn:hover{
+  background:#059669;
+}
+.locked{
+  font-size:13px;
+  opacity:.9;
+  background:rgba(0,0,0,0.25);
+  padding:4px 8px;
+  border-radius:6px;
+  display:inline-block;
+}
+
+/* ================= SEARCH BOX ================= */
+
+.search-box{
+  position:relative;
+  width:100%;
+  max-width:420px;
+  margin-bottom:20px;
+}
+
+/* icon */
+
+.search-box i{
+  position:absolute;
+  left:14px;
+  top:50%;
+  transform:translateY(-50%);
+  color:#888;
+  font-size:15px;
+}
+
+/* input */
+
+.course-search{
+  width:100%;
+  padding:12px 16px 12px 40px;
+
+  border-radius:12px;
+  border:1px solid #ddd;
+
+  font-size:14px;
+
+  outline:none;
+
+  background:#fff;
+
+  box-shadow:0 5px 15px rgba(0,0,0,0.06);
+
+  transition:all .25s ease;
+}
+
+.course-search:focus{
+  border-color:#rgba(0, 0, 0, 0.45);
+  box-shadow:0 8px 20px rgba(79,70,229,0.25);
+}
+
+/* placeholder */
+
+.course-search::placeholder{
+  color:#999;
+}
+
+@media (max-width:768px){
+
+  #deptCourses{
+
+    grid-template-columns:repeat(2,1fr);
+
+    gap:15px;
+
+  }
+
+}
+
+@media (max-width:480px){
+
+  #deptCourses{
+
+    grid-template-columns:1fr;
+
+  }
+
+}

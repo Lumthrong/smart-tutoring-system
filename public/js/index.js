@@ -13,81 +13,137 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
+
 document.addEventListener("DOMContentLoaded", () => {
 
   const container = document.getElementById("departmentSections");
+  const searchInput = document.getElementById("courseSearch");
+
   if (!container) return;
 
   let currentUser = null;
+  let allCourses = [];
+  let joinedCourses = new Set();
+  let searchTerm = "";
 
   /* ================= AUTH ================= */
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, async (user) => {
+
     currentUser = user;
+
+    if (user) {
+
+      const enrollQuery = query(
+        collection(db,"enrollments"),
+        where("userId","==",user.uid)
+      );
+
+      const enrollSnap = await getDocs(enrollQuery);
+
+      joinedCourses.clear();
+
+      enrollSnap.forEach(doc=>{
+        joinedCourses.add(doc.data().courseId);
+      });
+
+    }
+
+    renderCourses();
+
   });
 
-  /* ================= COURSES ================= */
 
-  const coursesRef = collection(db, "courses");
+  /* ================= SEARCH ================= */
 
-  onSnapshot(coursesRef, async (snapshot) => {
+  if (searchInput) {
 
-    container.innerHTML = "";
+    searchInput.addEventListener("input", (e) => {
 
-    if (snapshot.empty) {
-      container.innerHTML = "<p>No courses uploaded yet.</p>";
+      searchTerm = e.target.value.toLowerCase();
+      renderCourses();
+
+    });
+
+  }
+
+
+  /* ================= FIRESTORE COURSES ================= */
+
+  const coursesRef = collection(db,"courses");
+
+  onSnapshot(coursesRef,(snapshot)=>{
+
+    allCourses = snapshot.docs.map(doc => ({
+      id:doc.id,
+      ...doc.data()
+    }));
+
+    renderCourses();
+
+  });
+
+
+  /* ================= RENDER COURSES ================= */
+
+  function renderCourses(){
+
+    container.innerHTML="";
+
+    if(!allCourses.length){
+      container.innerHTML="<p>No courses uploaded yet.</p>";
       return;
     }
 
     const grouped = {};
 
-    snapshot.forEach(docSnap => {
+    for(const course of allCourses){
 
-      const data = docSnap.data();
-      const dept = (data.department || "Others").trim();
+      if(searchTerm && !course.course.toLowerCase().includes(searchTerm)){
+        continue;
+      }
 
-      if (!grouped[dept]) grouped[dept] = [];
+      const dept = (course.department || "Others").trim().toUpperCase();
 
-      grouped[dept].push({
-        id: docSnap.id,
-        ...data
-      });
+      if(!grouped[dept]) grouped[dept]=[];
 
-    });
+      grouped[dept].push(course);
 
-    for (const dept of Object.keys(grouped)) {
+    }
 
-      const section = document.createElement("div");
-      section.className = "dept-section";
 
-      section.innerHTML = `
-        <h3 class="dept-title">${dept}</h3>
+    for(const dept of Object.keys(grouped)){
+
+      const section=document.createElement("div");
+      section.className="dept-section";
+
+      section.innerHTML=`
+        <div class="dept-header">
+
+          <h3 class="dept-title">${dept}</h3>
+
+          <a class="show-more" href="department.html?dept=${encodeURIComponent(dept)}">
+            Show More
+          </a>
+
+        </div>
+
         <div class="dept-slider"></div>
       `;
 
       container.appendChild(section);
 
-      const slider = section.querySelector(".dept-slider");
+      const slider=section.querySelector(".dept-slider");
 
-      for (const course of grouped[dept]) {
 
-        let isJoined = false;
+      for(const course of grouped[dept]){
 
-        if (currentUser) {
-          const enrollQuery = query(
-            collection(db, "enrollments"),
-            where("userId", "==", currentUser.uid),
-            where("courseId", "==", course.id)
-          );
+        const isJoined=joinedCourses.has(course.id);
 
-          const enrollSnap = await getDocs(enrollQuery);
-          if (!enrollSnap.empty) isJoined = true;
-        }
+        const card=document.createElement("div");
+        card.className="book-card";
 
-        const card = document.createElement("div");
-        card.className = "book-card";
-
-        card.innerHTML = `
+        card.innerHTML=`
           <h3>${course.course}</h3>
           <p>Semester ${course.semester}</p>
 
@@ -101,6 +157,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <source src="${course.videoURL}">
               </video>
             ` : ""}
+
           ` : `
             <div class="locked">
               🔒 Join to access materials
@@ -112,52 +169,80 @@ document.addEventListener("DOMContentLoaded", () => {
           </button>
         `;
 
-        const joinBtn = card.querySelector(".join-btn");
+        const joinBtn=card.querySelector(".join-btn");
 
-        if (!isJoined) {
 
-          joinBtn.addEventListener("click", async () => {
+        if(!isJoined){
 
-            const user = auth.currentUser;
+          joinBtn.addEventListener("click", async ()=>{
 
-            if (!user) {
+            const user=auth.currentUser;
+
+            if(!user){
               alert("Login first.");
               return;
             }
 
-            await addDoc(collection(db, "enrollments"), {
-              userId: user.uid,
-              courseId: course.id,
-              courseName: course.course,
-              department: dept,
-              joinedAt: new Date()
+            const confirmJoin=confirm(`Join ${course.course}?`);
+
+            if(!confirmJoin) return;
+
+            await addDoc(collection(db,"enrollments"),{
+
+              userId:user.uid,
+              courseId:course.id,
+              courseName:course.course,
+              department:dept,
+              joinedAt:new Date()
+
             });
 
-            alert("Joined successfully!");
-            location.reload();
+            joinedCourses.add(course.id);
+
+            renderCourses();
+
           });
 
-        } else {
-          joinBtn.disabled = true;
+        }else{
+
+          joinBtn.disabled=true;
+
         }
 
         slider.appendChild(card);
+
       }
 
     }
 
-  });
+    observeSections();
+
+  }
+
+
+  /* ================= SCROLL REVEAL ================= */
+
+  function observeSections(){
+
+    const sections=document.querySelectorAll(".dept-section");
+
+    const observer=new IntersectionObserver(entries=>{
+
+      entries.forEach(entry=>{
+
+        if(entry.isIntersecting){
+
+          entry.target.style.opacity=1;
+          entry.target.style.transform="translateY(0)";
+
+        }
+
+      });
+
+    },{threshold:0.2});
+
+    sections.forEach(section=>observer.observe(section));
+
+  }
 
 });
-const reveals = document.querySelectorAll(".dept-section");
-
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(entry => {
-    if (entry.isIntersecting) {
-      entry.target.style.opacity = 1;
-      entry.target.style.transform = "translateY(0)";
-    }
-  });
-}, { threshold: 0.2 });
-
-reveals.forEach(section => observer.observe(section));

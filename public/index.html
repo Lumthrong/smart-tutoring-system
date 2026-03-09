@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Smart Tutor</title>
 <link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/index.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -47,7 +50,8 @@
   <button class="menu-btn" id="menuBtn">☰</button>
   <h1>Your dashboard</h1>
 
-    <div class="notify" id="notifyBell">🔔
+  <div class="notify" id="notifyBell">
+    <i class="fa-solid fa-bell"></i>
   <span id="notifyCount">0</span>
   <div id="notificationPanel" class="notify-panel">
     <div class="notify-header">
@@ -55,9 +59,7 @@
     </div>
 
     <div id="notificationList"></div>
-
   </div>
-
 </div>
 </header>
 
@@ -72,8 +74,22 @@
 
 
 <section class="books">
-  <h2>Recent Uploads</h2>
-  <div id="departmentSections"></div>
+<div class="search-box">
+
+  <i class="fa-solid fa-magnifying-glass"></i>
+
+  <input
+    type="text"
+    id="courseSearch"
+    placeholder="Search course..."
+    class="course-search"
+  />
+
+</div>
+<h2>Recent Uploads</h2>
+
+<div id="departmentSections"></div>
+
 </section>
 
 <script type="module" src="js/script.js"></script>

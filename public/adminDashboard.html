@@ -6,6 +6,8 @@
 <title>Admin Dashboard</title>
 <link rel="stylesheet" href="css/style.css">
 <link rel="stylesheet" href="css/admin.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
 <body data-role="admin">
 
@@ -47,6 +49,17 @@
 <header>
   <button class="menu-btn" id="menuBtn">☰</button>
   <h1>Admin Dashboard</h1>
+<div class="notify" id="notifyBell">
+    <i class="fa-solid fa-bell"></i>
+  <span id="notifyCount">0</span>
+  <div id="notificationPanel" class="notify-panel">
+    <div class="notify-header">
+      Notifications
+    </div>
+
+    <div id="notificationList"></div>
+  </div>
+</div>
 </header>
 
 <section class="dashboard">

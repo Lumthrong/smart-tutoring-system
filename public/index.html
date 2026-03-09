@@ -48,7 +48,7 @@
 
 <header>
   <button class="menu-btn" id="menuBtn">☰</button>
-  <h1>Your dashboard</h1>
+  <h1>Home</h1>
 
   <div class="notify" id="notifyBell">
     <i class="fa-solid fa-bell"></i>
@@ -65,11 +65,20 @@
 
 
 <section class="hero">
+  <div class="hero-slider">
+    <img src="https://res.cloudinary.com/df0vciznk/image/upload/v1773073276/file_00000000232c7208ae8fb1150ba5c43c_exbqb3.png" class="hero-slide active">
+    <img src="https://res.cloudinary.com/df0vciznk/image/upload/v1773075049/file_000000006e3871fa9b4a46848a3b29af_u1bh7v.png" class="hero-slide">
+    <img src="https://res.cloudinary.com/df0vciznk/image/upload/v1773075216/file_00000000e8f071faa0da7a8c743d2aa1_klkkk4.png" class="hero-slide">
+  </div>
+
+  <div class="hero-overlay"></div>
+
   <div class="hero-content">
     <h2>Learn Smarter. Study Better.</h2>
     <p>Access books, quizzes and AI-powered learning tools.</p>
     <a href="signup.html" class="btn-primary">Get Started</a>
   </div>
+
 </section>
 
 
@@ -90,6 +99,43 @@
 
 <div id="departmentSections"></div>
 
+<!-- COURSE CARD TEMPLATE -->
+<template id="courseCardTemplate">
+
+  <div class="book-card">
+
+    <img class="book-cover">
+
+    <div class="card-info">
+      <h3 class="course-title"></h3>
+      <p class="course-semester"></p>
+    </div>
+
+    <a class="pdf-btn" target="_blank">View</a>
+
+    <div class="locked">
+      🔒 Join to access materials
+    </div>
+    <button class="join-btn"></button>
+
+  </div>
+
+</template>
+<div id="joinModal" class="join-modal">
+  <div class="join-modal-box">
+
+    <h3>Join Course</h3>
+
+    <p id="joinCourseName"></p>
+
+    <div class="join-actions">
+      <button id="cancelJoin" class="cancel-btn">Cancel</button>
+      <button id="confirmJoin" class="confirm-btn">Join</button>
+    </div>
+
+  </div>
+</div>
+<div id="systemMessage"></div>
 </section>
 
 <script type="module" src="js/script.js"></script>

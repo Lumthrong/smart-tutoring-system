@@ -463,17 +463,13 @@ const div=document.createElement("div");
 
 div.innerHTML=`<p><b>${i+1}. ${q.question}</b></p>`;
 
-(q.options || []).forEach(opt=>{
-
+(q.options || []).forEach((opt,index)=>{
 div.innerHTML+=`
-
 <label>
-<input type="radio" name="q${i}" value="${opt}">
+<input type="radio" name="q${i}" value="${index}">
 ${opt}
 </label><br>
-
 `;
-
 });
 
 div.innerHTML+=`<div id="explain${i}" style="display:none;"></div>`;
@@ -497,10 +493,24 @@ questions.forEach((q,i)=>{
 
 const selected=document.querySelector(`input[name="q${i}"]:checked`);
 
-if(selected && selected.value.trim()===String(q.answer).trim()){
+let correctIndex = -1;
+
+const letterMap = ["a","b","c","d"];
+
+if(letterMap.includes(String(q.answer).toLowerCase().trim())){
+  correctIndex = letterMap.indexOf(String(q.answer).toLowerCase().trim());
+}
+else{
+  correctIndex = q.options.findIndex(
+    opt => opt.trim().toLowerCase() === String(q.answer).trim().toLowerCase()
+  );
+}
+
+if(selected && Number(selected.value) === correctIndex){
 score++;
 }
 
+/* show explanation */
 if(quizId==="aiQuiz"){
 
 const explain=document.getElementById(`explain${i}`);
@@ -508,10 +518,8 @@ const explain=document.getElementById(`explain${i}`);
 explain.style.display="block";
 
 explain.innerHTML=`
-
 <p><b>Correct Answer:</b> ${q.answer}</p>
 <p><b>Explanation:</b> ${q.explanation || "No explanation available."}</p>
-
 `;
 
 }

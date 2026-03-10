@@ -43,11 +43,15 @@
     Request Teacher Access
   </label>
 
-  <button onclick="sendOTP()" class="btnlogin">
-    Send OTP
-  </button>
+  <button onclick="sendOTP()" class="btnlogin" id="sendOtpBtn">
+Send OTP
+</button>
 
-  <input type="text" id="otpInput" placeholder="Enter OTP">
+  <input
+type="text"
+id="otpInput"
+placeholder="Enter OTP"
+style="display:none;">
 <div id="formMessage" class="form-message"></div>
   <button onclick="verifyOTP()" class="btnlogin">
     Verify OTP & Create Account

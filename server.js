@@ -32,9 +32,9 @@ async function verifyToken(req, res, next) {
   }
 
   // token from URL
-  else if (req.query.token) {
-    token = req.query.token;
-  }
+  if (!token && req.query.token) {
+  token = req.query.token;
+}
 
   if (!token) {
     return res.status(401).send("Unauthorized");

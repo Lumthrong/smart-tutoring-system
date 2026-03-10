@@ -211,7 +211,16 @@ verifyBtn.innerHTML = `Verifying <span class="btn-spinner"></span>`;
       role,
       requestedAt:new Date()
     });
+    await fetch("/set-role",{
+  method:"POST",
+  headers:{ "Content-Type":"application/json" },
+  body: JSON.stringify({
+    uid: userCred.user.uid,
+    role: role
+  })
+});
 
+await auth.currentUser.getIdToken(true);
     showMessage("Account created successfully","success");
 
     setTimeout(()=>{
@@ -242,20 +251,9 @@ window.login = async function(){
   try{
 
     const userCred=await signInWithEmailAndPassword(auth,email,password);
-    const uid=userCred.user.uid;
 
-    const snap=await getDoc(doc(db,"users",uid));
-
-    if(!snap.exists()){
-
-      loginBtn.disabled = false;
-      loginBtn.innerHTML = "Login";
-
-      showMessage("User profile missing");
-      return;
-    }
-
-    const role=snap.data().role;
+    const token = await auth.currentUser.getIdTokenResult();
+const role = token.claims.role || "student";
 
     if(role==="admin")
       window.location.href="adminDashboard.html";
@@ -296,59 +294,55 @@ window.logout=async function(){
 onAuthStateChanged(auth, async (user) => {
 
   const path = window.location.pathname;
+  const dashboardLink = document.getElementById("dashboardLink");
 
-  // Not logged in
+  /* ===== NOT LOGGED IN ===== */
+
   if (!user) {
 
-    if (!path.includes("login") && !path.includes("signup"))
+    if (!path.includes("login") && !path.includes("signup")) {
       window.location.href = "login.html";
+    }
 
     return;
   }
 
-  const snap = await getDoc(doc(db, "users", user.uid));
+  /* ===== GET USER ROLE ===== */
 
-  if (!snap.exists()) return;
+  await user.getIdToken(true);
 
-  const userRole = snap.data().role;
+const token = await user.getIdTokenResult();
+const role = token.claims.role || "student";
 
-  /* ===== PAGE ROLE REQUIREMENT ===== */
+  /* ================= DASHBOARD LINK FIX ================= */
+
+  if (dashboardLink) {
+
+    if (role === "admin")
+      dashboardLink.href = "adminDashboard.html";
+
+    else if (role === "teacher")
+      dashboardLink.href = "teacherDashboard.html";
+
+    else
+      dashboardLink.href = "dashboard.html";
+
+  }
+
+  /* ================= PAGE ROLE GUARD ================= */
 
   const pageRole = document.body.dataset.role;
 
-  if (pageRole && pageRole !== userRole) {
+  if (pageRole && pageRole !== role) {
 
-    // Redirect user to their correct dashboard
-
-    if (userRole === "admin")
+    if (role === "admin")
       window.location.href = "adminDashboard.html";
 
-    else if (userRole === "teacher")
+    else if (role === "teacher")
       window.location.href = "teacherDashboard.html";
 
     else
       window.location.href = "dashboard.html";
   }
-
-});
-/* ================= DASHBOARD LINK FIX ================= */
-
-onAuthStateChanged(auth, async (user) => {
-
-  const dashboardLink = document.getElementById("dashboardLink");
-
-  if (!user || !dashboardLink) return;
-
-  const snap = await getDoc(doc(db,"users",user.uid));
-  const role = snap.data().role;
-
-  if(role === "admin")
-    dashboardLink.href = "adminDashboard.html";
-
-  else if(role === "teacher")
-    dashboardLink.href = "teacherDashboard.html";
-
-  else
-    dashboardLink.href = "dashboard.html";
 
 });

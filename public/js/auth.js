@@ -1,5 +1,13 @@
 import { auth, db } from "./firebase.js";
+document.addEventListener("DOMContentLoaded",()=>{
 
+  const otpInput = document.getElementById("otpInput");
+  const verifyBtn = document.getElementById("verifyBtn");
+
+  if(otpInput) otpInput.style.display = "none";
+  if(verifyBtn) verifyBtn.style.display = "none";
+
+});
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -48,7 +56,7 @@ passwordInput.addEventListener("input", () => {
   }
 });
 let otpTimer;
-
+let resendCooldown = false;
 function startOTPTimer(){
 
   const message = document.getElementById("formMessage");
@@ -80,7 +88,10 @@ function startOTPTimer(){
 /* ================= SEND OTP ================= */
 
 window.sendOTP = async function () {
-
+if(resendCooldown){
+  showMessage("Please wait before requesting another OTP");
+  return;
+}
   const email = document.getElementById("email").value;
   const btn = document.getElementById("sendOtpBtn");
 
@@ -96,7 +107,7 @@ window.sendOTP = async function () {
 
   try{
 
-    const res = await fetch("https://smart-tutoring-system-ndjb.onrender.com/send-otp",{
+    const res = await fetch("/send-otp",{
       method:"POST",
       headers:{ "Content-Type":"application/json"},
       body:JSON.stringify({email})
@@ -104,15 +115,22 @@ window.sendOTP = async function () {
 
     const data = await res.json();
 
-    if(data.success){
+if(data.success){
 
-      showMessage("OTP sent successfully","success");
+  showMessage("OTP sent successfully","success");
 
-      document.getElementById("otpInput").style.display="block";
+  document.getElementById("otpInput").style.display="block";
+  document.getElementById("verifyBtn").style.display="block";
 
-      startOTPTimer();
+  startOTPTimer();
 
-    }else{
+  resendCooldown = true;
+
+  setTimeout(()=>{
+    resendCooldown = false;
+  },60000);
+
+}else{
       showMessage("Failed to send OTP");
     }
 
@@ -136,8 +154,15 @@ window.verifyOTP = async function () {
   const password = document.getElementById("password")?.value;
   const confirmPassword = document.getElementById("confirmPassword")?.value;
   const otp = document.getElementById("otpInput")?.value;
+  if(!otp || otp.trim() === ""){
+  showMessage("Please enter the verification code");
+  return;
+}
   const teacherRequest = document.getElementById("teacherRequest")?.checked;
+const verifyBtn = document.getElementById("verifyBtn");
 
+verifyBtn.disabled = true;
+verifyBtn.innerHTML = `Verifying <span class="btn-spinner"></span>`;
   const passwordRegex =
 /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
 
@@ -153,7 +178,7 @@ window.verifyOTP = async function () {
 
   try{
 
-    const verify = await fetch("https://smart-tutoring-system-ndjb.onrender.com/verify-otp", {
+    const verify = await fetch("/verify-otp", {
       method:"POST",
       headers:{ "Content-Type":"application/json" },
       body: JSON.stringify({ email, otp })
@@ -162,9 +187,14 @@ window.verifyOTP = async function () {
     const result = await verify.json();
 
     if(!result.success){
-      showMessage("Invalid OTP");
-      return;
-    }
+
+  verifyBtn.disabled = false;
+  verifyBtn.innerHTML = "Verify & Sign Up";
+
+  showMessage("Invalid OTP");
+  return;
+
+}
 
     const userCred = await createUserWithEmailAndPassword(auth,email,password);
 
@@ -188,9 +218,12 @@ window.verifyOTP = async function () {
       window.location.href="dashboard.html";
     },1500);
 
-  }catch(err){
-    showMessage(err.message);
-  }
+}catch(err){
+  showMessage(err.message);
+
+  verifyBtn.disabled = false;
+  verifyBtn.innerHTML = "Verify & Sign Up";
+}
 
 };
 
@@ -201,6 +234,10 @@ window.login = async function(){
 
   const email=document.getElementById("email")?.value;
   const password=document.getElementById("password")?.value;
+  const loginBtn = document.getElementById("loginBtn");
+
+  loginBtn.disabled = true;
+  loginBtn.innerHTML = `Logging in <span class="btn-spinner"></span>`;
 
   try{
 
@@ -210,6 +247,10 @@ window.login = async function(){
     const snap=await getDoc(doc(db,"users",uid));
 
     if(!snap.exists()){
+
+      loginBtn.disabled = false;
+      loginBtn.innerHTML = "Login";
+
       showMessage("User profile missing");
       return;
     }
@@ -224,6 +265,9 @@ window.login = async function(){
       window.location.href="dashboard.html";
 
   }catch(err){
+
+    loginBtn.disabled = false;
+    loginBtn.innerHTML = "Login";
 
     if(err.code === "auth/invalid-credential"){
       showMessage("Wrong email or password");

@@ -27,38 +27,103 @@ function showMessage(message,type="error"){
 
 }
 
+const passwordInput = document.getElementById("password");
+const strengthText = document.getElementById("passwordStrength");
 
+passwordInput.addEventListener("input", () => {
+
+  const val = passwordInput.value;
+
+  if(val.length < 6){
+    strengthText.innerText = "Weak password";
+    strengthText.style.color = "red";
+  }
+  else if(/^(?=.*[A-Za-z])(?=.*\d)/.test(val)){
+    strengthText.innerText = "Medium password";
+    strengthText.style.color = "orange";
+  }
+  else if(/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])/.test(val)){
+    strengthText.innerText = "Strong password";
+    strengthText.style.color = "green";
+  }
+});
+let otpTimer;
+
+function startOTPTimer(){
+
+  const message = document.getElementById("formMessage");
+
+  let time = 600; // 10 minutes
+
+  clearInterval(otpTimer);
+
+  otpTimer = setInterval(()=>{
+
+    const minutes = Math.floor(time/60);
+    const seconds = time%60;
+
+    message.innerText =
+      "OTP expires in " + minutes + ":" + (seconds<10?"0":"") + seconds;
+
+    time--;
+
+    if(time <= 0){
+
+      clearInterval(otpTimer);
+      message.innerText = "OTP expired. Request again.";
+
+    }
+
+  },1000);
+
+}
 /* ================= SEND OTP ================= */
 
 window.sendOTP = async function () {
 
-  const email = document.getElementById("email")?.value;
+  const email = document.getElementById("email").value;
+  const btn = document.getElementById("sendOtpBtn");
 
   if (!email) {
     showMessage("Enter email first");
     return;
   }
 
-  showMessage("Sending OTP...","success");
+  /* ===== SHOW SPINNER ===== */
+
+  btn.disabled = true;
+  btn.innerHTML = `Sending <span class="btn-spinner"></span>`;
 
   try{
 
-    const res = await fetch("https://smart-tutoring-system-ndjb.onrender.com/send-otp", {
+    const res = await fetch("/send-otp",{
       method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ email })
+      headers:{ "Content-Type":"application/json"},
+      body:JSON.stringify({email})
     });
 
     const data = await res.json();
 
-    if(data.success)
-      showMessage("OTP sent to your email","success");
-    else
+    if(data.success){
+
+      showMessage("OTP sent successfully","success");
+
+      document.getElementById("otpInput").style.display="block";
+
+      startOTPTimer();
+
+    }else{
       showMessage("Failed to send OTP");
+    }
 
   }catch(err){
-    showMessage("Server error while sending OTP");
+    showMessage("Server error");
   }
+
+  /* ===== RESTORE BUTTON ===== */
+
+  btn.disabled = false;
+  btn.innerHTML = "Send OTP";
 
 };
 
@@ -73,7 +138,8 @@ window.verifyOTP = async function () {
   const otp = document.getElementById("otpInput")?.value;
   const teacherRequest = document.getElementById("teacherRequest")?.checked;
 
-  const passwordRegex = /^[a-zA-Z0-9@#$%^&*!]{6,}$/;
+  const passwordRegex =
+/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
 
   if(!passwordRegex.test(password)){
     showMessage("Password must be at least 6 characters");

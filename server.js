@@ -24,15 +24,21 @@ if (!admin.apps.length) {
 
 async function verifyToken(req, res, next) {
 
-  const authHeader =
-  req.headers.authorization ||
-  "Bearer " + req.query.token;
+  let token = null;
 
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).send("Unauthorized");
+  // token from header
+  if (req.headers.authorization && req.headers.authorization.startsWith("Bearer ")) {
+    token = req.headers.authorization.split("Bearer ")[1];
   }
 
-  const token = authHeader.split("Bearer ")[1];
+  // token from URL
+  else if (req.query.token) {
+    token = req.query.token;
+  }
+
+  if (!token) {
+    return res.status(401).send("Unauthorized");
+  }
 
   try {
 

@@ -96,7 +96,7 @@ window.sendOTP = async function () {
 
   try{
 
-    const res = await fetch("/send-otp",{
+    const res = await fetch("https://smart-tutoring-system-ndjb.onrender.com/send-otp",{
       method:"POST",
       headers:{ "Content-Type":"application/json"},
       body:JSON.stringify({email})

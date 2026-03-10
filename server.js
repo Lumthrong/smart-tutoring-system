@@ -136,6 +136,7 @@ app.get("/test-email", async (req, res) => {
 /* ================= COURSE UPLOAD ================= */
 
 const multiUpload = upload.fields([
+  { name: "cover", maxCount: 1 },
   { name: "pdf", maxCount: 1 },
   { name: "video", maxCount: 1 }
 ]);
@@ -151,6 +152,17 @@ app.post("/upload", multiUpload, async (req, res) => {
 
     const pdfFile = req.files.pdf[0];
     const videoFile = req.files.video ? req.files.video[0] : null;
+    const coverFile = req.files.cover ? req.files.cover[0] : null;
+
+let coverUpload = null;
+
+if (coverFile) {
+
+  coverUpload = await cloudinary.uploader.upload(coverFile.path,{
+    folder:"uploads/covers"
+  });
+
+}
 
     /* ================= EXTRACT PDF TEXT ================= */
 
@@ -188,21 +200,25 @@ app.post("/upload", multiUpload, async (req, res) => {
 
     fs.unlinkSync(pdfFile.path);
     if(videoFile) fs.unlinkSync(videoFile.path);
+    if(coverFile) fs.unlinkSync(coverFile.path);
 
     res.json({
-      success:true,
-      department,
-      semester,
-      course,
+  success:true,
+  department,
+  semester,
+  course,
 
-      pdfURL: pdfUpload.secure_url,
-      pdfFilename: pdfUpload.public_id,
+  coverURL: coverUpload ? coverUpload.secure_url : null,
+  coverFilename: coverUpload ? coverUpload.public_id : null,
 
-      videoURL: videoUpload ? videoUpload.secure_url : null,
-      videoFilename: videoUpload ? videoUpload.public_id : null,
+  pdfURL: pdfUpload.secure_url,
+  pdfFilename: pdfUpload.public_id,
 
-      text: extractedText
-    });
+  videoURL: videoUpload ? videoUpload.secure_url : null,
+  videoFilename: videoUpload ? videoUpload.public_id : null,
+
+  text: extractedText
+});
 
   }
   catch(err){
@@ -283,21 +299,39 @@ app.post("/generate-test", async (req, res) => {
 
   try {
 
-/* ================= READ PDF FROM CLOUDINARY ================= */
+    /* ================= READ PDF FROM CLOUDINARY ================= */
 
-const responsePdf = await fetch(pdfURL);
+    const responsePdf = await fetch(pdfURL);
 
-if (!responsePdf.ok) {
-  console.error("Cloudinary fetch failed:", responsePdf.status);
-  return res.status(500).json({ error: "Failed to fetch PDF from Cloudinary" });
-}
+    if (!responsePdf.ok) {
+      console.error("Cloudinary fetch failed:", responsePdf.status);
+      return res.status(500).json({ error: "Failed to fetch PDF from Cloudinary" });
+    }
 
-const pdfArrayBuffer = await responsePdf.arrayBuffer();
-const pdfBuffer = Buffer.from(pdfArrayBuffer);
+    const pdfArrayBuffer = await responsePdf.arrayBuffer();
+    const pdfBuffer = Buffer.from(pdfArrayBuffer);
 
-const pdfData = await pdfParse(pdfBuffer);
+    const pdfData = await pdfParse(pdfBuffer);
 
-const text = pdfData.text.substring(0, 4000);
+    /* ================= CLEAN + SPLIT TEXT ================= */
+
+    const words = pdfData.text
+      .replace(/\s+/g, " ")
+      .split(" ");
+
+    if(words.length < 1000){
+      return res.status(400).json({ error:"PDF text too small for quiz generation" });
+    }
+
+    /* ================= RANDOM CHUNK (AVOIDS TOKEN LIMITS) ================= */
+
+    const chunkSize = 1200;
+
+    const start = Math.floor(
+      Math.random() * Math.max(1, words.length - chunkSize)
+    );
+
+    const text = words.slice(start, start + chunkSize).join(" ");
 
     /* ================= AI REQUEST ================= */
 
@@ -311,10 +345,19 @@ const text = pdfData.text.substring(0, 4000);
         },
         body: JSON.stringify({
           model: "llama-3.1-8b-instant",
-          messages: [{
-            role: "user",
-            content: `
-Generate 5 MCQs from the syllabus below.
+          messages: [
+            {
+              role: "user",
+              content: `
+You are an academic exam generator.
+
+Create 5 university-level MCQs ONLY from the study material below.
+
+Rules:
+- Questions must come from the syllabus.
+- Avoid general knowledge.
+- Avoid cover pages or introductions.
+- Each question must test understanding.
 
 Return STRICT JSON:
 
@@ -322,8 +365,9 @@ Return STRICT JSON:
  "questions":[
   {
    "question":"...",
-   "options":["A","B","C","D"],
-   "answer":"correct option"
+   "options":["...","...","...","..."],
+   "answer":"exact option text",
+   "explanation":"short explanation"
   }
  ]
 }
@@ -331,12 +375,20 @@ Return STRICT JSON:
 Syllabus:
 ${text}
 `
-          }]
+            }
+          ]
         })
       }
     );
 
     const data = await response.json();
+
+    /* ================= VALIDATE AI RESPONSE ================= */
+
+    if (!data.choices || !data.choices[0]) {
+      console.error("AI RESPONSE ERROR:", data);
+      return res.status(500).json({ error: "AI response invalid" });
+    }
 
     const raw = data.choices[0].message.content;
 
@@ -348,10 +400,13 @@ ${text}
 
       const match = raw.match(/\{[\s\S]*\}/);
 
-      if (!match)
-        return res.status(500).json({ error:"AI response invalid" });
+      if (!match) {
+        console.error("AI JSON PARSE FAILED:", raw);
+        return res.status(500).json({ error: "AI response invalid JSON" });
+      }
 
       parsed = JSON.parse(match[0]);
+
     }
 
     res.json(parsed);
@@ -359,7 +414,7 @@ ${text}
   } catch (err) {
 
     console.error("AI ERROR:", err);
-    res.status(500).json({ error:"AI failed" });
+    res.status(500).json({ error: "AI failed" });
 
   }
 

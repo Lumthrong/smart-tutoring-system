@@ -1,10 +1,26 @@
-const urlParams = new URLSearchParams(window.location.search);
-const pageToken = urlParams.get("token");
+const token = await auth.currentUser.getIdToken();
 
-if(pageToken){
-  localStorage.setItem("authToken",pageToken);
-}
+fetch("/some-api",{
+  headers:{
+    Authorization: "Bearer " + token
+  }
+})
 import { auth, db } from "./firebase.js";
+/* ================= GET AUTH TOKEN ================= */
+
+async function getAuthHeaders(){
+
+  const user = auth.currentUser;
+
+  if(!user) return {};
+
+  const token = await user.getIdToken();
+
+  return {
+    Authorization: "Bearer " + token
+  };
+
+}
 document.addEventListener("DOMContentLoaded",()=>{
 
   const otpInput = document.getElementById("otpInput");
@@ -259,18 +275,16 @@ window.login = async function(){
     const userCred = await signInWithEmailAndPassword(auth,email,password);
 
 const tokenResult = await auth.currentUser.getIdTokenResult(true);
-const token = tokenResult.token;
-
 const role = tokenResult.claims.role || "student";
 
 if(role==="admin")
-  window.location.href="/adminDashboard.html?token="+token;
+  window.location.href="/adminDashboard.html";
 
 else if(role==="teacher")
-  window.location.href="/teacherDashboard.html?token="+token;
+  window.location.href="/teacherDashboard.html";
 
 else
-  window.location.href="/dashboard.html?token="+token;
+  window.location.href="/dashboard.html";
 
   }catch(err){
 
@@ -302,7 +316,29 @@ window.logout=async function(){
 /* ================= UNIVERSAL ROLE GUARD ================= */
 
 onAuthStateChanged(auth, async (user) => {
+/* ===== VERIFY SESSION WITH SERVER ===== */
 
+if(user){
+
+  const token = await user.getIdToken();
+
+  const res = await fetch(window.location.pathname,{
+    headers:{
+      Authorization:"Bearer "+token
+    }
+  });
+
+  if(res.status === 401){
+    window.location.href="login.html";
+    return;
+  }
+
+  if(res.status === 403){
+    window.location.href="dashboard.html";
+    return;
+  }
+
+}
   const path = window.location.pathname;
   const dashboardLink = document.getElementById("dashboardLink");
 
@@ -324,18 +360,16 @@ const role = tokenResult.claims.role || "student";
 
   /* ================= DASHBOARD LINK FIX ================= */
 
-  const token = localStorage.getItem("authToken");
-
-if (dashboardLink && token) {
+if (dashboardLink) {
 
   if (role === "admin")
-    dashboardLink.href = "/adminDashboard.html?token=" + token;
+    dashboardLink.href = "/adminDashboard.html";
 
   else if (role === "teacher")
-    dashboardLink.href = "/teacherDashboard.html?token=" + token;
+    dashboardLink.href = "/teacherDashboard.html";
 
   else
-    dashboardLink.href = "/dashboard.html?token=" + token;
+    dashboardLink.href = "/dashboard.html";
 
 }
 

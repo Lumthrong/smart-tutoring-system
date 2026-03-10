@@ -7,17 +7,27 @@ import multer from "multer";
 import fs from "fs";
 import { createRequire } from "module";
 import { v2 as cloudinary } from "cloudinary";
-import { Resend } from "resend";
 const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
+import nodemailer from "nodemailer";
 
 dotenv.config();
-const resend = new Resend(process.env.RESEND_API_KEY);
+const transporter = nodemailer.createTransport({
+  host: "smtp-relay.brevo.com",
+  port: 587,
+  secure: false,
+  auth: {
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS
+  }
+});
+
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
+
 console.log("EMAIL_USER:", process.env.EMAIL_USER);
 console.log("GROQ_API_KEY exists:", !!process.env.GROQ_API_KEY);
 
@@ -63,12 +73,12 @@ const otpStore = new Map();
 
 app.post("/send-otp", async (req, res) => {
 
-  const { email } = req.body;
+  const email = req.body.email.trim().toLowerCase();
 
   if (!email)
     return res.status(400).json({ error: "Email required" });
 
-  const otp = Math.floor(100000 + Math.random() * 900000).toString();
+  const otp = String(Math.floor(100000 + Math.random() * 900000));
 
   otpStore.set(email, {
     otp,
@@ -77,13 +87,11 @@ app.post("/send-otp", async (req, res) => {
 
   try {
 
-    await resend.emails.send({
-
-      from: "Smart Tutor <onboarding@resend.dev>",
-      to: email,
-      subject: "Smart Tutor Verification Code",
-
-      html: `
+    await transporter.sendMail({
+  from: '"Smart Tutor" <iamrein22@gmail.com>',
+  to: email,
+  subject: "Smart Tutor Verification Code",
+  html: `
 <div style="font-family:Segoe UI,Arial;background:#f4f6fb;padding:40px">
 
 <div style="max-width:480px;margin:auto;background:white;border-radius:12px;
@@ -133,13 +141,13 @@ If you didn't request this email, ignore it.
 
 </div>
 `
-    });
+});
 
     res.json({ success: true });
 
   } catch (err) {
 
-    console.error("RESEND EMAIL ERROR:", err);
+    console.error("BREVO EMAIL ERROR:", err);
     res.status(500).json({ error: "Email send failed" });
 
   }
@@ -150,22 +158,30 @@ If you didn't request this email, ignore it.
 
 app.post("/verify-otp", (req, res) => {
 
-  const { email, otp } = req.body;
+  const email = String(req.body.email).trim().toLowerCase();
+  const otp = String(req.body.otp).trim();
 
   const data = otpStore.get(email);
 
-if(!data)
-  return res.status(400).json({error:"OTP expired"});
+  if(!data){
+    return res.status(400).json({error:"OTP expired"});
+  }
 
-if(Date.now() > data.expires){
+  if(Date.now() > data.expires){
+    otpStore.delete(email);
+    return res.status(400).json({error:"OTP expired"});
+  }
+
+  if(String(data.otp) !== otp){
+    return res.status(400).json({error:"Invalid OTP"});
+  }
+
   otpStore.delete(email);
-  return res.status(400).json({error:"OTP expired"});
-}
 
-if(data.otp !== otp)
-  return res.status(400).json({error:"Invalid OTP"});
-
-  otpStore.delete(email);
+otpStore.set(email,{
+  otp,
+  expires: Date.now() + 10 * 60 * 1000
+});
 
   res.json({ success: true });
 

@@ -10,8 +10,18 @@ import { v2 as cloudinary } from "cloudinary";
 const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
 import nodemailer from "nodemailer";
+import admin from "firebase-admin";
+
+const serviceAccount = JSON.parse(
+  fs.readFileSync("./serviceAccountKey.json", "utf8")
+);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 dotenv.config();
+
 const transporter = nodemailer.createTransport({
   host: "smtp-relay.brevo.com",
   port: 587,
@@ -187,6 +197,31 @@ otpStore.set(email,{
 
 });
 
+/* ================= SET USER ROLE CLAIM ================= */
+
+app.post("/set-role", async (req,res)=>{
+
+  const { uid, role } = req.body;
+
+  if(!uid || !role)
+    return res.status(400).json({error:"uid and role required"});
+
+  try{
+
+    await admin.auth().setCustomUserClaims(uid,{
+      role: role
+    });
+
+    res.json({success:true});
+
+  }catch(err){
+
+    console.error("SET ROLE ERROR:",err);
+    res.status(500).json({error:"Failed to set role"});
+
+  }
+
+});
 /* ================= COURSE UPLOAD ================= */
 
 const multiUpload = upload.fields([

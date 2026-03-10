@@ -20,6 +20,50 @@ if (!admin.apps.length) {
   });
 }
 
+/* ================= VERIFY FIREBASE TOKEN ================= */
+
+async function verifyToken(req, res, next) {
+
+  const authHeader =
+  req.headers.authorization ||
+  "Bearer " + req.query.token;
+
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).send("Unauthorized");
+  }
+
+  const token = authHeader.split("Bearer ")[1];
+
+  try {
+
+    const decoded = await admin.auth().verifyIdToken(token);
+
+    req.user = decoded;
+
+    next();
+
+  } catch (err) {
+
+    return res.status(401).send("Invalid token");
+
+  }
+
+}
+/* ================= ROLE CHECK ================= */
+
+function requireRole(role){
+
+  return (req,res,next)=>{
+
+    if(!req.user || req.user.role !== role){
+      return res.status(403).send("Forbidden");
+    }
+
+    next();
+
+  };
+
+}
 dotenv.config();
 
 const transporter = nodemailer.createTransport({
@@ -50,6 +94,27 @@ app.use(express.json());
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+/* ================= DASHBOARD PROTECTION ================= */
+
+app.get("/adminDashboard.html",
+  verifyToken,
+  requireRole("admin"),
+  (req,res)=>{
+    res.sendFile(path.join(__dirname,"public/adminDashboard.html"));
+});
+
+app.get("/teacherDashboard.html",
+  verifyToken,
+  requireRole("teacher"),
+  (req,res)=>{
+    res.sendFile(path.join(__dirname,"public/teacherDashboard.html"));
+});
+
+app.get("/dashboard.html",
+  verifyToken,
+  (req,res)=>{
+    res.sendFile(path.join(__dirname,"public/dashboard.html"));
+});
 /* ================= STATIC FILES ================= */
 
 app.use(express.static(path.join(__dirname, "public")));

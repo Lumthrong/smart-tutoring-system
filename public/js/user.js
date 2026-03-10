@@ -363,63 +363,82 @@ renderQuiz(questions,quizId,quizData);
 
 /* ================= AI QUIZ ================= */
 
-window.startTest=async function(){
+window.startTest = async function(){
 
-if(aiQuizUsed){
-showMessage("AI quiz already completed.");
-return;
-}
+window.scrollTo({
+top:0,
+behavior:"smooth"
+});
+
+const dashboard=document.querySelector(".dashboard");
+
+const loading=document.createElement("div");
+loading.className="card";
+
+loading.innerHTML=`
+<h3>Generating AI Quiz...</h3>
+<div class="spinner"></div>
+`;
+
+dashboard.prepend(loading);
+
+try{
 
 const courseSelect=document.getElementById("courseSelect");
 
 if(!courseSelect.value){
 showMessage("Select a course first");
+loading.remove();
 return;
 }
 
 const courseId=courseSelect.value;
 
 const courseDoc=await getDoc(doc(db,"courses",courseId));
-
 const courseData=courseDoc.data();
 
 const res=await fetch("/generate-test",{
-
 method:"POST",
-
 headers:{ "Content-Type":"application/json" },
-
 body:JSON.stringify({
 pdfURL:courseData.pdfURL
 })
-
 });
 
 const data=await res.json();
 
-/* FIX: handle different AI response formats */
+loading.remove();
 
-let questions = data.questions || data.quiz || data.data || [];
-
-if(!Array.isArray(questions) && data.questions?.questions){
-questions = data.questions.questions;
-}
-
-if(!Array.isArray(questions) || questions.length === 0){
+if(!data.questions || !Array.isArray(data.questions)){
 showMessage("AI quiz generation failed");
 return;
 }
 
-renderQuiz(questions,"aiQuiz",{
-title:"AI Quick Quiz"
+/* create unique attempt id */
+const attemptId = auth.currentUser.uid + "_ai_" + Date.now();
+
+renderQuiz(data.questions,"aiQuiz",{
+title:"AI Quick Quiz",
+attemptId
 });
 
-};
+}
+catch(err){
 
+console.error(err);
+
+loading.remove();
+showMessage("Quiz generation failed");
+
+}
+
+};
 
 /* ================= RENDER QUIZ ================= */
 
 function renderQuiz(questions,quizId,quizData){
+
+const attemptId = quizData.attemptId || null;
 
 const dashboard=document.querySelector(".dashboard");
 
@@ -478,7 +497,7 @@ questions.forEach((q,i)=>{
 
 const selected=document.querySelector(`input[name="q${i}"]:checked`);
 
-if(selected && selected.value===q.answer){
+if(selected && selected.value.trim()===String(q.answer).trim()){
 score++;
 }
 
@@ -522,7 +541,16 @@ loadCharts(auth.currentUser.uid);
 
 /* save AI quiz result */
 
-await addDoc(collection(db,"ai_quiz_results"),{
+const resultId = attemptId;
+
+const resultDoc = await getDoc(doc(db,"ai_quiz_results",resultId));
+
+if(resultDoc.exists()){
+showMessage("You already submitted this quiz.");
+return;
+}
+
+await setDoc(doc(db,"ai_quiz_results",resultId),{
 userId:auth.currentUser.uid,
 score:percent,
 submittedAt:new Date()

@@ -12,9 +12,11 @@ const pdfParse = require("pdf-parse");
 import nodemailer from "nodemailer";
 import admin from "firebase-admin";
 
-const serviceAccount = JSON.parse(
-  fs.readFileSync("./serviceAccountKey.json", "utf8")
-);
+const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+
+admin.initializeApp({
+  credential: admin.credential.cert(serviceAccount)
+});
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)

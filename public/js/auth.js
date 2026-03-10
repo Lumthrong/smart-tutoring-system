@@ -324,18 +324,20 @@ const role = tokenResult.claims.role || "student";
 
   /* ================= DASHBOARD LINK FIX ================= */
 
-  if (dashboardLink) {
+  const token = localStorage.getItem("authToken");
 
-    if (role === "admin")
-      dashboardLink.href = "adminDashboard.html";
+if (dashboardLink && token) {
 
-    else if (role === "teacher")
-      dashboardLink.href = "teacherDashboard.html";
+  if (role === "admin")
+    dashboardLink.href = "/adminDashboard.html?token=" + token;
 
-    else
-      dashboardLink.href = "dashboard.html";
+  else if (role === "teacher")
+    dashboardLink.href = "/teacherDashboard.html?token=" + token;
 
-  }
+  else
+    dashboardLink.href = "/dashboard.html?token=" + token;
+
+}
 
   /* ================= PAGE ROLE GUARD ================= */
 

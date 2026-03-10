@@ -1,3 +1,9 @@
+const urlParams = new URLSearchParams(window.location.search);
+const pageToken = urlParams.get("token");
+
+if(pageToken){
+  localStorage.setItem("authToken",pageToken);
+}
 import { auth, db } from "./firebase.js";
 document.addEventListener("DOMContentLoaded",()=>{
 
@@ -250,17 +256,21 @@ window.login = async function(){
 
   try{
 
-    const userCred=await signInWithEmailAndPassword(auth,email,password);
+    const userCred = await signInWithEmailAndPassword(auth,email,password);
 
-    const token = await auth.currentUser.getIdTokenResult();
-const role = token.claims.role || "student";
+const token = await auth.currentUser.getIdToken();
+const claims = await auth.currentUser.getIdTokenResult();
 
-    if(role==="admin")
-      window.location.href="adminDashboard.html";
-    else if(role==="teacher")
-      window.location.href="teacherDashboard.html";
-    else
-      window.location.href="dashboard.html";
+const role = claims.claims.role || "student";
+
+if(role==="admin")
+  window.location.href="/adminDashboard.html?token="+token;
+
+else if(role==="teacher")
+  window.location.href="/teacherDashboard.html?token="+token;
+
+else
+  window.location.href="/dashboard.html?token="+token;
 
   }catch(err){
 
@@ -309,10 +319,8 @@ onAuthStateChanged(auth, async (user) => {
 
   /* ===== GET USER ROLE ===== */
 
-  await user.getIdToken(true);
-
-const token = await user.getIdTokenResult();
-const role = token.claims.role || "student";
+  const tokenResult = await user.getIdTokenResult();
+const role = tokenResult.claims.role || "student";
 
   /* ================= DASHBOARD LINK FIX ================= */
 
@@ -345,4 +353,4 @@ const role = token.claims.role || "student";
       window.location.href = "dashboard.html";
   }
 
-});
+}); 

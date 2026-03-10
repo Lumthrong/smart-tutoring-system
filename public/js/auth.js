@@ -258,10 +258,10 @@ window.login = async function(){
 
     const userCred = await signInWithEmailAndPassword(auth,email,password);
 
-const token = await auth.currentUser.getIdToken();
-const claims = await auth.currentUser.getIdTokenResult();
+const tokenResult = await auth.currentUser.getIdTokenResult(true);
+const token = tokenResult.token;
 
-const role = claims.claims.role || "student";
+const role = tokenResult.claims.role || "student";
 
 if(role==="admin")
   window.location.href="/adminDashboard.html?token="+token;

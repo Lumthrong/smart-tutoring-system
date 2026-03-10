@@ -102,24 +102,16 @@ const __dirname = path.dirname(__filename);
 
 /* ================= DASHBOARD PROTECTION ================= */
 
-app.get("/adminDashboard.html",
-  verifyToken,
-  requireRole("admin"),
-  (req,res)=>{
-    res.sendFile(path.join(__dirname,"public/adminDashboard.html"));
+app.get("/adminDashboard.html",(req,res)=>{
+  res.sendFile(path.join(__dirname,"public/adminDashboard.html"));
 });
 
-app.get("/teacherDashboard.html",
-  verifyToken,
-  requireRole("teacher"),
-  (req,res)=>{
-    res.sendFile(path.join(__dirname,"public/teacherDashboard.html"));
+app.get("/teacherDashboard.html",(req,res)=>{
+  res.sendFile(path.join(__dirname,"public/teacherDashboard.html"));
 });
 
-app.get("/dashboard.html",
-  verifyToken,
-  (req,res)=>{
-    res.sendFile(path.join(__dirname,"public/dashboard.html"));
+app.get("/dashboard.html",(req,res)=>{
+  res.sendFile(path.join(__dirname,"public/dashboard.html"));
 });
 /* ================= STATIC FILES ================= */
 

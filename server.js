@@ -6,21 +6,19 @@ import { fileURLToPath } from "url";
 import multer from "multer";
 import fs from "fs";
 import { createRequire } from "module";
-import sgMail from "@sendgrid/mail";
 import { v2 as cloudinary } from "cloudinary";
-
+import { Resend } from "resend";
 const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
 
 dotenv.config();
+const resend = new Resend(process.env.RESEND_API_KEY);
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET
 });
-sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 console.log("EMAIL_USER:", process.env.EMAIL_USER);
-console.log("SENDGRID KEY exists:", !!process.env.SENDGRID_API_KEY);
 console.log("GROQ_API_KEY exists:", !!process.env.GROQ_API_KEY);
 
 const app = express();
@@ -72,22 +70,78 @@ app.post("/send-otp", async (req, res) => {
 
   const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-  otpStore.set(email, otp);
+  otpStore.set(email, {
+    otp,
+    expires: Date.now() + 10 * 60 * 1000
+  });
 
   try {
 
-    await sgMail.send({
-  to: email,
-  from: process.env.EMAIL_USER, // must be verified sender in SendGrid
-  subject: "Smart Tutor OTP Verification",
-  text: `Your verification OTP is: ${otp}`
-});
+    await resend.emails.send({
+
+      from: "Smart Tutor <onboarding@resend.dev>",
+      to: email,
+      subject: "Smart Tutor Verification Code",
+
+      html: `
+<div style="font-family:Segoe UI,Arial;background:#f4f6fb;padding:40px">
+
+<div style="max-width:480px;margin:auto;background:white;border-radius:12px;
+box-shadow:0 10px 25px rgba(0,0,0,0.08);overflow:hidden">
+
+<div style="background:linear-gradient(135deg,#4f46e5,#6366f1);
+padding:24px;text-align:center;color:white">
+
+<h2 style="margin:0">Smart Tutor</h2>
+<p style="margin:5px 0 0 0;font-size:14px">Account Verification</p>
+
+</div>
+
+<div style="padding:30px;text-align:center">
+
+<p>Your verification code:</p>
+
+<div style="
+background:#f3f4ff;
+border:2px dashed #4f46e5;
+border-radius:10px;
+padding:18px 30px;
+display:inline-block;
+margin:15px 0;
+">
+
+<span style="
+font-size:34px;
+font-weight:700;
+letter-spacing:8px;
+color:#4f46e5;
+">
+${otp}
+</span>
+
+</div>
+
+<p>This code expires in <b>10 minutes</b>.</p>
+
+<p style="color:#777;font-size:13px">
+If you didn't request this email, ignore it.
+</p>
+
+</div>
+
+</div>
+
+</div>
+`
+    });
 
     res.json({ success: true });
 
   } catch (err) {
-    console.error("OTP EMAIL ERROR:", err);
+
+    console.error("RESEND EMAIL ERROR:", err);
     res.status(500).json({ error: "Email send failed" });
+
   }
 
 });
@@ -98,13 +152,18 @@ app.post("/verify-otp", (req, res) => {
 
   const { email, otp } = req.body;
 
-  const storedOTP = otpStore.get(email);
+  const data = otpStore.get(email);
 
-  if (!storedOTP)
-    return res.status(400).json({ error: "OTP expired" });
+if(!data)
+  return res.status(400).json({error:"OTP expired"});
 
-  if (storedOTP !== otp)
-    return res.status(400).json({ error: "Invalid OTP" });
+if(Date.now() > data.expires){
+  otpStore.delete(email);
+  return res.status(400).json({error:"OTP expired"});
+}
+
+if(data.otp !== otp)
+  return res.status(400).json({error:"Invalid OTP"});
 
   otpStore.delete(email);
 
@@ -112,27 +171,6 @@ app.post("/verify-otp", (req, res) => {
 
 });
 
-app.get("/test-email", async (req, res) => {
-
-  try {
-
-    await sgMail.send({
-      to: process.env.EMAIL_USER,
-      from: process.env.EMAIL_USER,
-      subject: "SendGrid Test",
-      text: "Email working on Render"
-    });
-
-    res.send("Email sent successfully");
-
-  } catch (error) {
-
-    console.error("SENDGRID ERROR:", error);
-    res.send("Email failed");
-
-  }
-
-});
 /* ================= COURSE UPLOAD ================= */
 
 const multiUpload = upload.fields([

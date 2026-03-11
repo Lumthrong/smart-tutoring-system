@@ -9,7 +9,8 @@ import {
 
 import {
   doc,
-  setDoc
+  setDoc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* ================= MESSAGE SYSTEM ================= */
@@ -150,18 +151,13 @@ window.verifyOTP = async function(){
 
 const email=document.getElementById("email")?.value;
 const password=document.getElementById("password")?.value;
-const confirmPassword=document.getElementById("confirmPassword")?.value;
 const otp=document.getElementById("otpInput")?.value;
 const teacherRequest=document.getElementById("teacherRequest")?.checked;
-const verifyBtn=document.getElementById("verifyBtn");
 
 if(!otp){
 showMessage("Enter verification code");
 return;
 }
-
-verifyBtn.disabled=true;
-verifyBtn.innerHTML=`Verifying <span class="btn-spinner"></span>`;
 
 try{
 
@@ -174,13 +170,8 @@ body:JSON.stringify({email,otp})
 const result=await verify.json();
 
 if(!result.success){
-
-verifyBtn.disabled=false;
-verifyBtn.innerHTML="Verify & Sign Up";
-
 showMessage("Invalid OTP");
 return;
-
 }
 
 const userCred=await createUserWithEmailAndPassword(auth,email,password);
@@ -205,20 +196,23 @@ role:role
 })
 });
 
+/* FORCE TOKEN REFRESH AFTER CLAIM SET */
 await auth.currentUser.getIdToken(true);
 
-showMessage("Account created successfully","success");
+const token = await auth.currentUser.getIdToken();
 
-setTimeout(()=>{
-window.location.href="/dashboard.html";
-},1500);
+if(role==="admin")
+window.location.href=`/adminDashboard.html?token=${token}`;
+
+else if(role==="teacher" || role==="pending_teacher")
+window.location.href=`/teacherDashboard.html?token=${token}`;
+
+else
+window.location.href=`/dashboard.html?token=${token}`;
 
 }catch(err){
 
 showMessage(err.message);
-
-verifyBtn.disabled=false;
-verifyBtn.innerHTML="Verify & Sign Up";
 
 }
 
@@ -237,19 +231,37 @@ loginBtn.innerHTML=`Logging in <span class="btn-spinner"></span>`;
 
 try{
 
-const userCred=await signInWithEmailAndPassword(auth,email,password);
+await signInWithEmailAndPassword(auth,email,password);
 
-const tokenResult=await auth.currentUser.getIdTokenResult(true);
-const role=tokenResult.claims.role || "student";
+/* refresh token to get latest role */
+await auth.currentUser.getIdToken(true);
+
+const tokenResult = await auth.currentUser.getIdTokenResult();
+let role = tokenResult.claims.role;
+
+if(!role){
+
+  // check Firestore role if claim missing
+  const userDoc = await getDoc(doc(db,"users",auth.currentUser.uid));
+
+  if(userDoc.exists()){
+    role = userDoc.data().role;
+  }
+
+}
+
+if(!role) role="student";
+
+const token = await auth.currentUser.getIdToken();
 
 if(role==="admin")
-window.location.href="/adminDashboard.html";
+window.location.href=`/adminDashboard.html?token=${token}`;
 
-else if(role==="teacher")
-window.location.href="/teacherDashboard.html";
+else if(role==="teacher" || role==="pending_teacher")
+window.location.href=`/teacherDashboard.html?token=${token}`;
 
 else
-window.location.href="/dashboard.html";
+window.location.href=`/dashboard.html?token=${token}`;
 
 }catch(err){
 
@@ -258,7 +270,6 @@ loginBtn.innerHTML="Login";
 
 if(err.code==="auth/invalid-credential")
 showMessage("Wrong email or password");
-
 else
 showMessage("Login failed");
 
@@ -290,13 +301,11 @@ return;
 
 }
 
-/* ===== SERVER SESSION VERIFY ===== */
-
 if(!path.includes("login") && !path.includes("signup")){
 
-const token=await user.getIdToken();
+const token = await user.getIdToken();
 
-const res=await fetch(path,{
+const res = await fetch(`${path}?token=${token}`,{
 headers:{ Authorization:"Bearer "+token }
 });
 
@@ -306,7 +315,25 @@ return;
 }
 
 if(res.status===403){
-window.location.href="/dashboard.html";
+
+await auth.currentUser.getIdToken(true);
+
+const tokenResult = await auth.currentUser.getIdTokenResult();
+let role = tokenResult.claims.role;
+
+if(!role) role="student";
+
+const token = await auth.currentUser.getIdToken();
+
+if(role==="admin")
+window.location.href=`/adminDashboard.html?token=${token}`;
+
+else if(role==="teacher" || role==="pending_teacher")
+window.location.href=`/teacherDashboard.html?token=${token}`;
+
+else
+window.location.href=`/dashboard.html?token=${token}`;
+
 return;
 }
 
@@ -314,21 +341,34 @@ return;
 
 /* ===== DASHBOARD LINK FIX ===== */
 
-const dashboardLink=document.getElementById("dashboardLink");
+const dashboardLink = document.getElementById("dashboardLink");
 
-if(dashboardLink){
+if (dashboardLink) {
 
-const tokenResult=await user.getIdTokenResult();
-const role=tokenResult.claims.role || "student";
+let role = "student";
 
-if(role==="admin")
-dashboardLink.href="/adminDashboard.html";
+try{
 
-else if(role==="teacher")
-dashboardLink.href="/teacherDashboard.html";
+  const userDoc = await getDoc(doc(db,"users",user.uid));
+
+  if(userDoc.exists()){
+    role = userDoc.data().role;
+  }
+
+}catch(err){
+  console.error("ROLE FETCH ERROR:",err);
+}
+
+const token = await user.getIdToken();
+
+if (role === "admin")
+dashboardLink.href = `/adminDashboard.html?token=${token}`;
+
+else if (role === "teacher" || role === "pending_teacher")
+dashboardLink.href = `/teacherDashboard.html?token=${token}`;
 
 else
-dashboardLink.href="/dashboard.html";
+dashboardLink.href = `/dashboard.html?token=${token}`;
 
 }
 

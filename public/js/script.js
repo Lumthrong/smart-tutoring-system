@@ -70,6 +70,12 @@ function setupProfileDropdown() {
   });
 }
 
+const toggle = document.getElementById("bookToggle");
+const dropdown = document.getElementById("bookDropdown");
+
+toggle.addEventListener("click", () => {
+  dropdown.classList.toggle("show");
+});
 /* =========================================================
    AUTH UI CONTROL
    Shows/Hides Login + Profile Dropdown

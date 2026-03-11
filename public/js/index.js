@@ -12,7 +12,23 @@ import {
 import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+/* ===== GET STARTED SCROLL ===== */
 
+const startBtn = document.getElementById("getStartedBtn");
+
+if(startBtn){
+
+startBtn.addEventListener("click",(e)=>{
+
+e.preventDefault();
+
+document.getElementById("recentUploads").scrollIntoView({
+behavior:"smooth"
+});
+
+});
+
+}
 
 let messageTimer;
 
@@ -168,9 +184,15 @@ function renderCourses(){
     return;
   }
 
-  const grouped = {};
+  /* ================= LIMIT TO LATEST 10 ================= */
 
-  for(const course of allCourses){
+const latestCourses = [...allCourses]
+.sort((a,b)=> new Date(b.uploadedAt) - new Date(a.uploadedAt))
+.slice(0,11);
+
+const grouped = {};
+
+  for(const course of latestCourses){
 
     if(searchTerm && !course.course.toLowerCase().includes(searchTerm)){
       continue;

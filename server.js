@@ -9,7 +9,7 @@ import { createRequire } from "module";
 import { v2 as cloudinary } from "cloudinary";
 const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
-import * as SibApiV3Sdk from "@getbrevo/brevo";
+import Brevo from "@getbrevo/brevo";
 import admin from "firebase-admin";
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -71,10 +71,10 @@ function requireRole(role){
 
 }
 dotenv.config();
-const brevo = new SibApiV3Sdk.TransactionalEmailsApi();
+const apiInstance = new Brevo.TransactionalEmailsApi();
 
-brevo.setApiKey(
-  SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
+apiInstance.setApiKey(
+  Brevo.TransactionalEmailsApiApiKeys.apiKey,
   process.env.BREVO_API_KEY
 );
 
@@ -164,7 +164,7 @@ app.post("/send-otp", async (req, res) => {
 
   try {
 
-    await brevo.sendTransacEmail({
+    await apiInstance.sendTransacEmail({
   sender: {
     email: "iamrein22@gmail.com",
     name: "Smart Tutor"

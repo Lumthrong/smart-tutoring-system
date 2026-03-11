@@ -9,7 +9,6 @@ import { createRequire } from "module";
 import { v2 as cloudinary } from "cloudinary";
 const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
-import { TransactionalEmailsApi } from "@getbrevo/brevo";
 import admin from "firebase-admin";
 dotenv.config();
 
@@ -71,13 +70,6 @@ function requireRole(role){
   };
 
 }
-
-const apiInstance = new TransactionalEmailsApi();
-
-apiInstance.setApiKey(
-  "api-key",
-  process.env.BREVO_API_KEY
-);
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -165,14 +157,20 @@ app.post("/send-otp", async (req, res) => {
 
   try {
 
-    await apiInstance.sendTransacEmail({
-  sender: {
-    email: "iamrein22@gmail.com",
-    name: "Smart Tutor"
+    const emailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json",
+    "api-key": process.env.BREVO_API_KEY
   },
-  to: [{ email: email }],
-  subject: "Smart Tutor Verification Code",
-  htmlContent: `
+  body: JSON.stringify({
+    sender: {
+      email: "iamrein22@gmail.com",
+      name: "Smart Tutor"
+    },
+    to: [{ email: email }],
+    subject: "Smart Tutor Verification Code",
+    htmlContent: `
 <div style="font-family:Segoe UI,Arial;background:#f4f6fb;padding:40px">
 
 <div style="max-width:480px;margin:auto;background:white;border-radius:12px;
@@ -212,17 +210,17 @@ ${otp}
 
 <p>This code expires in <b>10 minutes</b>.</p>
 
-<p style="color:#777;font-size:13px">
-If you didn't request this email, ignore it.
-</p>
-
 </div>
-
 </div>
-
 </div>
 `
+  })
 });
+    if (!emailResponse.ok) {
+  const errorText = await emailResponse.text();
+  console.error("BREVO ERROR:", errorText);
+  return res.status(500).json({ error: "Email send failed" });
+    }
 
     res.json({ success: true });
 

@@ -14,38 +14,61 @@
 
 <div class="sidebar" id="sidebar">
 
-  <!-- USER MINI HEADER -->
-  <div class="profile-mini">
-    <div class="avatar-circle">
-  <img id="miniProfileImg" src="" alt="Avatar">
-  <span id="avatarCircle">U</span>
-</div>
-    <div class="profile-info">
-      <p id="profileName">Guest</p>
-      <small id="profileEmail"></small>
+    <!-- USER MINI HEADER -->
+    <div class="profile-mini">
+      <div class="avatar-circle">
+        <img id="miniProfileImg" src="" alt="Avatar">
+        <span id="avatarCircle">U</span>
+      </div>
+      <div class="profile-info">
+        <p id="profileName">Guest</p>
+        <small id="profileEmail"></small>
+      </div>
+    </div>
+
+    <a href="index.html">Home</a>
+
+    <!-- PROFILE DROPDOWN -->
+    <div class="profile-wrapper">
+      <div class="profile-toggle" id="profileToggle">
+        Profile ▾
+      </div>
+      <div class="profile-dropdown" id="profileDropdown">
+        <a href="dashboard.html" id="dashboardLink">Dashboard</a>
+        <a href="accsettings.html">Profile Settings</a>
+        <a href="#" id="logoutLink">Logout</a>
+      </div>
+    </div>
+    <div class="book-wrapper">
+      <div class="book-toggle" id="bookToggle">
+        Books ▾
+      </div>
+      <div class="book-dropdown" id="bookDropdown">
+        <a href="/department.html?dept=COMPUTER SCIENCE">
+          Computer Science
+        </a>
+        <a href="/department.html?dept=MECHANICAL">
+          Mechanical Engineering
+        </a>
+        <a href="/department.html?dept=CIVIL">
+          Civil Engineering
+        </a>
+        <a href="/department.html?dept=ELECTRICAL">
+          Electrical Engineering
+        </a>
+        <a href="/department.html?dept=GENERAL KNOWLEDGE">
+          General Knowledge
+        </a>
+        <a href="/department.html?dept=OTHERS">
+          Others
+        </a>
+      </div>
+    </div>
+    <div class="footer">
+      <a href="About.html">About</a>
     </div>
   </div>
-
-  <a href="index.html">Home</a>
-
-  <!-- PROFILE DROPDOWN -->
-  <div class="profile-wrapper">
-    <div class="profile-toggle" id="profileToggle">
-      Profile ▾
-    </div>
-
-    <div class="profile-dropdown" id="profileDropdown">
-      <a href="dashboard.html" id="dashboardLink">Dashboard</a>
-      <a href="accsettings.html">Profile Settings</a>
-      <a href="#" id="logoutLink">Logout</a>
-    </div>
-  </div>
-
-  <a href="login.html" id="loginLink">Login</a>
-
-</div>
-
-<div class="overlay" id="overlay"></div>
+  <div class="overlay" id="overlay"></div>
 
 <header>
   <button class="menu-btn" id="menuBtn">☰</button>

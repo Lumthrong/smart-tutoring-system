@@ -1,144 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Smart Tutor</title>
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/index.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Tutor</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/index.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 </head>
+
 <body>
 
-<div class="sidebar" id="sidebar">
+  <div class="sidebar" id="sidebar">
 
-  <!-- USER MINI HEADER -->
-  <div class="profile-mini">
-    <div class="avatar-circle">
-  <img id="miniProfileImg" src="" alt="Avatar">
-  <span id="avatarCircle">U</span>
-</div>
-    <div class="profile-info">
-      <p id="profileName">Guest</p>
-      <small id="profileEmail"></small>
-    </div>
-  </div>
-
-  <a href="index.html">Home</a>
-
-  <!-- PROFILE DROPDOWN -->
-  <div class="profile-wrapper">
-    <div class="profile-toggle" id="profileToggle">
-      Profile ▾
+    <!-- USER MINI HEADER -->
+    <div class="profile-mini">
+      <div class="avatar-circle">
+        <img id="miniProfileImg" src="" alt="Avatar">
+        <span id="avatarCircle">U</span>
+      </div>
+      <div class="profile-info">
+        <p id="profileName">Guest</p>
+        <small id="profileEmail"></small>
+      </div>
     </div>
 
-    <div class="profile-dropdown" id="profileDropdown">
-      <a href="dashboard.html" id="dashboardLink">Dashboard</a>
-      <a href="accsettings.html">Profile Settings</a>
-      <a href="#" id="logoutLink">Logout</a>
+    <a href="index.html">Home</a>
+
+    <!-- PROFILE DROPDOWN -->
+    <div class="profile-wrapper">
+      <div class="profile-toggle" id="profileToggle">
+        Profile ▾
+      </div>
+      <div class="profile-dropdown" id="profileDropdown">
+        <a href="dashboard.html" id="dashboardLink">Dashboard</a>
+        <a href="accsettings.html">Profile Settings</a>
+        <a href="#" id="logoutLink">Logout</a>
+      </div>
+    </div>
+    <div class="book-wrapper">
+      <div class="book-toggle" id="bookToggle">
+        Books ▾
+      </div>
+      <div class="book-dropdown" id="bookDropdown">
+        <a href="/department.html?dept=COMPUTER SCIENCE">
+          Computer Science
+        </a>
+        <a href="/department.html?dept=MECHANICAL">
+          Mechanical Engineering
+        </a>
+        <a href="/department.html?dept=CIVIL">
+          Civil Engineering
+        </a>
+        <a href="/department.html?dept=ELECTRICAL">
+          Electrical Engineering
+        </a>
+        <a href="/department.html?dept=GENERAL KNOWLEDGE">
+          General Knowledge
+        </a>
+        <a href="/department.html?dept=OTHERS">
+          Others
+        </a>
+      </div>
+    </div>
+    <div class="footer">
+      <a href="About.html">About</a>
     </div>
   </div>
+  <div class="overlay" id="overlay"></div>
 
-  <a href="login.html" id="loginLink">Login</a>
+  <header>
+    <button class="menu-btn" id="menuBtn">☰</button>
+    <h1>Home</h1>
 
-</div>
+    <div class="notify" id="notifyBell">
+      <i class="fa-solid fa-bell"></i>
+      <span id="notifyCount">0</span>
+      <div id="notificationPanel" class="notify-panel">
+        <div class="notify-header">
+          Notifications
+        </div>
 
-<div class="overlay" id="overlay"></div>
-
-<header>
-  <button class="menu-btn" id="menuBtn">☰</button>
-  <h1>Home</h1>
-
-  <div class="notify" id="notifyBell">
-    <i class="fa-solid fa-bell"></i>
-  <span id="notifyCount">0</span>
-  <div id="notificationPanel" class="notify-panel">
-    <div class="notify-header">
-      Notifications
+        <div id="notificationList"></div>
+      </div>
+    </div>
+  </header>
+  <section class="hero">
+    <div class="hero-slider">
+      <img
+        src="https://res.cloudinary.com/df0vciznk/image/upload/v1773073276/file_00000000232c7208ae8fb1150ba5c43c_exbqb3.png"
+        class="hero-slide active">
+      <img
+        src="https://res.cloudinary.com/df0vciznk/image/upload/v1773075049/file_000000006e3871fa9b4a46848a3b29af_u1bh7v.png"
+        class="hero-slide">
+      <img
+        src="https://res.cloudinary.com/df0vciznk/image/upload/v1773075216/file_00000000e8f071faa0da7a8c743d2aa1_klkkk4.png"
+        class="hero-slide">
     </div>
 
-    <div id="notificationList"></div>
-  </div>
-</div>
-</header>
-<section class="hero">
-  <div class="hero-slider">
-    <img src="https://res.cloudinary.com/df0vciznk/image/upload/v1773073276/file_00000000232c7208ae8fb1150ba5c43c_exbqb3.png" class="hero-slide active">
-    <img src="https://res.cloudinary.com/df0vciznk/image/upload/v1773075049/file_000000006e3871fa9b4a46848a3b29af_u1bh7v.png" class="hero-slide">
-    <img src="https://res.cloudinary.com/df0vciznk/image/upload/v1773075216/file_00000000e8f071faa0da7a8c743d2aa1_klkkk4.png" class="hero-slide">
-  </div>
+    <div class="hero-overlay"></div>
 
-  <div class="hero-overlay"></div>
-
-  <div class="hero-content">
-    <h2>Learn Smarter. Study Better.</h2>
-    <p>Access books, quizzes and AI-powered learning tools.</p>
-    <a href="#recentUploads" id="getStartedBtn" class="btn-primary">Get Started</a>
-  </div>
-
-</section>
-
-<section class="search">
-<div class="search-box">
-  <i class="fa-solid fa-magnifying-glass"></i>
-
-  <input
-    type="text"
-    id="courseSearch"
-    placeholder="Search course..."
-    class="course-search"/>
-
-</div>
-</section>
-<section class="books" id="recentUploads">
-
-<h2>Recent Uploads</h2>
-
-<div id="departmentSections"></div>
-
-<!-- COURSE CARD TEMPLATE -->
-<template id="courseCardTemplate">
-
-  <div class="book-card">
-
-    <img class="book-cover">
-
-    <div class="card-info">
-      <h3 class="course-title"></h3>
-      <p class="course-semester"></p>
+    <div class="hero-content">
+      <h2>Learn Smarter. Study Better.</h2>
+      <p>Access books, quizzes and AI-powered learning tools.</p>
+      <a href="#recentUploads" id="getStartedBtn" class="btn-primary">Get Started</a>
     </div>
 
-    <a class="pdf-btn" target="_blank">View</a>
+  </section>
 
-    <div class="locked">
-      🔒 Join to access materials
+  <section class="search">
+    <div class="search-box">
+      <i class="fa-solid fa-magnifying-glass"></i>
+
+      <input type="text" id="courseSearch" placeholder="Search course..." class="course-search" />
+
     </div>
-    <button class="join-btn"></button>
+  </section>
+  <section class="books" id="recentUploads">
 
-  </div>
+    <h2>Recent Uploads</h2>
 
-</template>
-<div id="joinModal" class="join-modal">
-  <div class="join-modal-box">
+    <div id="departmentSections"></div>
 
-    <h3>Join Course</h3>
+    <!-- COURSE CARD TEMPLATE -->
+    <template id="courseCardTemplate">
 
-    <p id="joinCourseName"></p>
+      <div class="book-card">
 
-    <div class="join-actions">
-      <button id="cancelJoin" class="cancel-btn">Cancel</button>
-      <button id="confirmJoin" class="confirm-btn">Join</button>
+        <img class="book-cover">
+
+        <div class="card-info">
+          <h3 class="course-title"></h3>
+          <p class="course-semester"></p>
+        </div>
+
+        <a class="pdf-btn" target="_blank">View</a>
+
+        <div class="locked">
+          🔒 Join to access materials
+        </div>
+        <button class="join-btn"></button>
+
+      </div>
+
+    </template>
+    <div id="joinModal" class="join-modal">
+      <div class="join-modal-box">
+
+        <h3>Join Course</h3>
+
+        <p id="joinCourseName"></p>
+
+        <div class="join-actions">
+          <button id="cancelJoin" class="cancel-btn">Cancel</button>
+          <button id="confirmJoin" class="confirm-btn">Join</button>
+        </div>
+
+      </div>
     </div>
+    <div id="systemMessage"></div>
+  </section>
 
-  </div>
-</div>
-<div id="systemMessage"></div>
-</section>
-
-<script type="module" src="js/script.js"></script>
-<script type="module" src="js/index.js"></script>
-<script type="module" src="js/auth.js"></script>
-<script type="module" src="js/notification.js"></script>
+  <script type="module" src="js/script.js"></script>
+  <script type="module" src="js/index.js"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/notification.js"></script>
 </body>
+
 </html>

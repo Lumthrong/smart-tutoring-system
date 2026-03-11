@@ -53,6 +53,8 @@ function showMessage(message,type="error"){
 const passwordInput = document.getElementById("password");
 const strengthText = document.getElementById("passwordStrength");
 
+if(passwordInput && strengthText){
+
 passwordInput.addEventListener("input", () => {
 
   const val = passwordInput.value;
@@ -309,43 +311,7 @@ window.logout=async function(){
 /* ================= UNIVERSAL ROLE GUARD ================= */
 
 onAuthStateChanged(auth, async (user) => {
-/* ===== VERIFY SESSION WITH SERVER ===== */
 
-const path = window.location.pathname;
-
-if(user && !path.includes("login") && !path.includes("signup")){
-
-  const token = await user.getIdToken();
-
-  const res = await fetch(window.location.pathname,{
-    headers:{
-      Authorization:"Bearer "+token
-    }
-  });
-
-  if(res.status === 401){
-    window.location.href="login.html";
-    return;
-  }
-
-  if(res.status === 403){
-    window.location.href="dashboard.html";
-    return;
-  }
-
-}
-
-  if(res.status === 401){
-    window.location.href="login.html";
-    return;
-  }
-
-  if(res.status === 403){
-    window.location.href="dashboard.html";
-    return;
-  }
-
-}
   const path = window.location.pathname;
   const dashboardLink = document.getElementById("dashboardLink");
 
@@ -360,27 +326,51 @@ if(user && !path.includes("login") && !path.includes("signup")){
     return;
   }
 
-  /* ===== GET USER ROLE ===== */
+  /* ===== VERIFY SESSION WITH SERVER ===== */
+
+  if(!path.includes("login") && !path.includes("signup")){
+
+    const token = await user.getIdToken();
+
+    const res = await fetch(path,{
+      headers:{
+        Authorization:"Bearer "+token
+      }
+    });
+
+    if(res.status === 401){
+      window.location.href="login.html";
+      return;
+    }
+
+    if(res.status === 403){
+      window.location.href="dashboard.html";
+      return;
+    }
+
+  }
+
+  /* ===== GET ROLE ===== */
 
   const tokenResult = await user.getIdTokenResult();
-const role = tokenResult.claims.role || "student";
+  const role = tokenResult.claims.role || "student";
 
-  /* ================= DASHBOARD LINK FIX ================= */
+  /* ===== DASHBOARD LINK FIX ===== */
 
-if (dashboardLink) {
+  if (dashboardLink) {
 
-  if (role === "admin")
-    dashboardLink.href = "/adminDashboard.html";
+    if (role === "admin")
+      dashboardLink.href = "/adminDashboard.html";
 
-  else if (role === "teacher")
-    dashboardLink.href = "/teacherDashboard.html";
+    else if (role === "teacher")
+      dashboardLink.href = "/teacherDashboard.html";
 
-  else
-    dashboardLink.href = "/dashboard.html";
+    else
+      dashboardLink.href = "/dashboard.html";
 
-}
+  }
 
-  /* ================= PAGE ROLE GUARD ================= */
+  /* ===== PAGE ROLE GUARD ===== */
 
   const pageRole = document.body.dataset.role;
 
@@ -396,4 +386,4 @@ if (dashboardLink) {
       window.location.href = "dashboard.html";
   }
 
-}); 
+});

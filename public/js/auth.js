@@ -1,28 +1,5 @@
 import { auth, db } from "./firebase.js";
-/* ================= GET AUTH TOKEN ================= */
 
-async function getAuthHeaders(){
-
-  const user = auth.currentUser;
-
-  if(!user) return {};
-
-  const token = await user.getIdToken();
-
-  return {
-    Authorization: "Bearer " + token
-  };
-
-}
-document.addEventListener("DOMContentLoaded",()=>{
-
-  const otpInput = document.getElementById("otpInput");
-  const verifyBtn = document.getElementById("verifyBtn");
-
-  if(otpInput) otpInput.style.display = "none";
-  if(verifyBtn) verifyBtn.style.display = "none";
-
-});
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -32,8 +9,7 @@ import {
 
 import {
   doc,
-  setDoc,
-  getDoc
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 /* ================= MESSAGE SYSTEM ================= */
@@ -49,6 +25,8 @@ function showMessage(message,type="error"){
   box.style.display="block";
 
 }
+
+/* ================= PASSWORD STRENGTH ================= */
 
 const passwordInput = document.getElementById("password");
 const strengthText = document.getElementById("passwordStrength");
@@ -71,14 +49,21 @@ passwordInput.addEventListener("input", () => {
     strengthText.innerText = "Strong password";
     strengthText.style.color = "green";
   }
+
 });
+
+}
+
+/* ================= OTP TIMER ================= */
+
 let otpTimer;
 let resendCooldown = false;
+
 function startOTPTimer(){
 
   const message = document.getElementById("formMessage");
 
-  let time = 600; // 10 minutes
+  let time = 600;
 
   clearInterval(otpTimer);
 
@@ -102,288 +87,249 @@ function startOTPTimer(){
   },1000);
 
 }
+
 /* ================= SEND OTP ================= */
 
-window.sendOTP = async function () {
+window.sendOTP = async function(){
+
 if(resendCooldown){
   showMessage("Please wait before requesting another OTP");
   return;
 }
-  const email = document.getElementById("email").value;
-  const btn = document.getElementById("sendOtpBtn");
 
-  if (!email) {
-    showMessage("Enter email first");
-    return;
-  }
+const email=document.getElementById("email").value;
+const btn=document.getElementById("sendOtpBtn");
 
-  /* ===== SHOW SPINNER ===== */
+if(!email){
+  showMessage("Enter email first");
+  return;
+}
 
-  btn.disabled = true;
-  btn.innerHTML = `Sending <span class="btn-spinner"></span>`;
+btn.disabled=true;
+btn.innerHTML=`Sending <span class="btn-spinner"></span>`;
 
-  try{
+try{
 
-    const res = await fetch("/send-otp",{
-      method:"POST",
-      headers:{ "Content-Type":"application/json"},
-      body:JSON.stringify({email})
-    });
+const res=await fetch("/send-otp",{
+method:"POST",
+headers:{ "Content-Type":"application/json"},
+body:JSON.stringify({email})
+});
 
-    const data = await res.json();
+const data=await res.json();
 
 if(data.success){
 
-  showMessage("OTP sent successfully","success");
+showMessage("OTP sent successfully","success");
 
-  document.getElementById("otpInput").style.display="block";
-  document.getElementById("verifyBtn").style.display="block";
+document.getElementById("otpInput").style.display="block";
+document.getElementById("verifyBtn").style.display="block";
 
-  startOTPTimer();
+startOTPTimer();
 
-  resendCooldown = true;
+resendCooldown=true;
 
-  setTimeout(()=>{
-    resendCooldown = false;
-  },60000);
+setTimeout(()=>{resendCooldown=false},60000);
 
 }else{
-      showMessage("Failed to send OTP");
-    }
+showMessage("Failed to send OTP");
+}
 
-  }catch(err){
-    showMessage("Server error");
-  }
+}catch(err){
+showMessage("Server error");
+}
 
-  /* ===== RESTORE BUTTON ===== */
+btn.disabled=false;
+btn.innerHTML="Send OTP";
 
-  btn.disabled = false;
-  btn.innerHTML = "Send OTP";
-
-};
-
+}
 
 /* ================= VERIFY OTP + SIGNUP ================= */
 
-window.verifyOTP = async function () {
+window.verifyOTP = async function(){
 
-  const email = document.getElementById("email")?.value;
-  const password = document.getElementById("password")?.value;
-  const confirmPassword = document.getElementById("confirmPassword")?.value;
-  const otp = document.getElementById("otpInput")?.value;
-  if(!otp || otp.trim() === ""){
-  showMessage("Please enter the verification code");
-  return;
+const email=document.getElementById("email")?.value;
+const password=document.getElementById("password")?.value;
+const confirmPassword=document.getElementById("confirmPassword")?.value;
+const otp=document.getElementById("otpInput")?.value;
+const teacherRequest=document.getElementById("teacherRequest")?.checked;
+const verifyBtn=document.getElementById("verifyBtn");
+
+if(!otp){
+showMessage("Enter verification code");
+return;
 }
-  const teacherRequest = document.getElementById("teacherRequest")?.checked;
-const verifyBtn = document.getElementById("verifyBtn");
 
-verifyBtn.disabled = true;
-verifyBtn.innerHTML = `Verifying <span class="btn-spinner"></span>`;
-  const passwordRegex =
-/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+verifyBtn.disabled=true;
+verifyBtn.innerHTML=`Verifying <span class="btn-spinner"></span>`;
 
-  if(!passwordRegex.test(password)){
-    showMessage("Password must be at least 6 characters");
-    return;
-  }
+try{
 
-  if(password !== confirmPassword){
-    showMessage("Passwords do not match");
-    return;
-  }
+const verify=await fetch("/verify-otp",{
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify({email,otp})
+});
 
-  try{
+const result=await verify.json();
 
-    const verify = await fetch("/verify-otp", {
-      method:"POST",
-      headers:{ "Content-Type":"application/json" },
-      body: JSON.stringify({ email, otp })
-    });
+if(!result.success){
 
-    const result = await verify.json();
+verifyBtn.disabled=false;
+verifyBtn.innerHTML="Verify & Sign Up";
 
-    if(!result.success){
-
-  verifyBtn.disabled = false;
-  verifyBtn.innerHTML = "Verify & Sign Up";
-
-  showMessage("Invalid OTP");
-  return;
+showMessage("Invalid OTP");
+return;
 
 }
 
-    const userCred = await createUserWithEmailAndPassword(auth,email,password);
+const userCred=await createUserWithEmailAndPassword(auth,email,password);
 
-    let role="student";
+let role="student";
 
-    if(email==="admin@smart.com")
-      role="admin";
+if(email==="admin@smart.com") role="admin";
+if(teacherRequest) role="pending_teacher";
 
-    if(teacherRequest)
-      role="pending_teacher";
+await setDoc(doc(db,"users",userCred.user.uid),{
+email,
+role,
+requestedAt:new Date()
+});
 
-    await setDoc(doc(db,"users",userCred.user.uid),{
-      email,
-      role,
-      requestedAt:new Date()
-    });
-    await fetch("/set-role",{
-  method:"POST",
-  headers:{ "Content-Type":"application/json" },
-  body: JSON.stringify({
-    uid: userCred.user.uid,
-    role: role
-  })
+await fetch("/set-role",{
+method:"POST",
+headers:{ "Content-Type":"application/json"},
+body:JSON.stringify({
+uid:userCred.user.uid,
+role:role
+})
 });
 
 await auth.currentUser.getIdToken(true);
-    showMessage("Account created successfully","success");
 
-    setTimeout(()=>{
-      window.location.href="dashboard.html";
-    },1500);
+showMessage("Account created successfully","success");
+
+setTimeout(()=>{
+window.location.href="/dashboard.html";
+},1500);
 
 }catch(err){
-  showMessage(err.message);
 
-  verifyBtn.disabled = false;
-  verifyBtn.innerHTML = "Verify & Sign Up";
+showMessage(err.message);
+
+verifyBtn.disabled=false;
+verifyBtn.innerHTML="Verify & Sign Up";
+
 }
 
-};
-
+}
 
 /* ================= LOGIN ================= */
 
 window.login = async function(){
 
-  const email=document.getElementById("email")?.value;
-  const password=document.getElementById("password")?.value;
-  const loginBtn = document.getElementById("loginBtn");
+const email=document.getElementById("email")?.value;
+const password=document.getElementById("password")?.value;
+const loginBtn=document.getElementById("loginBtn");
 
-  loginBtn.disabled = true;
-  loginBtn.innerHTML = `Logging in <span class="btn-spinner"></span>`;
+loginBtn.disabled=true;
+loginBtn.innerHTML=`Logging in <span class="btn-spinner"></span>`;
 
-  try{
+try{
 
-    const userCred = await signInWithEmailAndPassword(auth,email,password);
+const userCred=await signInWithEmailAndPassword(auth,email,password);
 
-const tokenResult = await auth.currentUser.getIdTokenResult(true);
-const role = tokenResult.claims.role || "student";
+const tokenResult=await auth.currentUser.getIdTokenResult(true);
+const role=tokenResult.claims.role || "student";
 
 if(role==="admin")
-  window.location.href="/adminDashboard.html";
+window.location.href="/adminDashboard.html";
 
 else if(role==="teacher")
-  window.location.href="/teacherDashboard.html";
+window.location.href="/teacherDashboard.html";
 
 else
-  window.location.href="/dashboard.html";
+window.location.href="/dashboard.html";
 
-  }catch(err){
+}catch(err){
 
-    loginBtn.disabled = false;
-    loginBtn.innerHTML = "Login";
+loginBtn.disabled=false;
+loginBtn.innerHTML="Login";
 
-    if(err.code === "auth/invalid-credential"){
-      showMessage("Wrong email or password");
-    }
-    else{
-      showMessage("Login failed");
-    }
+if(err.code==="auth/invalid-credential")
+showMessage("Wrong email or password");
 
-  }
+else
+showMessage("Login failed");
 
-};
+}
 
+}
 
 /* ================= LOGOUT ================= */
 
-window.logout=async function(){
+window.logout = async function(){
 
-  await signOut(auth);
-  window.location.href="login.html";
+await signOut(auth);
+window.location.href="/login.html";
 
-};
-
+}
 
 /* ================= UNIVERSAL ROLE GUARD ================= */
 
-onAuthStateChanged(auth, async (user) => {
+onAuthStateChanged(auth, async(user)=>{
 
-  const path = window.location.pathname;
-  const dashboardLink = document.getElementById("dashboardLink");
+const path=window.location.pathname;
 
-  /* ===== NOT LOGGED IN ===== */
+if(!user){
 
-  if (!user) {
+if(!path.includes("login") && !path.includes("signup"))
+window.location.href="/login.html";
 
-    if (!path.includes("login") && !path.includes("signup")) {
-      window.location.href = "login.html";
-    }
+return;
 
-    return;
-  }
+}
 
-  /* ===== VERIFY SESSION WITH SERVER ===== */
+/* ===== SERVER SESSION VERIFY ===== */
 
-  if(!path.includes("login") && !path.includes("signup")){
+if(!path.includes("login") && !path.includes("signup")){
 
-    const token = await user.getIdToken();
+const token=await user.getIdToken();
 
-    const res = await fetch(path,{
-      headers:{
-        Authorization:"Bearer "+token
-      }
-    });
+const res=await fetch(path,{
+headers:{ Authorization:"Bearer "+token }
+});
 
-    if(res.status === 401){
-      window.location.href="login.html";
-      return;
-    }
+if(res.status===401){
+window.location.href="/login.html";
+return;
+}
 
-    if(res.status === 403){
-      window.location.href="dashboard.html";
-      return;
-    }
+if(res.status===403){
+window.location.href="/dashboard.html";
+return;
+}
 
-  }
+}
 
-  /* ===== GET ROLE ===== */
+/* ===== DASHBOARD LINK FIX ===== */
 
-  const tokenResult = await user.getIdTokenResult();
-  const role = tokenResult.claims.role || "student";
+const dashboardLink=document.getElementById("dashboardLink");
 
-  /* ===== DASHBOARD LINK FIX ===== */
+if(dashboardLink){
 
-  if (dashboardLink) {
+const tokenResult=await user.getIdTokenResult();
+const role=tokenResult.claims.role || "student";
 
-    if (role === "admin")
-      dashboardLink.href = "/adminDashboard.html";
+if(role==="admin")
+dashboardLink.href="/adminDashboard.html";
 
-    else if (role === "teacher")
-      dashboardLink.href = "/teacherDashboard.html";
+else if(role==="teacher")
+dashboardLink.href="/teacherDashboard.html";
 
-    else
-      dashboardLink.href = "/dashboard.html";
+else
+dashboardLink.href="/dashboard.html";
 
-  }
-
-  /* ===== PAGE ROLE GUARD ===== */
-
-  const pageRole = document.body.dataset.role;
-
-  if (pageRole && pageRole !== role) {
-
-    if (role === "admin")
-      window.location.href = "adminDashboard.html";
-
-    else if (role === "teacher")
-      window.location.href = "teacherDashboard.html";
-
-    else
-      window.location.href = "dashboard.html";
-  }
+}
 
 });

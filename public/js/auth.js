@@ -1,10 +1,3 @@
-const token = await auth.currentUser.getIdToken();
-
-fetch("/some-api",{
-  headers:{
-    Authorization: "Bearer " + token
-  }
-})
 import { auth, db } from "./firebase.js";
 /* ================= GET AUTH TOKEN ================= */
 
@@ -318,7 +311,9 @@ window.logout=async function(){
 onAuthStateChanged(auth, async (user) => {
 /* ===== VERIFY SESSION WITH SERVER ===== */
 
-if(user){
+const path = window.location.pathname;
+
+if(user && !path.includes("login") && !path.includes("signup")){
 
   const token = await user.getIdToken();
 
@@ -327,6 +322,18 @@ if(user){
       Authorization:"Bearer "+token
     }
   });
+
+  if(res.status === 401){
+    window.location.href="login.html";
+    return;
+  }
+
+  if(res.status === 403){
+    window.location.href="dashboard.html";
+    return;
+  }
+
+}
 
   if(res.status === 401){
     window.location.href="login.html";

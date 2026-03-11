@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Dashboard</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/about.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+</head>
+
+<body data-role="student">
+
+<!-- ================= SIDEBAR ================= -->
+
+<div class="sidebar" id="sidebar">
+
+    <!-- USER MINI HEADER -->
+    <div class="profile-mini">
+      <div class="avatar-circle">
+        <img id="miniProfileImg" src="" alt="Avatar">
+        <span id="avatarCircle">U</span>
+      </div>
+      <div class="profile-info">
+        <p id="profileName">Guest</p>
+        <small id="profileEmail"></small>
+      </div>
+    </div>
+
+    <a href="index.html">Home</a>
+
+    <!-- PROFILE DROPDOWN -->
+    <div class="profile-wrapper">
+      <div class="profile-toggle" id="profileToggle">
+        Profile ▾
+      </div>
+      <div class="profile-dropdown" id="profileDropdown">
+        <a href="dashboard.html" id="dashboardLink">Dashboard</a>
+        <a href="accsettings.html">Profile Settings</a>
+        <a href="#" id="logoutLink">Logout</a>
+      </div>
+    </div>
+    <div class="book-wrapper">
+      <div class="book-toggle" id="bookToggle">
+        Books ▾
+      </div>
+      <div class="book-dropdown" id="bookDropdown">
+        <a href="/department.html?dept=COMPUTER SCIENCE">
+          Computer Science
+        </a>
+        <a href="/department.html?dept=MECHANICAL">
+          Mechanical Engineering
+        </a>
+        <a href="/department.html?dept=CIVIL">
+          Civil Engineering
+        </a>
+        <a href="/department.html?dept=ELECTRICAL">
+          Electrical Engineering
+        </a>
+        <a href="/department.html?dept=GENERAL KNOWLEDGE">
+          General Knowledge
+        </a>
+        <a href="/department.html?dept=OTHERS">
+          Others
+        </a>
+      </div>
+    </div>
+    <div class="footer">
+      <a href="about.html">About</a>
+    </div>
+  </div>
+  <div class="overlay" id="overlay"></div>
+
+<!-- ================= HEADER ================= -->
+
+<header>
+
+<button class="menu-btn" id="menuBtn">☰</button>
+
+<h1>Student Dashboard</h1>
+
+<div class="notify" id="notifyBell">
+    <i class="fa-solid fa-bell"></i>
+  <span id="notifyCount">0</span>
+  <div id="notificationPanel" class="notify-panel">
+    <div class="notify-header">
+      Notifications
+    </div>
+
+    <div id="notificationList"></div>
+  </div>
+</div>
+
+</header>
+
+<section class="about-page">
+
+<div class="about-container">
+
+<h2 class="about-title">About Smart Tutoring</h2>
+
+<p class="about-intro">
+Smart Tutoring is an AI-powered learning platform designed to make studying easier, faster, and more organized. 
+Students can access study materials, books, quizzes, and intelligent tools that help improve learning efficiency.
+</p>
+
+<!-- PLATFORM FEATURES -->
+
+<div class="about-features">
+
+<div class="feature-box">
+<i class="fa-solid fa-book"></i>
+<h3>Study Resources</h3>
+<p>
+Access a wide range of academic books and learning materials organized by department and course.
+</p>
+</div>
+
+<div class="feature-box">
+<i class="fa-solid fa-brain"></i>
+<h3>AI Learning Tools</h3>
+<p>
+Generate quizzes and tests automatically using AI to help reinforce your understanding of study materials.
+</p>
+</div>
+
+<div class="feature-box">
+<i class="fa-solid fa-chart-line"></i>
+<h3>Smart Progress</h3>
+<p>
+Track your learning progress and improve your study performance using smart analytics.
+</p>
+</div>
+
+</div>
+
+<!-- MISSION -->
+
+<div class="about-mission">
+
+<h3>Our Mission</h3>
+
+<p>
+The goal of Smart Tutoring is to create a modern digital learning environment where students can easily access knowledge and learn more efficiently using technology and AI.
+</p>
+
+</div>
+
+<!-- DEVELOPER SECTION -->
+
+<div class="about-developer">
+
+<h3>Developers</h3>
+
+<div class="developer-grid">
+
+<!-- Developer 1 -->
+
+<div class="developer-card">
+
+<img src="https://res.cloudinary.com/df0vciznk/image/upload/v1773080000/default_profile_xx.png" class="developer-photo">
+
+<div class="developer-info">
+
+<h4>A Dope healer</h4>
+
+<p>
+Lead developer of Smart Tutoring System. Responsible for backend architecture, authentication system, and AI learning integration.
+</p>
+
+<p class="dev-role">
+Full Stack Developer
+</p>
+
+</div>
+
+</div>
+
+<!-- Developer 2 -->
+
+<div class="developer-card">
+
+<img src="https://res.cloudinary.com/df0vciznk/image/upload/v1773080000/default_profile_xx.png" class="developer-photo">
+
+<div class="developer-info">
+
+<h4>Adorable filler</h4>
+
+<p>
+Worked on user interface design, dashboard layout, and frontend interactions to ensure a smooth and modern learning experience.
+</p>
+
+<p class="dev-role">
+Frontend Developer
+</p>
+
+</div>
+
+</div>
+
+<!-- Developer 3 -->
+
+<div class="developer-card">
+
+<img src="https://res.cloudinary.com/df0vciznk/image/upload/v1773080000/default_profile_xx.png" class="developer-photo">
+
+<div class="developer-info">
+
+<h4>A dog hit her</h4>
+
+<p>
+Handled database design, course resource management, and system optimization for better performance and scalability.
+</p>
+
+<p class="dev-role">
+Backend Developer
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+<!-- ================= SCRIPTS ================= -->
+
+<script type="module" src="js/script.js"></script>
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/notification.js"></script>
+</body>
+</html>

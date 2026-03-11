@@ -9,8 +9,9 @@ import { createRequire } from "module";
 import { v2 as cloudinary } from "cloudinary";
 const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
-import Brevo from "@getbrevo/brevo";
+import * as Brevo from "@getbrevo/brevo";
 import admin from "firebase-admin";
+dotenv.config();
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
@@ -70,7 +71,7 @@ function requireRole(role){
   };
 
 }
-dotenv.config();
+
 const apiInstance = new Brevo.TransactionalEmailsApi();
 
 apiInstance.setApiKey(

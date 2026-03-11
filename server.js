@@ -9,7 +9,7 @@ import { createRequire } from "module";
 import { v2 as cloudinary } from "cloudinary";
 const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
-import nodemailer from "nodemailer";
+import SibApiV3Sdk from "@getbrevo/brevo";
 import admin from "firebase-admin";
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
@@ -71,16 +71,12 @@ function requireRole(role){
 
 }
 dotenv.config();
+const brevo = new SibApiV3Sdk.TransactionalEmailsApi();
 
-const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.SMTP_USER,
-    pass: process.env.SMTP_PASS
-  }
-});
+brevo.setApiKey(
+  SibApiV3Sdk.TransactionalEmailsApiApiKeys.apiKey,
+  process.env.BREVO_API_KEY
+);
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -102,16 +98,24 @@ const __dirname = path.dirname(__filename);
 
 /* ================= DASHBOARD PROTECTION ================= */
 
-app.get("/adminDashboard.html",(req,res)=>{
-  res.sendFile(path.join(__dirname,"public/adminDashboard.html"));
+app.get("/adminDashboard.html",
+  verifyToken,
+  requireRole("admin"),
+  (req,res)=>{
+    res.sendFile(path.join(__dirname,"public/adminDashboard.html"));
 });
 
-app.get("/teacherDashboard.html",(req,res)=>{
-  res.sendFile(path.join(__dirname,"public/teacherDashboard.html"));
+app.get("/teacherDashboard.html",
+  verifyToken,
+  requireRole("teacher"),
+  (req,res)=>{
+    res.sendFile(path.join(__dirname,"public/teacherDashboard.html"));
 });
 
-app.get("/dashboard.html",(req,res)=>{
-  res.sendFile(path.join(__dirname,"public/dashboard.html"));
+app.get("/dashboard.html",
+  verifyToken,
+  (req,res)=>{
+    res.sendFile(path.join(__dirname,"public/dashboard.html"));
 });
 /* ================= STATIC FILES ================= */
 
@@ -160,11 +164,14 @@ app.post("/send-otp", async (req, res) => {
 
   try {
 
-    await transporter.sendMail({
-  from: '"Smart Tutor" <iamrein22@gmail.com>',
-  to: email,
+    await brevo.sendTransacEmail({
+  sender: {
+    email: "iamrein22@gmail.com",
+    name: "Smart Tutor"
+  },
+  to: [{ email: email }],
   subject: "Smart Tutor Verification Code",
-  html: `
+  htmlContent: `
 <div style="font-family:Segoe UI,Arial;background:#f4f6fb;padding:40px">
 
 <div style="max-width:480px;margin:auto;background:white;border-radius:12px;

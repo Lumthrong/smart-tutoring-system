@@ -9,7 +9,7 @@ import { createRequire } from "module";
 import { v2 as cloudinary } from "cloudinary";
 const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
-import SibApiV3Sdk from "@getbrevo/brevo";
+import * as SibApiV3Sdk from "@getbrevo/brevo";
 import admin from "firebase-admin";
 
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);

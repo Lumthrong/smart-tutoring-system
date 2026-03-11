@@ -20,6 +20,9 @@ if (!admin.apps.length) {
   });
 }
 
+/* ADD THIS LINE */
+const db = admin.firestore();
+
 /* ================= VERIFY FIREBASE TOKEN ================= */
 
 async function verifyToken(req, res, next) {
@@ -44,6 +47,8 @@ async function verifyToken(req, res, next) {
 
     const decoded = await admin.auth().verifyIdToken(token);
 
+console.log("USER ROLE:", decoded.role);
+
     req.user = decoded;
 
     next();
@@ -59,13 +64,47 @@ async function verifyToken(req, res, next) {
 
 function requireRole(role){
 
-  return (req,res,next)=>{
+  return async (req,res,next)=>{
 
-    if(!req.user || req.user.role !== role){
+    if(!req.user){
       return res.status(403).send("Forbidden");
     }
 
-    next();
+    try{
+
+      const uid = req.user.uid;
+
+     const userDoc = await db
+  .collection("users")
+  .doc(uid)
+  .get();
+
+      if(!userDoc.exists){
+        return res.status(403).send("Forbidden");
+      }
+
+      const userRole = userDoc.data().role;
+
+      console.log("FIRESTORE ROLE:", userRole);
+
+      if(role === "teacher"){
+        if(userRole !== "teacher" && userRole !== "pending_teacher"){
+          return res.status(403).send("Forbidden");
+        }
+      }
+
+      else if(userRole !== role){
+        return res.status(403).send("Forbidden");
+      }
+
+      next();
+
+    }catch(err){
+
+      console.error("ROLE CHECK ERROR:",err);
+      res.status(500).send("Server error");
+
+    }
 
   };
 
@@ -91,17 +130,28 @@ const __dirname = path.dirname(__filename);
 
 /* ================= DASHBOARD PROTECTION ================= */
 
-app.get("/adminDashboard.html",(req,res)=>{
-  res.sendFile(path.join(__dirname,"public/adminDashboard.html"));
-});
+app.get("/adminDashboard.html",
+  verifyToken,
+  requireRole("admin"),
+  (req,res)=>{
+    res.sendFile(path.join(__dirname,"public/adminDashboard.html"));
+  }
+);
 
-app.get("/teacherDashboard.html",(req,res)=>{
+app.get("/teacherDashboard.html",
+  verifyToken,
+  requireRole("teacher"),
+  (req,res)=>{
     res.sendFile(path.join(__dirname,"public/teacherDashboard.html"));
-});
+  }
+);
 
-app.get("/dashboard.html",(req,res)=>{
+app.get("/dashboard.html",
+  verifyToken,
+  (req,res)=>{
     res.sendFile(path.join(__dirname,"public/dashboard.html"));
-});
+  }
+);
 /* ================= STATIC FILES ================= */
 
 app.use(express.static(path.join(__dirname, "public")));
@@ -264,14 +314,18 @@ app.post("/set-role", async (req,res)=>{
 
   const { uid, role } = req.body;
 
-  if(!uid || !role)
+  if(!uid || !role){
     return res.status(400).json({error:"uid and role required"});
+  }
 
   try{
 
-    await admin.auth().setCustomUserClaims(uid,{
-      role: role
-    });
+    await admin.auth().setCustomUserClaims(uid,{ role });
+
+    // verify claim was written
+    const user = await admin.auth().getUser(uid);
+
+    console.log("ROLE SET:", user.customClaims);
 
     res.json({success:true});
 

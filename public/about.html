@@ -1,22 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Student Dashboard</title>
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/about.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/about.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
 </head>
 
-<body data-role="student">
+<body>
 
-<!-- ================= SIDEBAR ================= -->
-
-<div class="sidebar" id="sidebar">
+  <div class="sidebar" id="sidebar">
 
     <!-- USER MINI HEADER -->
     <div class="profile-mini">
@@ -30,21 +29,32 @@
       </div>
     </div>
 
-    <a href="index.html">Home</a>
+    <a href="index.html"><span class="material-symbols-outlined">home
+</span> Home</a>
 
     <!-- PROFILE DROPDOWN -->
     <div class="profile-wrapper">
-      <div class="profile-toggle" id="profileToggle">
-        Profile ▾
+      <div class="profile-toggle" id="profileToggle"><span class="material-symbols-outlined">
+account_circle
+</span>
+      Profile ▾
       </div>
       <div class="profile-dropdown" id="profileDropdown">
-        <a href="dashboard.html" id="dashboardLink">Dashboard</a>
-        <a href="accsettings.html">Profile Settings</a>
-        <a href="#" id="logoutLink">Logout</a>
+        <a href="dashboard.html" id="dashboardLink"><span class="material-symbols-outlined">
+dashboard
+</span> Dashboard</a>
+        <a href="accsettings.html"><span class="material-symbols-outlined">
+settings
+</span> Profile Settings</a>
+        <a href="#" id="logoutLink"><span class="material-symbols-outlined">
+logout
+</span> Logout</a>
       </div>
     </div>
     <div class="book-wrapper">
-      <div class="book-toggle" id="bookToggle">
+      <div class="book-toggle" id="bookToggle"> <span class="material-symbols-outlined">
+newsstand
+</span>
         Books ▾
       </div>
       <div class="book-dropdown" id="bookDropdown">
@@ -69,167 +79,177 @@
       </div>
     </div>
     <div class="footer">
-      <a href="about.html">About</a>
+      <a href="about.html"><span class="material-symbols-outlined">
+info
+</span> About</a>
     </div>
   </div>
   <div class="overlay" id="overlay"></div>
 
-<!-- ================= HEADER ================= -->
+  <header>
+    <button class="menu-btn" id="menuBtn"><span class="material-symbols-outlined">
+menu
+</span></button>
+    <h1>Home</h1>
 
-<header>
+    <div class="notify" id="notifyBell">
+      <span class="material-symbols-outlined">
+notifications
+</span>
+      <span id="notifyCount">0</span>
+      <div id="notificationPanel" class="notify-panel">
+        <div class="notify-header">
+          Notifications
+        </div>
 
-<button class="menu-btn" id="menuBtn">☰</button>
-
-<h1>Student Dashboard</h1>
-
-<div class="notify" id="notifyBell">
-    <i class="fa-solid fa-bell"></i>
-  <span id="notifyCount">0</span>
-  <div id="notificationPanel" class="notify-panel">
-    <div class="notify-header">
-      Notifications
+        <div id="notificationList"></div>
+      </div>
     </div>
+  </header>
 
-    <div id="notificationList"></div>
-  </div>
-</div>
+  <section class="about-page">
 
-</header>
+    <div class="about-container">
 
-<section class="about-page">
+      <h2 class="about-title">About Smart Tutoring</h2>
 
-<div class="about-container">
+      <p class="about-intro">
+        Smart Tutoring is an AI-powered learning platform designed to make studying easier, faster, and more organized.
+        Students can access study materials, books, quizzes, and intelligent tools that help improve learning
+        efficiency.
+      </p>
 
-<h2 class="about-title">About Smart Tutoring</h2>
+      <!-- PLATFORM FEATURES -->
 
-<p class="about-intro">
-Smart Tutoring is an AI-powered learning platform designed to make studying easier, faster, and more organized. 
-Students can access study materials, books, quizzes, and intelligent tools that help improve learning efficiency.
-</p>
+      <div class="about-features">
 
-<!-- PLATFORM FEATURES -->
+        <div class="feature-box">
+          <i class="fa-solid fa-book"></i>
+          <h3>Study Resources</h3>
+          <p>
+            Access a wide range of academic books and learning materials organized by department and course.
+          </p>
+        </div>
 
-<div class="about-features">
+        <div class="feature-box">
+          <i class="fa-solid fa-brain"></i>
+          <h3>AI Learning Tools</h3>
+          <p>
+            Generate quizzes and tests automatically using AI to help reinforce your understanding of study materials.
+          </p>
+        </div>
 
-<div class="feature-box">
-<i class="fa-solid fa-book"></i>
-<h3>Study Resources</h3>
-<p>
-Access a wide range of academic books and learning materials organized by department and course.
-</p>
-</div>
+        <div class="feature-box">
+          <i class="fa-solid fa-chart-line"></i>
+          <h3>Smart Progress</h3>
+          <p>
+            Track your learning progress and improve your study performance using smart analytics.
+          </p>
+        </div>
 
-<div class="feature-box">
-<i class="fa-solid fa-brain"></i>
-<h3>AI Learning Tools</h3>
-<p>
-Generate quizzes and tests automatically using AI to help reinforce your understanding of study materials.
-</p>
-</div>
+      </div>
 
-<div class="feature-box">
-<i class="fa-solid fa-chart-line"></i>
-<h3>Smart Progress</h3>
-<p>
-Track your learning progress and improve your study performance using smart analytics.
-</p>
-</div>
+      <!-- MISSION -->
 
-</div>
+      <div class="about-mission">
 
-<!-- MISSION -->
+        <h3>Our Mission</h3>
 
-<div class="about-mission">
+        <p>
+          The goal of Smart Tutoring is to create a modern digital learning environment where students can easily access
+          knowledge and learn more efficiently using technology and AI.
+        </p>
 
-<h3>Our Mission</h3>
+      </div>
 
-<p>
-The goal of Smart Tutoring is to create a modern digital learning environment where students can easily access knowledge and learn more efficiently using technology and AI.
-</p>
+      <!-- DEVELOPER SECTION -->
 
-</div>
+      <div class="about-developer">
 
-<!-- DEVELOPER SECTION -->
+        <h3>Developers</h3>
 
-<div class="about-developer">
+        <div class="developer-grid">
 
-<h3>Developers</h3>
+          <!-- Developer 1 -->
 
-<div class="developer-grid">
+          <div class="developer-card">
 
-<!-- Developer 1 -->
+            <img src="https://res.cloudinary.com/df0vciznk/image/upload/v1773080000/default_profile_xx.png"
+              class="developer-photo">
 
-<div class="developer-card">
+            <div class="developer-info">
 
-<img src="https://res.cloudinary.com/df0vciznk/image/upload/v1773080000/default_profile_xx.png" class="developer-photo">
+              <h4>A dope healer</h4>
 
-<div class="developer-info">
+              <p>
+                Lead developer of Smart Tutoring System. Responsible for backend architecture, authentication system,
+                and AI learning integration.
+              </p>
 
-<h4>A Dope healer</h4>
+              <p class="dev-role">
+                Full Stack Developer
+              </p>
 
-<p>
-Lead developer of Smart Tutoring System. Responsible for backend architecture, authentication system, and AI learning integration.
-</p>
+            </div>
 
-<p class="dev-role">
-Full Stack Developer
-</p>
+          </div>
 
-</div>
+          <!-- Developer 2 -->
 
-</div>
+          <div class="developer-card">
 
-<!-- Developer 2 -->
+            <img src="https://res.cloudinary.com/df0vciznk/image/upload/v1773080000/default_profile_xx.png"
+              class="developer-photo">
 
-<div class="developer-card">
+            <div class="developer-info">
 
-<img src="https://res.cloudinary.com/df0vciznk/image/upload/v1773080000/default_profile_xx.png" class="developer-photo">
+              <h4>Adorable filler</h4>
 
-<div class="developer-info">
+              <p>
+                Worked on user interface design, dashboard layout, and frontend interactions to ensure a smooth and
+                modern learning experience.
+              </p>
 
-<h4>Adorable filler</h4>
+              <p class="dev-role">
+                Frontend Developer
+              </p>
 
-<p>
-Worked on user interface design, dashboard layout, and frontend interactions to ensure a smooth and modern learning experience.
-</p>
+            </div>
 
-<p class="dev-role">
-Frontend Developer
-</p>
+          </div>
 
-</div>
+          <!-- Developer 3 -->
 
-</div>
+          <div class="developer-card">
 
-<!-- Developer 3 -->
+            <img src="https://res.cloudinary.com/df0vciznk/image/upload/v1773080000/default_profile_xx.png"
+              class="developer-photo">
 
-<div class="developer-card">
+            <div class="developer-info">
 
-<img src="https://res.cloudinary.com/df0vciznk/image/upload/v1773080000/default_profile_xx.png" class="developer-photo">
+              <h4>A dog hit her</h4>
 
-<div class="developer-info">
+              <p>
+                Handled database design, course resource management, and system optimization for better performance and
+                scalability.
+              </p>
 
-<h4>A dog hit her</h4>
+              <p class="dev-role">
+                Backend Developer
+              </p>
 
-<p>
-Handled database design, course resource management, and system optimization for better performance and scalability.
-</p>
+            </div>
 
-<p class="dev-role">
-Backend Developer
-</p>
+          </div>
 
-</div>
+        </div>
 
-</div>
+      </div>
+      <!-- ================= SCRIPTS ================= -->
 
-</div>
-
-</div>
-<!-- ================= SCRIPTS ================= -->
-
-<script type="module" src="js/script.js"></script>
-<script type="module" src="js/auth.js"></script>
-<script type="module" src="js/notification.js"></script>
+      <script type="module" src="js/script.js"></script>
+      <script type="module" src="js/auth.js"></script>
+      <script type="module" src="js/notification.js"></script>
 </body>
+
 </html>

@@ -8,10 +8,12 @@
 <link rel="stylesheet" href="css/teacher.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
 </head>
+
 <body data-role="teacher">
 
-<div class="sidebar" id="sidebar">
+  <div class="sidebar" id="sidebar">
 
     <!-- USER MINI HEADER -->
     <div class="profile-mini">
@@ -25,21 +27,32 @@
       </div>
     </div>
 
-    <a href="index.html">Home</a>
+    <a href="index.html"><span class="material-symbols-outlined">home
+</span> Home</a>
 
     <!-- PROFILE DROPDOWN -->
     <div class="profile-wrapper">
-      <div class="profile-toggle" id="profileToggle">
-        Profile ▾
+      <div class="profile-toggle" id="profileToggle"><span class="material-symbols-outlined">
+account_circle
+</span>
+      Profile ▾
       </div>
       <div class="profile-dropdown" id="profileDropdown">
-        <a href="dashboard.html" id="dashboardLink">Dashboard</a>
-        <a href="accsettings.html">Profile Settings</a>
-        <a href="#" id="logoutLink">Logout</a>
+        <a href="dashboard.html" id="dashboardLink"><span class="material-symbols-outlined">
+dashboard
+</span> Dashboard</a>
+        <a href="accsettings.html"><span class="material-symbols-outlined">
+settings
+</span> Profile Settings</a>
+        <a href="#" id="logoutLink"><span class="material-symbols-outlined">
+logout
+</span> Logout</a>
       </div>
     </div>
     <div class="book-wrapper">
-      <div class="book-toggle" id="bookToggle">
+      <div class="book-toggle" id="bookToggle"> <span class="material-symbols-outlined">
+newsstand
+</span>
         Books ▾
       </div>
       <div class="book-dropdown" id="bookDropdown">
@@ -64,26 +77,33 @@
       </div>
     </div>
     <div class="footer">
-      <a href="about.html">About</a>
+      <a href="about.html"><span class="material-symbols-outlined">
+info
+</span> About</a>
     </div>
   </div>
   <div class="overlay" id="overlay"></div>
 
-<header>
-  <button class="menu-btn" id="menuBtn">☰</button>
-  <h1>Dashboard (Teacher)</h1>
-      <div class="notify" id="notifyBell">
-    <i class="fa-solid fa-bell"></i>
-  <span id="notifyCount">0</span>
-  <div id="notificationPanel" class="notify-panel">
-    <div class="notify-header">
-      Notifications
-    </div>
+  <header>
+    <button class="menu-btn" id="menuBtn"><span class="material-symbols-outlined">
+menu
+</span></button>
+    <h1>Home</h1>
 
-    <div id="notificationList"></div>
-  </div>
-</div>
-</header>
+    <div class="notify" id="notifyBell">
+      <span class="material-symbols-outlined">
+notifications
+</span>
+      <span id="notifyCount">0</span>
+      <div id="notificationPanel" class="notify-panel">
+        <div class="notify-header">
+          Notifications
+        </div>
+
+        <div id="notificationList"></div>
+      </div>
+    </div>
+  </header>
 
   <!-- 🔥 Upload Lecture -->
   <div class="card">

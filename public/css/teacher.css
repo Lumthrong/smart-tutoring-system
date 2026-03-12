@@ -1,103 +1,72 @@
-#systemMessage{
+/* ================= SYSTEM MESSAGE ================= */
 
-position:fixed;
-bottom:30px;
-left:50%;
+#systemMessage {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
 
-transform:translateX(-50%);
-
-background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(12px);
-color:white;
 
-padding:12px 20px;
-border-radius:8px;
+  color: white;
+  padding: 12px 22px;
+  border-radius: 10px;
 
-font-size:14px;
-font-weight:500;
+  font-size: 14px;
+  font-weight: 500;
 
-z-index:9999;
-display:none;
+  z-index: 9999;
+  display: none;
 
-box-shadow:0 4px 15px rgba(0,0,0,0.2);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
 
-animation:fadeIn 0.3s ease;
-
+  animation: fadeIn .3s ease;
 }
 
-@keyframes fadeIn{
-from{opacity:0; transform:translate(-50%,10px);}
-to{opacity:1; transform:translate(-50%,0);}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
 }
+
 /* ================= LOADER ================= */
 
-.loader{
-position:fixed;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-width:45px;
-height:45px;
-border:4px solid rgba(255,255,255,0.2);
-border-top:4px solid #4f46e5;
-border-radius:50%;
-animation:spin 0.8s linear infinite;
-z-index:9999;
+.loader {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 45px;
+  height: 45px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top: 4px solid #4f46e5;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  z-index: 9999;
 }
 
-.hidden{
-display:none;
-}
-/* ================= UPLOAD BUTTON ================= */
-
-.upload-btn{
-  position:relative;
-  padding:10px 18px;
-  border:none;
-  border-radius:8px;
-  background:#4f46e5;
-  color:white;
-  font-size:14px;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
+.hidden {
+  display: none;
 }
 
-/* loader */
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
 
-.btn-loader{
-  width:16px;
-  height:16px;
-
-  border:2px solid rgba(255,255,255,0.4);
-  border-top:2px solid white;
-
-  border-radius:50%;
-
-  animation:spin .7s linear infinite;
-
-  display:none;
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
-/* loading state */
-
-.upload-btn.loading .btn-loader{
-  display:block;
-}
-
-.upload-btn.loading .btn-text{
-  opacity:0.7;
-}
-
-/* animation */
-
-@keyframes spin{
-  0%{transform:rotate(0deg);}
-  100%{transform:rotate(360deg);}
-}
-/* ================= DASHBOARD LAYOUT ================= */
+/* ================= DASHBOARD ================= */
 
 .dashboard {
   padding: 40px 20px;
@@ -105,26 +74,29 @@ display:none;
   margin: auto;
 }
 
-/* ================= CARD STYLE ================= */
+/* ================= CARD ================= */
 
 .card {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255, 255, 255, 0.08);
   backdrop-filter: blur(20px);
+
   border-radius: 18px;
   padding: 25px;
   margin-bottom: 40px;
-  box-shadow: 0 15px 40px rgba(0,0,0,0.15);
-  border: 1px solid rgba(255,255,255,0.1);
-  animation: fadeUp 0.8s ease forwards;
+
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  animation: fadeUp .6s ease forwards;
 }
 
 .card h3 {
-  margin-bottom: 20px;
+  margin-bottom: 18px;
   font-size: 20px;
   font-weight: 600;
 }
 
-/* ================= FORM STYLING ================= */
+/* ================= FORM ================= */
 
 #uploadLectureForm {
   display: grid;
@@ -134,70 +106,103 @@ display:none;
 #uploadLectureForm select,
 #uploadLectureForm input[type="text"],
 #uploadLectureForm input[type="file"] {
+
   padding: 12px;
   border-radius: 10px;
   border: 1px solid #ddd;
   font-size: 14px;
-  transition: 0.3s ease;
+
+  transition: .25s;
 }
 
 #uploadLectureForm select:focus,
 #uploadLectureForm input[type="text"]:focus {
   outline: none;
   border-color: #4f46e5;
-  box-shadow: 0 0 10px rgba(79,70,229,0.2);
+  box-shadow: 0 0 10px rgba(79, 70, 229, .25);
 }
 
-/* File label styling */
 #uploadLectureForm label {
   font-size: 13px;
   font-weight: 500;
-  margin-top: 10px;
+  margin-top: 8px;
 }
 
-/* Upload Button */
+/* ================= UPLOAD BUTTON ================= */
 
-#uploadLectureForm button {
+.upload-btn {
+  position: relative;
   padding: 12px;
   border-radius: 12px;
   border: none;
+
   background: rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(12px);
+
   color: white;
   font-weight: 600;
+
   cursor: pointer;
-  transition: 0.3s ease;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  transition: .25s;
 }
 
-#uploadLectureForm button:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 10px 25px rgba(79,70,229,0.3);
+.upload-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(79, 70, 229, .35);
+}
+
+/* loader */
+
+.btn-loader {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  display: none;
+}
+
+.upload-btn.loading .btn-loader {
+  display: block;
+}
+
+.upload-btn.loading .btn-text {
+  opacity: .7;
 }
 
 /* ================= MY LECTURES GRID ================= */
 
 #myLectures {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
   gap: 20px;
 }
 
-/* Lecture Card */
+/* lecture card */
 
-#myLectures > div {
+#myLectures>div {
   background: white;
   padding: 18px;
-  border-radius: 15px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.08);
-  transition: 0.3s ease;
+  border-radius: 14px;
+
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+
+  transition: .25s;
 }
 
-#myLectures > div:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+#myLectures>div:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
 }
 
-/* Department & Semester Headers */
+/* headers */
 
 #myLectures h4 {
   font-size: 18px;
@@ -206,475 +211,263 @@ display:none;
   font-weight: 600;
 }
 
-#myLectures h5 {
-  font-size: 14px;
-  margin-bottom: 15px;
-  opacity: 0.7;
-}
+/* lecture buttons */
 
-/* PDF Button */
-
-#myLectures a {
-  display: inline-block;
-  padding: 6px 10px;
-  background: #2b7cff;
-  color: white;
-  border-radius: 6px;
-  text-decoration: none;
-  font-size: 13px;
+#myLectures button {
   margin-top: 8px;
-}
+  margin-right: 6px;
 
-/* Video */
+  padding: 7px 10px;
 
-#myLectures video {
-  width: 100%;
-  border-radius: 10px;
-  margin-top: 10px;
-}
-/* Delete Button */
-
-.deleteBtn {
-  margin-top: 10px;
-  padding: 8px 12px;
-  border-radius: 8px;
   border: none;
-  background: #ef4444;
-  color: white;
+  border-radius: 7px;
+
+  font-size: 13px;
   cursor: pointer;
-  transition: 0.3s ease;
+
+  background: #4f46e5;
+  color: white;
+
+  transition: .2s;
 }
 
-.deleteBtn:hover {
+#myLectures button:hover {
+  background: #4338ca;
+}
+
+/* delete button */
+
+#myLectures .deleteCourse {
+  background: #ef4444;
+}
+
+#myLectures .deleteCourse:hover {
   background: #dc2626;
 }
-/* ================= CHAT BOX ================= */
 
-.chatBox{
-  margin-top:15px;
-  border:1px solid #e4e4e4;
-  border-radius:10px;
-  background:#ffffff;
+/* ================= ENROLLED COURSES ================= */
 
-  display:flex;
-  flex-direction:column;
+#enrolledCourses div {
+  padding: 12px 14px;
+  border-radius: 10px;
 
-  height:320px;
+  background: white;
+  margin-bottom: 10px;
+
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.06);
 }
 
-/* hidden */
+/* ================= ENROLLMENT STATS ================= */
 
-.chatBox.hidden{
-  display:none;
+#enrollmentStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  margin-top: 10px;
 }
 
-/* ================= HEADER ================= */
+/* each course stat card */
 
-.chatHeader{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
+.enrollment-card {
+  background: white;
+  border-radius: 14px;
+  padding: 16px 18px;
 
-  padding:10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 
-  background:#4f46e5;
-  color:white;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
 
-  border-radius:10px 10px 0 0;
+  transition: .25s;
 }
 
-.chatClose{
-  background:none;
-  border:none;
-  color:white;
-  font-size:16px;
-  cursor:pointer;
+.enrollment-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.12);
 }
 
-/* ================= OPEN BUTTON ================= */
+/* course name */
 
-.chatToggle{
-  margin-top:10px;
-  padding:8px 14px;
-
-  border:none;
-  background:#4f46e5;
-  color:white;
-
-  border-radius:6px;
-  cursor:pointer;
+.enrollment-course {
+  font-weight: 600;
+  font-size: 15px;
+  color: #333;
 }
 
-.chatToggle:hover{
-  background:#4338ca;
+/* number of students */
+
+.enrollment-count {
+  background: #4f46e5;
+  color: white;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  padding: 6px 12px;
+  border-radius: 20px;
+
+  min-width: 45px;
+  text-align: center;
 }
 
-/* ================= MESSAGES ================= */
+/* optional label */
 
-.chatMessages{
-  flex:1;
-  padding:12px;
-  overflow-y:auto;
-
-  display:flex;
-  flex-direction:column;
-  gap:8px;
+.enrollment-label {
+  font-size: 12px;
+  color: #777;
+  margin-top: 3px;
 }
 
-/* ================= MESSAGE BUBBLE ================= */
+/* ================= PERFORMANCE SECTION ================= */
 
-.chatMsg{
-  max-width:75%;
-  padding:10px 12px;
-
-  border-radius:10px;
-  font-size:14px;
-
-  display:flex;
-  flex-direction:column;
+#courseSelect {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  margin-bottom: 15px;
+  width: 100%;
 }
 
-/* student message */
-
-.chatMsg.student{
-  background:#e8f0ff;
-  align-self:flex-start;
+#performanceList div {
+  background: white;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
 }
 
-/* teacher message */
+/* ================= QUIZZES ================= */
 
-.chatMsg.teacher{
-  background:#e6ffe9;
-  align-self:flex-end;
+#teacherQuizzes div {
+  background: white;
+  padding: 14px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
 }
 
-/* name */
+#teacherQuizzes button {
+  margin-top: 8px;
+  margin-right: 6px;
 
-.chatMsg strong{
-  font-size:12px;
-  margin-bottom:3px;
-  color:#444;
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+
+  background: #4f46e5;
+  color: white;
+  cursor: pointer;
 }
 
-/* text */
+/* ================= CHAT ================= */
 
-.chatMsg p{
-  margin:0;
+.chatBox {
+  margin-top: 15px;
+  border: 1px solid #e4e4e4;
+  border-radius: 10px;
+  background: #fff;
+
+  display: flex;
+  flex-direction: column;
+  height: 320px;
 }
 
-/* ================= INPUT ================= */
-
-.chatInput{
-  display:flex;
-  border-top:1px solid #eee;
+.chatBox.hidden {
+  display: none;
 }
 
-.chatInput input{
-  flex:1;
-  border:none;
-  padding:10px;
-  font-size:14px;
+.chatHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 10px 12px;
+
+  background: #4f46e5;
+  color: white;
+
+  border-radius: 10px 10px 0 0;
 }
 
-.chatInput input:focus{
-  outline:none;
+.chatClose {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
 }
 
-.chatInput button{
-  border:none;
-  background:#4f46e5;
-  color:white;
-  padding:0 16px;
-  cursor:pointer;
+.chatMessages {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.chatInput button:hover{
-  background:#4338ca;
-}/* ================= CHAT BOX ================= */
+.chatMsg {
+  max-width: 75%;
+  padding: 10px 12px;
 
-.chatBox{
-  margin-top:15px;
-  border:1px solid #e4e4e4;
-  border-radius:10px;
-  background:#ffffff;
+  border-radius: 10px;
+  font-size: 14px;
 
-  display:flex;
-  flex-direction:column;
-
-  height:320px;
+  display: flex;
+  flex-direction: column;
 }
 
-/* hidden */
-
-.chatBox.hidden{
-  display:none;
+.chatMsg.student {
+  background: #e8f0ff;
+  align-self: flex-start;
 }
 
-/* ================= HEADER ================= */
-
-.chatHeader{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-
-  padding:10px 12px;
-
-  background:#4f46e5;
-  color:white;
-
-  border-radius:10px 10px 0 0;
-}
-
-.chatClose{
-  background:none;
-  border:none;
-  color:white;
-  font-size:16px;
-  cursor:pointer;
-}
-
-/* ================= OPEN BUTTON ================= */
-
-.chatToggle{
-  margin-top:10px;
-  padding:8px 14px;
-
-  border:none;
-  background:#4f46e5;
-  color:white;
-
-  border-radius:6px;
-  cursor:pointer;
-}
-
-.chatToggle:hover{
-  background:#4338ca;
-}
-
-/* ================= MESSAGES ================= */
-
-.chatMessages{
-  flex:1;
-  padding:12px;
-  overflow-y:auto;
-
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-
-/* ================= MESSAGE BUBBLE ================= */
-
-.chatMsg{
-  max-width:75%;
-  padding:10px 12px;
-
-  border-radius:10px;
-  font-size:14px;
-
-  display:flex;
-  flex-direction:column;
-}
-
-/* student message */
-
-.chatMsg.student{
+.chatMsg.teacher {
   background: #e6ffe9;
-  align-self:flex-start;
+  align-self: flex-end;
 }
 
-/* teacher message */
-
-.chatMsg.teacher{
-  background:#e8f0ff;
-  align-self:flex-end;
+.chatMsg strong {
+  font-size: 12px;
+  margin-bottom: 3px;
+  color: #444;
 }
 
-/* name */
-
-.chatMsg strong{
-  font-size:12px;
-  margin-bottom:3px;
-  color:#444;
+.chatMsg p {
+  margin: 0;
 }
 
-/* text */
-
-.chatMsg p{
-  margin:0;
+.chatInput {
+  display: flex;
+  border-top: 1px solid #eee;
 }
 
-/* ================= INPUT ================= */
-
-.chatInput{
-  display:flex;
-  border-top:1px solid #eee;
+.chatInput input {
+  flex: 1;
+  border: none;
+  padding: 10px;
+  font-size: 14px;
 }
 
-.chatInput input{
-  flex:1;
-  border:none;
-  padding:10px;
-  font-size:14px;
+.chatInput input:focus {
+  outline: none;
 }
 
-.chatInput input:focus{
-  outline:none;
+.chatInput button {
+  border: none;
+  background: #4f46e5;
+  color: white;
+  padding: 0 16px;
+  cursor: pointer;
 }
 
-.chatInput button{
-  border:none;
-  background:#4f46e5;
-  color:white;
-  padding:0 16px;
-  cursor:pointer;
+.chatInput button:hover {
+  background: #4338ca;
 }
 
-.chatInput button:hover{
-  background:#4338ca;
-}/* ================= CHAT BOX ================= */
-
-.chatBox{
-  margin-top:15px;
-  border:1px solid #e4e4e4;
-  border-radius:10px;
-  background:#ffffff;
-
-  display:flex;
-  flex-direction:column;
-
-  height:320px;
-}
-
-/* hidden */
-
-.chatBox.hidden{
-  display:none;
-}
-
-/* ================= HEADER ================= */
-
-.chatHeader{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-
-  padding:10px 12px;
-
-  background:#4f46e5;
-  color:white;
-
-  border-radius:10px 10px 0 0;
-}
-
-.chatClose{
-  background:none;
-  border:none;
-  color:white;
-  font-size:16px;
-  cursor:pointer;
-}
-
-/* ================= OPEN BUTTON ================= */
-
-.chatToggle{
-  margin-top:10px;
-  padding:8px 14px;
-
-  border:none;
-  background:#4f46e5;
-  color:white;
-
-  border-radius:6px;
-  cursor:pointer;
-}
-
-.chatToggle:hover{
-  background:#4338ca;
-}
-
-/* ================= MESSAGES ================= */
-
-.chatMessages{
-  flex:1;
-  padding:12px;
-  overflow-y:auto;
-
-  display:flex;
-  flex-direction:column;
-  gap:8px;
-}
-
-/* ================= MESSAGE BUBBLE ================= */
-
-.chatMsg{
-  max-width:75%;
-  padding:10px 12px;
-
-  border-radius:10px;
-  font-size:14px;
-
-  display:flex;
-  flex-direction:column;
-}
-
-/* student message */
-
-.chatMsg.student{
-  background:#e8f0ff;
-  align-self:flex-start;
-}
-
-/* teacher message */
-
-.chatMsg.teacher{
-  background:#e6ffe9;
-  align-self:flex-end;
-}
-
-/* name */
-
-.chatMsg strong{
-  font-size:12px;
-  margin-bottom:3px;
-  color:#444;
-}
-
-/* text */
-
-.chatMsg p{
-  margin:0;
-}
-
-/* ================= INPUT ================= */
-
-.chatInput{
-  display:flex;
-  border-top:1px solid #eee;
-}
-
-.chatInput input{
-  flex:1;
-  border:none;
-  padding:10px;
-  font-size:14px;
-}
-
-.chatInput input:focus{
-  outline:none;
-}
-
-.chatInput button{
-  border:none;
-  background:#4f46e5;
-  color:white;
-  padding:0 16px;
-  cursor:pointer;
-}
-
-.chatInput button:hover{
-  background:#4338ca;
-}
 /* ================= ANIMATION ================= */
 
 @keyframes fadeUp {
@@ -682,6 +475,7 @@ display:none;
     transform: translateY(30px);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -690,8 +484,107 @@ display:none;
 
 /* ================= RESPONSIVE ================= */
 
-@media (max-width: 768px) {
+/* Tablets */
+@media (max-width: 1024px) {
+
   .dashboard {
+    padding: 30px 20px;
+  }
+
+  #myLectures {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  }
+
+  .card {
     padding: 20px;
   }
+
+  #enrollmentStats {
+    font-size: 22px;
+  }
+
+}
+
+/* Large Phones */
+@media (max-width: 768px) {
+
+  .dashboard {
+    padding: 20px 15px;
+  }
+
+  .card {
+    padding: 18px;
+  }
+
+  #myLectures {
+    grid-template-columns: 1fr;
+  }
+
+  #uploadLectureForm {
+    gap: 12px;
+  }
+
+  #uploadLectureForm input,
+  #uploadLectureForm select {
+    font-size: 13px;
+  }
+
+  .upload-btn {
+    font-size: 14px;
+  }
+
+  #enrollmentStats {
+    font-size: 20px;
+  }
+
+  .chatBox {
+    height: 280px;
+  }
+
+}
+
+/* Small Phones */
+@media (max-width: 480px) {
+
+  .dashboard {
+    padding: 15px 10px;
+  }
+
+  .card {
+    padding: 15px;
+    border-radius: 14px;
+  }
+
+  .card h3 {
+    font-size: 18px;
+  }
+
+  #systemMessage {
+    width: 90%;
+    font-size: 13px;
+  }
+
+  #uploadLectureForm input,
+  #uploadLectureForm select {
+    padding: 10px;
+  }
+
+  .upload-btn {
+    padding: 10px;
+    font-size: 13px;
+  }
+
+  #myLectures > div {
+    padding: 14px;
+  }
+
+  #myLectures button {
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+
+  .chatBox {
+    height: 250px;
+  }
+
 }

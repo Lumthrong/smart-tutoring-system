@@ -12,6 +12,7 @@ import {
 import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
 /* ===== GET STARTED SCROLL ===== */
 
 const startBtn = document.getElementById("getStartedBtn");
@@ -56,6 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("departmentSections");
   const searchInput = document.getElementById("courseSearch");
   const template = document.getElementById("courseCardTemplate");
+  const searchDropdown = document.getElementById("searchDropdown");
 
   if (!container) return;
 
@@ -63,7 +65,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let allCourses = [];
   let joinedCourses = new Set();
   let searchTerm = "";
-
 
 
 /* ================= JOIN MODAL ================= */
@@ -141,19 +142,92 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 
-/* ================= SEARCH ================= */
+/* ================= SEARCH (UPDATED) ================= */
 
-if (searchInput) {
+if(searchInput){
 
-  searchInput.addEventListener("input", (e) => {
+searchInput.addEventListener("input",(e)=>{
 
-    searchTerm = e.target.value.toLowerCase();
-    renderCourses();
+const term = e.target.value.toLowerCase().trim();
 
-  });
+if(term === ""){
+searchDropdown.style.display="none";
+return;
+}
+
+const results = allCourses.filter(course => {
+
+const nameMatch =
+course.course?.toLowerCase().includes(term);
+
+const tagMatch =
+course.tags?.some(tag =>
+tag.toLowerCase().includes(term)
+);
+
+return nameMatch || tagMatch;
+
+}).slice(0,6);
+
+renderSearchDropdown(results);
+
+});
 
 }
 
+
+/* ================= SEARCH DROPDOWN ================= */
+
+function renderSearchDropdown(results){
+
+searchDropdown.innerHTML="";
+
+if(results.length === 0){
+
+searchDropdown.innerHTML="<div class='search-item'>No results found</div>";
+searchDropdown.style.display="block";
+return;
+
+}
+
+results.forEach(course=>{
+
+const dept = (course.department || "Others").trim().toUpperCase();
+
+const item=document.createElement("div");
+item.className="search-item";
+
+item.innerHTML=`
+${course.coverURL ? `<img src="${course.coverURL}">` : ""}
+<div>
+<h4>${course.course}</h4>
+<p>${dept} • Semester ${course.semester}</p>
+</div>
+`;
+
+item.onclick=()=>{
+window.location.href=
+`department.html?dept=${encodeURIComponent(dept)}`;
+};
+
+searchDropdown.appendChild(item);
+
+});
+
+searchDropdown.style.display="block";
+
+}
+
+
+/* Hide dropdown when clicking outside */
+
+document.addEventListener("click",(e)=>{
+
+if(!e.target.closest(".search-box")){
+searchDropdown.style.display="none";
+}
+
+});
 
 
 /* ================= FIRESTORE COURSES ================= */
@@ -183,8 +257,6 @@ function renderCourses(){
     container.innerHTML="<p>No courses uploaded yet.</p>";
     return;
   }
-
-  /* ================= LIMIT TO LATEST 10 ================= */
 
 const latestCourses = [...allCourses]
 .sort((a,b)=> new Date(b.uploadedAt) - new Date(a.uploadedAt))
@@ -250,18 +322,12 @@ const grouped = {};
       semester.textContent = "Semester " + course.semester;
 
 
-
-      /* ================= COVER ================= */
-
       if(course.coverURL){
         cover.src = course.coverURL;
       }else{
         cover.style.display = "none";
       }
 
-
-
-      /* ================= JOIN STATE ================= */
 
       if(isJoined){
 
@@ -304,8 +370,6 @@ const grouped = {};
 
       }
 
-
-
       slider.appendChild(card);
 
     }
@@ -345,6 +409,8 @@ function observeSections(){
 
 
 });
+
+
 const slides = document.querySelectorAll(".hero-slide");
 let index = 0;
 

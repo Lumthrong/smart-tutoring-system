@@ -14,21 +14,23 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import { onAuthStateChanged }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-function showMessage(text){
+  from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+let activeCourseId = null;
+let performanceChart = null;
+
+function showMessage(text) {
 
   const msg = document.getElementById("systemMessage");
-  if(!msg) return;
 
   msg.innerText = text;
   msg.style.display = "block";
 
-  setTimeout(()=>{
+  setTimeout(() => {
     msg.style.display = "none";
-  },3000);
+  }, 3000);
 
 }
-let activeCourseId = null;
 
 document.addEventListener("DOMContentLoaded", () => {
 
@@ -41,51 +43,66 @@ document.addEventListener("DOMContentLoaded", () => {
   const sendBtn = document.querySelector(".sendComment");
   const input = document.querySelector(".commentInput");
 
-  /* ================= AUTH ================= */
+  /* AUTH */
 
-  onAuthStateChanged(auth, (user) => {
+  onAuthStateChanged(auth, user => {
 
     if (!user) {
-      window.location.href = "login.html";
+
+      window.location = "login.html";
       return;
+
     }
 
     loadMyCourses();
     loadMyQuizzes();
 
+    loadEnrolledCourses();
+    loadEnrollmentStats();
+    loadCourseDropdown();
+    loadQuizResults();
+
   });
 
-  /* ================= CHAT CLOSE ================= */
+  /* CHAT CLOSE */
 
-  if(closeBtn && chatBox){
-    closeBtn.onclick = ()=>{
+  if (closeBtn && chatBox) {
+
+    closeBtn.onclick = () => {
+
       chatBox.classList.add("hidden");
+
     };
+
   }
 
-  /* ================= SEND COMMENT ================= */
+  /* SEND COMMENT */
 
-  if(sendBtn && input){
+  if (sendBtn && input) {
 
-    sendBtn.onclick = async ()=>{
+    sendBtn.onclick = async () => {
 
-      if(!activeCourseId){
+      if (!activeCourseId) {
+
         alert("Open a course discussion first.");
         return;
+
       }
 
       const message = input.value.trim();
-      if(!message) return;
+      if (!message) return;
 
-      const userDoc = await getDoc(doc(db,"users",auth.currentUser.uid));
+      const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
       const user = userDoc.data();
 
-      await addDoc(collection(db,"course_comments"),{
+      await addDoc(collection(db, "course_comments"), {
+
         courseId: activeCourseId,
         userId: auth.currentUser.uid,
         userName: user.firstName || user.email,
         message: message,
         createdAt: new Date()
+
       });
 
       input.value = "";
@@ -94,229 +111,541 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-  /* ================= UPLOAD COURSE ================= */
+  /* UPLOAD COURSE */
 
-  if(uploadForm){
+  if (uploadForm) {
 
     uploadForm.addEventListener("submit", async (e) => {
 
-  e.preventDefault();
+      e.preventDefault();
 
-  const btn = document.getElementById("uploadBtn");
-  btn.classList.add("loading");
-  btn.disabled = true;
+      const btn = document.getElementById("uploadBtn");
 
-  const formData = new FormData(uploadForm);
+      btn.classList.add("loading");
+      btn.disabled = true;
 
-  const tagsInput = uploadForm.tags.value || "";
-  const tags = tagsInput.split(",").map(t => t.trim()).filter(t => t);
+      const formData = new FormData(uploadForm);
 
-  const res = await fetch("/upload", {
-    method: "POST",
-    body: formData
-  });
+      const res = await fetch("/upload", {
 
-  const data = await res.json();
+        method: "POST",
+        body: formData
 
-  await addDoc(collection(db, "courses"), {
-  department: data.department,
-  semester: data.semester,
-  course: data.course,
+      });
 
-  tags: tags,
+      const data = await res.json();
 
-  coverURL: data.coverURL || null,
-  coverFilename: data.coverFilename || null,
+      await addDoc(collection(db, "courses"), {
 
-  pdfURL: data.pdfURL,
-  pdfFilename: data.pdfFilename,
+        department: data.department,
+        semester: data.semester,
+        course: data.course,
 
-  videoURL: data.videoURL,
-  videoFilename: data.videoFilename,
+        pdfURL: data.pdfURL,
+        videoURL: data.videoURL,
 
-  uploadedBy: auth.currentUser.uid,
-  createdAt: new Date()
-});
+        uploadedBy: auth.currentUser.uid,
+        createdAt: new Date()
 
-  btn.classList.remove("loading");
-  btn.disabled = false;
+      });
 
-  showMessage("Lecture uploaded successfully");
+      btn.classList.remove("loading");
+      btn.disabled = false;
 
-  uploadForm.reset();
+      showMessage("Lecture uploaded successfully");
 
-});
+      uploadForm.reset();
+
+    });
 
   }
 
+  /* MY COURSES */
+  function loadMyCourses() {
 
-/* ================= LOAD COURSES ================= */
+    const q = query(
+      collection(db, "courses"),
+      where("uploadedBy", "==", auth.currentUser.uid)
+    );
 
-function loadMyCourses(){
+    onSnapshot(q, (snapshot) => {
 
-  const q = query(
-    collection(db,"courses"),
-    where("uploadedBy","==",auth.currentUser.uid)
-  );
+      courseContainer.innerHTML = "";
 
-  onSnapshot(q,(snapshot)=>{
+      const grouped = {};
 
-    courseContainer.innerHTML="";
+      snapshot.forEach(docSnap => {
 
-    snapshot.forEach(docSnap=>{
+        const course = docSnap.data();
+        const dept = course.department || "Others";
 
-      const course = docSnap.data();
-      const courseId = docSnap.id;
+        if (!grouped[dept]) grouped[dept] = [];
 
-      const div=document.createElement("div");
+        grouped[dept].push({
+          id: docSnap.id,
+          ...course
+        });
 
-      div.innerHTML=`
+      });
+
+      for (const dept in grouped) {
+
+        const section = document.createElement("div");
+        section.className = "dept-section";
+
+        section.innerHTML = `
+<h4 class="dept-title">${dept}</h4>
+<div class="dept-courses"></div>
+`;
+
+        courseContainer.appendChild(section);
+
+        const grid = section.querySelector(".dept-courses");
+
+        grouped[dept].forEach(course => {
+
+          const courseId = course.id;
+
+          const div = document.createElement("div");
+
+          div.className = "lecture-card";
+
+          div.innerHTML = `
 <p>
-<strong>${course.course}</strong>
-(${course.department} - Sem ${course.semester})
+<strong>${course.course}</strong><br>
+<small>${course.semester === "general" ? "General" : `Semester ${course.semester}`}</small>
 </p>
 
 <button class="openDiscussion">Discussion</button>
 <button class="createQuiz">Create Quiz</button>
+<button class="latestQuiz">Latest Quiz</button>
 <button class="deleteCourse">Delete</button>
-
-<hr>
 `;
 
-      /* OPEN DISCUSSION */
+          div.querySelector(".openDiscussion").onclick = () => {
 
-      div.querySelector(".openDiscussion").onclick = ()=>{
+            activeCourseId = courseId;
 
-        activeCourseId = courseId;
+            loadComments(courseId);
 
-        loadComments(courseId);
+            chatBox.classList.remove("hidden");
 
-        const chat = document.getElementById("chatBox");
-        if(chat) chat.classList.remove("hidden");
+            chatBox.scrollIntoView({
+              behavior: "smooth",
+              block: "center"
+            });
 
-      };
+          };
 
-      /* CREATE QUIZ */
+          div.querySelector(".createQuiz").onclick = () => {
+            window.location = "createQuiz.html?course=" + courseId;
+          };
 
-      div.querySelector(".createQuiz").onclick=()=>{
-        window.location="createQuiz.html?course="+courseId;
-      };
+          div.querySelector(".latestQuiz").onclick = async () => {
 
-      /* DELETE COURSE */
+            const snap = await getDocs(
+              query(collection(db, "quizzes"),
+                where("courseId", "==", courseId))
+            );
 
-      div.querySelector(".deleteCourse").onclick=async()=>{
+            if (snap.empty) {
 
-        if(!confirm("Delete this course?")) return;
+              alert("No quiz created yet for this course.");
 
-        try{
-          const courseData = docSnap.data();
+              return;
 
-await fetch(`/delete-course/${courseData.pdfFilename}`,{
-  method:"DELETE"
-});
+            }
 
-if(courseData.videoFilename){
-  await fetch(`/delete-course/${courseData.videoFilename}`,{
-    method:"DELETE"
-  });
-}
+            window.location = "quizResults.html?course=" + courseId;
 
-await deleteDoc(doc(db,"courses",courseId));
-        }catch(err){
-          console.error(err);
-          showMessage("Delete failed. Check Firestore permissions.");
-        }
+          };
 
-      };
+          div.querySelector(".deleteCourse").onclick = async () => {
 
-      courseContainer.appendChild(div);
+            if (!confirm("Delete this course?")) return;
+
+            await deleteDoc(doc(db, "courses", courseId));
+
+          };
+
+          grid.appendChild(div);
+
+        });
+
+      }
 
     });
 
-  });
+  }
 
-}
+  /* ENROLLED COURSES */
 
+  async function loadEnrolledCourses() {
 
-/* ================= LOAD COMMENTS ================= */
+    const container = document.getElementById("enrolledCourses");
 
-function loadComments(courseId){
+    const snap = await getDocs(
 
- const list=document.querySelector(".commentList");
+      query(collection(db, "enrollments"),
+        where("userId", "==", auth.currentUser.uid))
 
- const q = query(
-  collection(db,"course_comments"),
-  where("courseId","==",courseId),
-  orderBy("createdAt","asc")
- );
+    );
 
- onSnapshot(q,(snap)=>{
+    container.innerHTML = "";
 
-   list.innerHTML="";
+    for (const e of snap.docs) {
 
-   snap.forEach(docSnap=>{
+      const courseDoc = await getDoc(doc(db, "courses", e.data().courseId));
+      if (!courseDoc.exists()) continue;
 
-     const data=docSnap.data();
+      const course = courseDoc.data();
 
-     const div=document.createElement("div");
+      const div = document.createElement("div");
 
-     const role =
-       data.userId === auth.currentUser.uid
-       ? "teacher"
-       : "student";
+      div.innerHTML = `
+<strong>${course.course}</strong>
+<br>
+<a href="${course.pdfURL}" target="_blank">Open PDF</a>
+`;
 
-     div.className = "chatMsg " + role;
+      container.appendChild(div);
 
-     div.innerHTML = `
+    }
+
+  }
+
+  /* ENROLLMENT STATS */
+
+  async function loadEnrollmentStats() {
+
+    const container = document.getElementById("enrollmentStats");
+
+    const courseSnap = await getDocs(
+
+      query(collection(db, "courses"),
+        where("uploadedBy", "==", auth.currentUser.uid))
+
+    );
+
+    container.innerHTML = "";
+
+    for (const c of courseSnap.docs) {
+
+      const enrollSnap = await getDocs(
+
+        query(collection(db, "enrollments"),
+          where("courseId", "==", c.id))
+
+      );
+
+      const div = document.createElement("div");
+
+div.className = "enrollment-card";
+
+div.innerHTML = `
+<div>
+  <div class="enrollment-course">${c.data().course}</div>
+  <div class="enrollment-label">Students Enrolled</div>
+</div>
+
+<div class="enrollment-count">${enrollSnap.size}</div>
+`;
+
+      container.appendChild(div);
+
+    }
+
+  }
+
+  /* COURSE DROPDOWN */
+
+  async function loadCourseDropdown() {
+
+    const select = document.getElementById("courseSelect");
+
+    const snap = await getDocs(
+
+      query(collection(db, "courses"),
+        where("uploadedBy", "==", auth.currentUser.uid))
+
+    );
+
+    select.innerHTML = "<option>Select Course</option>";
+
+    snap.forEach(doc => {
+
+      const opt = document.createElement("option");
+
+      opt.value = doc.id;
+      opt.textContent = doc.data().course;
+
+      select.appendChild(opt);
+
+    });
+
+    select.addEventListener("change", (e) => {
+
+      loadStudentPerformance(e.target.value);
+
+    });
+
+  }
+
+  /* STUDENT PERFORMANCE */
+
+  async function loadStudentPerformance(courseId) {
+
+    const container = document.getElementById("performanceList");
+
+    const snap = await getDocs(
+      query(collection(db, "course_quiz_results"),
+        where("courseId", "==", courseId))
+    );
+
+    container.innerHTML = "";
+
+    let scores = [];
+    let names = [];
+
+    snap.forEach(doc => {
+
+      const data = doc.data();
+
+      scores.push(data.score);
+      names.push(data.studentName);
+
+      const div = document.createElement("div");
+
+      div.innerHTML = `
+<strong>${data.studentName}</strong>
+<p>${data.score}%</p>
+`;
+
+      container.appendChild(div);
+
+    });
+
+    renderPerformanceChart(names, scores);
+
+  }
+
+  function renderPerformanceChart(names, scores) {
+
+    const ctx = document.getElementById("performanceChart");
+
+    if (performanceChart) performanceChart.destroy();
+
+    performanceChart = new Chart(ctx, {
+
+      type: "bar",
+
+      data: {
+        labels: names,
+        datasets: [{
+          label: "Student Performance %",
+          data: scores,
+          backgroundColor: "#4f46e5"
+        }]
+      },
+
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100
+          }
+        }
+      }
+
+    });
+
+  }
+
+  /* COMMENTS */
+
+  function loadComments(courseId) {
+
+    const list = document.querySelector(".commentList");
+
+    const q = query(
+
+      collection(db, "course_comments"),
+      where("courseId", "==", courseId),
+      orderBy("createdAt", "asc")
+
+    );
+
+    onSnapshot(q, (snap) => {
+
+      list.innerHTML = "";
+
+      snap.forEach(docSnap => {
+
+        const data = docSnap.data();
+
+        const div = document.createElement("div");
+
+        div.className = "chatMsg";
+
+        div.innerHTML = `
 <strong>${data.userName}</strong>
 <p>${data.message}</p>
 `;
 
-     list.appendChild(div);
+        list.appendChild(div);
 
-   });
+      });
 
-   list.scrollTop = list.scrollHeight;
+      list.scrollTop = list.scrollHeight;
 
- });
+    });
+
+  }
+
+  /* QUIZ RESULTS */
+
+async function loadQuizResults() {
+
+  const container = document.getElementById("quizResults");
+
+  const snap = await getDocs(collection(db, "course_quiz_results"));
+
+  container.innerHTML = "";
+
+  if (snap.empty) {
+    container.innerHTML = "<p>No results yet.</p>";
+    return;
+  }
+
+  for (const resultDoc of snap.docs) {
+
+    const data = resultDoc.data();
+
+    let studentName = "Unknown Student";
+    let courseName = "Unknown Course";
+    let submitTime = "Unknown time";
+
+    /* FETCH STUDENT NAME */
+
+    if (data.userId) {
+
+      try {
+
+        const userSnap = await getDoc(doc(db, "users", data.userId));
+
+        if (userSnap.exists()) {
+
+          const user = userSnap.data();
+
+          studentName =
+            user.firstName ||
+            user.name ||
+            user.fullName ||
+            user.email ||
+            "Student";
+
+        }
+
+      } catch (err) {
+        console.error("User fetch error:", err);
+      }
+    }
+
+    /* FETCH COURSE NAME FROM ENROLLMENTS */
+
+    if (data.userId) {
+
+      try {
+
+        const enrollSnap = await getDocs(
+          query(
+            collection(db, "enrollments"),
+            where("userId", "==", data.userId)
+          )
+        );
+
+        if (!enrollSnap.empty) {
+
+          const enrollment = enrollSnap.docs[0].data();
+
+          const courseSnap = await getDoc(
+            doc(db, "courses", enrollment.courseId)
+          );
+
+          if (courseSnap.exists()) {
+
+            courseName = courseSnap.data().course;
+
+          }
+
+        }
+
+      } catch (err) {
+        console.error("Enrollment fetch error:", err);
+      }
+    }
+
+    /* FORMAT SUBMISSION TIME */
+
+    if (data.submittedAt) {
+
+      const date = data.submittedAt.toDate();
+
+      submitTime = date.toLocaleString();
+
+    }
+
+    const div = document.createElement("div");
+
+    div.innerHTML = `
+      <strong>${studentName}</strong>
+      <p>Course: ${courseName}</p>
+      <p>Score: ${data.score}</p>
+      <p>Submitted: ${submitTime}</p>
+      <hr>
+    `;
+
+    container.appendChild(div);
+
+  }
 
 }
 
+  /* QUIZZES */
 
-/* ================= LOAD QUIZZES ================= */
+  function loadMyQuizzes() {
 
-function loadMyQuizzes(){
+    const q = query(
+      collection(db, "quizzes"),
+      where("createdBy", "==", auth.currentUser.uid)
+    );
 
- const q=query(
-  collection(db,"quizzes"),
-  where("createdBy","==",auth.currentUser.uid)
- );
+    onSnapshot(q, async (snapshot) => {
 
- onSnapshot(q,async(snapshot)=>{
+      quizContainer.innerHTML = "";
 
-   quizContainer.innerHTML="";
+      if (snapshot.empty) {
+        quizContainer.innerHTML = "<p>No quizzes created yet.</p>";
+        return;
+      }
 
-   if(snapshot.empty){
-     quizContainer.innerHTML="<p>No quizzes created yet.</p>";
-     return;
-   }
+      for (const quizDoc of snapshot.docs) {
 
-   for(const quizDoc of snapshot.docs){
+        const quiz = quizDoc.data();
 
-     const quiz = quizDoc.data();
+        let courseName = "Unknown Course";
 
-     let courseName="Unknown Course";
+        if (quiz.courseId) {
+          const courseDoc = await getDoc(doc(db, "courses", quiz.courseId));
+          if (courseDoc.exists()) {
+            courseName = courseDoc.data().course;
+          }
+        }
 
-     if(quiz.courseId){
-       const courseDoc=await getDoc(doc(db,"courses",quiz.courseId));
-       if(courseDoc.exists()){
-         courseName=courseDoc.data().course;
-       }
-     }
+        const div = document.createElement("div");
 
-     const div=document.createElement("div");
-
-     div.innerHTML=`
+        div.innerHTML = `
 <p>
 📝 <strong>${quiz.title}</strong><br>
 <small>Course: ${courseName}</small>
@@ -328,49 +657,55 @@ function loadMyQuizzes(){
 <hr>
 `;
 
-     div.querySelector(".editQuiz").onclick=()=>{
-       window.location="createQuiz.html?quiz="+quizDoc.id;
-     };
+        div.querySelector(".editQuiz").onclick = () => {
+          window.location = "createQuiz.html?quiz=" + quizDoc.id;
+        };
 
-     div.querySelector(".deleteQuiz").onclick=async()=>{
+        div.querySelector(".deleteQuiz").onclick = async () => {
 
-       if(!confirm("Delete this quiz?")) return;
+          if (!confirm("Delete this quiz?")) return;
 
-       try{
+          try {
 
-         const questionQuery=query(
-          collection(db,"quiz_questions"),
-          where("quizId","==",quizDoc.id)
-         );
+            const questionQuery = query(
+              collection(db, "quiz_questions"),
+              where("quizId", "==", quizDoc.id)
+            );
 
-         const questions=await getDocs(questionQuery);
-         for(const q of questions.docs) await deleteDoc(q.ref);
+            const questions = await getDocs(questionQuery);
 
-         const resultQuery=query(
-          collection(db,"quiz_results"),
-          where("quizId","==",quizDoc.id)
-         );
+            for (const q of questions.docs) {
+              await deleteDoc(q.ref);
+            }
 
-         const results=await getDocs(resultQuery);
-         for(const r of results.docs) await deleteDoc(r.ref);
+            const resultQuery = query(
+              collection(db, "quiz_results"),
+              where("quizId", "==", quizDoc.id)
+            );
 
-         await deleteDoc(doc(db,"quizzes",quizDoc.id));
+            const results = await getDocs(resultQuery);
 
-         showMessage("Quiz deleted");
+            for (const r of results.docs) {
+              await deleteDoc(r.ref);
+            }
 
-       }catch(err){
-         console.error(err);
-         showMessage("Delete failed. Firestore permission blocked.");
-       }
+            await deleteDoc(doc(db, "quizzes", quizDoc.id));
 
-     };
+            showMessage("Quiz deleted");
 
-     quizContainer.appendChild(div);
+          } catch (err) {
+            console.error(err);
+            showMessage("Delete failed");
+          }
 
-   }
+        };
 
- });
+        quizContainer.appendChild(div);
 
-}
+      }
+
+    });
+
+  }
 
 });

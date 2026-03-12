@@ -51,7 +51,12 @@ header h1 {
 .menu-btn:hover {
   transform: scale(1.1);
 }
-
+/*icons*/
+.material-symbols-outlined {
+  font-size: 24px;
+  color:#eef4ff;
+  vertical-align: middle;
+}
 /* ================= NOTIFICATION BELL ================= */
 
 .notify{

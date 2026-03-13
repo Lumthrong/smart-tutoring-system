@@ -721,6 +721,8 @@ Your task:
    such as ≥ ≤ ≠ ± × ÷ √ ^ ² ³ −.
 2. If no mathematical expressions are present, generate normal
    conceptual or factual questions from the syllabus.
+3. priortize covering random portions of the entire syllabus. 
+   example: General knowledge, reasoning, science, english if available in the syllabus.
 
 Rules:
 - Generate EXACTLY 5 MCQs from the syllabus.

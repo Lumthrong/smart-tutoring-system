@@ -645,7 +645,13 @@ Text:
 ${text}
 `;
 
-return await askGroq("llama-3.3-70b-versatile",prompt);
+const repaired = await askGroq("llama-3.1-8b-instant", prompt);
+
+if(!repaired || repaired === "incorrect"){
+return text;
+}
+
+return repaired;
 
 }
 app.post("/generate-test", async (req, res) => {
@@ -693,7 +699,9 @@ app.post("/generate-test", async (req, res) => {
 
 /* Repair corrupted math expressions */
 
+if(/[=√×÷^≤≥±]/.test(text)){
 text = await repairMathText(text);
+}
 
     /* ================= AI REQUEST ================= */
 

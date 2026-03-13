@@ -36,8 +36,8 @@ async function verifyToken(req, res, next) {
 
   // token from URL
   if (!token && req.query.token) {
-  token = req.query.token;
-}
+    token = req.query.token;
+  }
 
   if (!token) {
     return res.status(401).send("Unauthorized");
@@ -47,7 +47,7 @@ async function verifyToken(req, res, next) {
 
     const decoded = await admin.auth().verifyIdToken(token);
 
-console.log("USER ROLE:", decoded.role);
+    console.log("USER ROLE:", decoded.role);
 
     req.user = decoded;
 
@@ -62,24 +62,24 @@ console.log("USER ROLE:", decoded.role);
 }
 /* ================= ROLE CHECK ================= */
 
-function requireRole(role){
+function requireRole(role) {
 
-  return async (req,res,next)=>{
+  return async (req, res, next) => {
 
-    if(!req.user){
+    if (!req.user) {
       return res.status(403).send("Forbidden");
     }
 
-    try{
+    try {
 
       const uid = req.user.uid;
 
-     const userDoc = await db
-  .collection("users")
-  .doc(uid)
-  .get();
+      const userDoc = await db
+        .collection("users")
+        .doc(uid)
+        .get();
 
-      if(!userDoc.exists){
+      if (!userDoc.exists) {
         return res.status(403).send("Forbidden");
       }
 
@@ -87,21 +87,21 @@ function requireRole(role){
 
       console.log("FIRESTORE ROLE:", userRole);
 
-      if(role === "teacher"){
-        if(userRole !== "teacher" && userRole !== "pending_teacher"){
+      if (role === "teacher") {
+        if (userRole !== "teacher" && userRole !== "pending_teacher") {
           return res.status(403).send("Forbidden");
         }
       }
 
-      else if(userRole !== role){
+      else if (userRole !== role) {
         return res.status(403).send("Forbidden");
       }
 
       next();
 
-    }catch(err){
+    } catch (err) {
 
-      console.error("ROLE CHECK ERROR:",err);
+      console.error("ROLE CHECK ERROR:", err);
       res.status(500).send("Server error");
 
     }
@@ -133,23 +133,23 @@ const __dirname = path.dirname(__filename);
 app.get("/admin.html",
   verifyToken,
   requireRole("admin"),
-  (req,res)=>{
-    res.sendFile(path.join(__dirname,"public/admin.html"));
+  (req, res) => {
+    res.sendFile(path.join(__dirname, "public/admin.html"));
   }
 );
 
 app.get("/teacher.html",
   verifyToken,
   requireRole("teacher"),
-  (req,res)=>{
-    res.sendFile(path.join(__dirname,"public/teacher.html"));
+  (req, res) => {
+    res.sendFile(path.join(__dirname, "public/teacher.html"));
   }
 );
 
 app.get("/dashboard.html",
   verifyToken,
-  (req,res)=>{
-    res.sendFile(path.join(__dirname,"public/dashboard.html"));
+  (req, res) => {
+    res.sendFile(path.join(__dirname, "public/dashboard.html"));
   }
 );
 /* ================= STATIC FILES ================= */
@@ -200,19 +200,19 @@ app.post("/send-otp", async (req, res) => {
   try {
 
     const emailResponse = await fetch("https://api.brevo.com/v3/smtp/email", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    "api-key": process.env.BREVO_API_KEY
-  },
-  body: JSON.stringify({
-    sender: {
-      email: "iamrein22@gmail.com",
-      name: "Smart Tutor"
-    },
-    to: [{ email: email }],
-    subject: "Smart Tutor Verification Code",
-    htmlContent: `
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": process.env.BREVO_API_KEY
+      },
+      body: JSON.stringify({
+        sender: {
+          email: "iamrein22@gmail.com",
+          name: "Smart Tutor"
+        },
+        to: [{ email: email }],
+        subject: "Smart Tutor Verification Code",
+        htmlContent: `
 <div style="font-family:Segoe UI,Arial;background:#f4f6fb;padding:40px">
 
 <div style="max-width:480px;margin:auto;background:white;border-radius:12px;
@@ -256,12 +256,12 @@ ${otp}
 </div>
 </div>
 `
-  })
-});
+      })
+    });
     if (!emailResponse.ok) {
-  const errorText = await emailResponse.text();
-  console.error("BREVO ERROR:", errorText);
-  return res.status(500).json({ error: "Email send failed" });
+      const errorText = await emailResponse.text();
+      console.error("BREVO ERROR:", errorText);
+      return res.status(500).json({ error: "Email send failed" });
     }
 
     res.json({ success: true });
@@ -284,25 +284,25 @@ app.post("/verify-otp", (req, res) => {
 
   const data = otpStore.get(email);
 
-  if(!data){
-    return res.status(400).json({error:"OTP expired"});
+  if (!data) {
+    return res.status(400).json({ error: "OTP expired" });
   }
 
-  if(Date.now() > data.expires){
+  if (Date.now() > data.expires) {
     otpStore.delete(email);
-    return res.status(400).json({error:"OTP expired"});
+    return res.status(400).json({ error: "OTP expired" });
   }
 
-  if(String(data.otp) !== otp){
-    return res.status(400).json({error:"Invalid OTP"});
+  if (String(data.otp) !== otp) {
+    return res.status(400).json({ error: "Invalid OTP" });
   }
 
   otpStore.delete(email);
 
-otpStore.set(email,{
-  otp,
-  expires: Date.now() + 10 * 60 * 1000
-});
+  otpStore.set(email, {
+    otp,
+    expires: Date.now() + 10 * 60 * 1000
+  });
 
   res.json({ success: true });
 
@@ -310,29 +310,29 @@ otpStore.set(email,{
 
 /* ================= SET USER ROLE CLAIM ================= */
 
-app.post("/set-role", async (req,res)=>{
+app.post("/set-role", async (req, res) => {
 
   const { uid, role } = req.body;
 
-  if(!uid || !role){
-    return res.status(400).json({error:"uid and role required"});
+  if (!uid || !role) {
+    return res.status(400).json({ error: "uid and role required" });
   }
 
-  try{
+  try {
 
-    await admin.auth().setCustomUserClaims(uid,{ role });
+    await admin.auth().setCustomUserClaims(uid, { role });
 
     // verify claim was written
     const user = await admin.auth().getUser(uid);
 
     console.log("ROLE SET:", user.customClaims);
 
-    res.json({success:true});
+    res.json({ success: true });
 
-  }catch(err){
+  } catch (err) {
 
-    console.error("SET ROLE ERROR:",err);
-    res.status(500).json({error:"Failed to set role"});
+    console.error("SET ROLE ERROR:", err);
+    res.status(500).json({ error: "Failed to set role" });
 
   }
 
@@ -358,15 +358,15 @@ app.post("/upload", multiUpload, async (req, res) => {
     const videoFile = req.files.video ? req.files.video[0] : null;
     const coverFile = req.files.cover ? req.files.cover[0] : null;
 
-let coverUpload = null;
+    let coverUpload = null;
 
-if (coverFile) {
+    if (coverFile) {
 
-  coverUpload = await cloudinary.uploader.upload(coverFile.path,{
-    folder:"uploads/covers"
-  });
+      coverUpload = await cloudinary.uploader.upload(coverFile.path, {
+        folder: "uploads/covers"
+      });
 
-}
+    }
 
     /* ================= EXTRACT PDF TEXT ================= */
 
@@ -375,27 +375,27 @@ if (coverFile) {
     try {
       const pdfBuffer = fs.readFileSync(pdfFile.path);
       const pdfData = await pdfParse(pdfBuffer);
-      extractedText = pdfData.text.substring(0,15000);
-    } catch(err){
-      console.error("PDF PARSE ERROR:",err);
+      extractedText = pdfData.text.substring(0, 15000);
+    } catch (err) {
+      console.error("PDF PARSE ERROR:", err);
     }
 
     /* ================= CLOUDINARY PDF UPLOAD ================= */
 
-    const pdfUpload = await cloudinary.uploader.upload(pdfFile.path,{
-      resource_type:"raw",
-      folder:"uploads/pdfs"
+    const pdfUpload = await cloudinary.uploader.upload(pdfFile.path, {
+      resource_type: "raw",
+      folder: "uploads/pdfs"
     });
 
     /* ================= CLOUDINARY VIDEO UPLOAD ================= */
 
     let videoUpload = null;
 
-    if(videoFile){
+    if (videoFile) {
 
-      videoUpload = await cloudinary.uploader.upload(videoFile.path,{
-        resource_type:"auto",
-        folder:"uploads/videos"
+      videoUpload = await cloudinary.uploader.upload(videoFile.path, {
+        resource_type: "auto",
+        folder: "uploads/videos"
       });
 
     }
@@ -403,32 +403,32 @@ if (coverFile) {
     /* ================= DELETE TEMP FILES ================= */
 
     fs.unlinkSync(pdfFile.path);
-    if(videoFile) fs.unlinkSync(videoFile.path);
-    if(coverFile) fs.unlinkSync(coverFile.path);
+    if (videoFile) fs.unlinkSync(videoFile.path);
+    if (coverFile) fs.unlinkSync(coverFile.path);
 
     res.json({
-  success:true,
-  department,
-  semester,
-  course,
+      success: true,
+      department,
+      semester,
+      course,
 
-  coverURL: coverUpload ? coverUpload.secure_url : null,
-  coverFilename: coverUpload ? coverUpload.public_id : null,
+      coverURL: coverUpload ? coverUpload.secure_url : null,
+      coverFilename: coverUpload ? coverUpload.public_id : null,
 
-  pdfURL: pdfUpload.secure_url,
-  pdfFilename: pdfUpload.public_id,
+      pdfURL: pdfUpload.secure_url,
+      pdfFilename: pdfUpload.public_id,
 
-  videoURL: videoUpload ? videoUpload.secure_url : null,
-  videoFilename: videoUpload ? videoUpload.public_id : null,
+      videoURL: videoUpload ? videoUpload.secure_url : null,
+      videoFilename: videoUpload ? videoUpload.public_id : null,
 
-  text: extractedText
-});
+      text: extractedText
+    });
 
   }
-  catch(err){
+  catch (err) {
 
-    console.error("UPLOAD ERROR:",err);
-    res.status(500).json({ error:"Upload failed" });
+    console.error("UPLOAD ERROR:", err);
+    res.status(500).json({ error: "Upload failed" });
 
   }
 
@@ -445,17 +445,17 @@ app.delete("/delete-course/:publicId", async (req, res) => {
     if (!publicId)
       return res.status(400).json({ error: "File id required" });
 
-    await cloudinary.uploader.destroy(publicId,{
-      resource_type:"auto"
+    await cloudinary.uploader.destroy(publicId, {
+      resource_type: "auto"
     });
 
-    res.json({ success:true });
+    res.json({ success: true });
 
   }
-  catch(err){
+  catch (err) {
 
-    console.error("DELETE ERROR:",err);
-    res.status(500).json({ error:"Delete failed" });
+    console.error("DELETE ERROR:", err);
+    res.status(500).json({ error: "Delete failed" });
 
   }
 
@@ -468,32 +468,186 @@ app.post("/upload-profile", upload.single("profile"), async (req, res) => {
   try {
 
     if (!req.file)
-      return res.status(400).json({ success:false });
+      return res.status(400).json({ success: false });
 
-    const uploadResult = await cloudinary.uploader.upload(req.file.path,{
-      folder:"uploads/profiles"
+    const uploadResult = await cloudinary.uploader.upload(req.file.path, {
+      folder: "uploads/profiles"
     });
 
     fs.unlinkSync(req.file.path);
 
     res.json({
-      success:true,
+      success: true,
       fileURL: uploadResult.secure_url,
       filename: uploadResult.public_id
     });
 
   }
-  catch(err){
+  catch (err) {
 
-    console.error("PROFILE UPLOAD ERROR:",err);
-    res.status(500).json({ success:false });
+    console.error("PROFILE UPLOAD ERROR:", err);
+    res.status(500).json({ success: false });
 
   }
 
 });
 
 /* ================= AI TEST GENERATION ================= */
+async function askGroq(model, prompt) {
 
+  try {
+
+    const res = await fetch(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.GROQ_API_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          model,
+          messages: [
+            {
+              role: "user",
+              content: prompt
+            }
+          ]
+        })
+      }
+    );
+
+    const data = await res.json();
+
+    /* HANDLE GROQ ERRORS */
+
+    if (data.error) {
+      console.error("GROQ ERROR:", data.error.message);
+      return "incorrect";
+    }
+
+    /* HANDLE EMPTY RESPONSE */
+
+    if (!data.choices || !data.choices[0]) {
+      console.error("GROQ INVALID RESPONSE:", data);
+      return "incorrect";
+    }
+
+    return data.choices[0].message.content;
+
+  }
+  catch (err) {
+
+    console.error("GROQ REQUEST FAILED:", err);
+    return "incorrect";
+
+  }
+
+}
+async function verifyGemini(question, options, answer) {
+
+  const prompt = `
+Question:
+${question}
+
+Options:
+${options.join("\n")}
+
+Proposed Correct Answer:
+${answer}
+
+Return ONLY:
+correct
+or
+incorrect
+`;
+
+  const res = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [{ text: prompt }]
+          }
+        ]
+      })
+    }
+  );
+
+  const data = await res.json();
+
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+
+  return text.toLowerCase().includes("correct");
+
+}
+
+async function verifyWithThreeModels(question, options, answer){
+
+const prompt = `
+Question:
+${question}
+
+Options:
+${options.join("\n")}
+
+Proposed Correct Answer:
+${answer}
+
+Return ONLY:
+correct
+or
+incorrect
+`;
+
+try{
+
+const [groq1, groq2, gemini] = await Promise.all([
+
+askGroq("llama-3.3-70b-versatile",prompt),
+askGroq("llama-3.1-8b-instant",prompt),
+verifyGemini(question,options,answer)
+
+]);
+
+const r1 = String(groq1).toLowerCase().includes("correct");
+const r2 = String(groq2).toLowerCase().includes("correct");
+const r3 = gemini;
+
+const votes = [r1,r2,r3].filter(v => v).length;
+
+return votes >= 2;
+
+}catch(err){
+
+console.error("Verification error:",err);
+return false;
+
+}
+
+}
+
+/*regenerate math*/
+async function repairMathText(text){
+
+const prompt = `
+The following text was extracted from a PDF and contains
+broken mathematical symbols.
+
+Fix the text and restore the correct math expressions.
+
+Text:
+${text}
+`;
+
+return await askGroq("llama-3.3-70b-versatile",prompt);
+
+}
 app.post("/generate-test", async (req, res) => {
 
   const { pdfURL } = req.body;
@@ -523,8 +677,8 @@ app.post("/generate-test", async (req, res) => {
       .replace(/\s+/g, " ")
       .split(" ");
 
-    if(words.length < 1000){
-      return res.status(400).json({ error:"PDF text too small for quiz generation" });
+    if (words.length < 1000) {
+      return res.status(400).json({ error: "PDF text too small for quiz generation" });
     }
 
     /* ================= RANDOM CHUNK (AVOIDS TOKEN LIMITS) ================= */
@@ -535,7 +689,11 @@ app.post("/generate-test", async (req, res) => {
       Math.random() * Math.max(1, words.length - chunkSize)
     );
 
-    const text = words.slice(start, start + chunkSize).join(" ");
+  let text = words.slice(start, start + chunkSize).join(" ");
+
+/* Repair corrupted math expressions */
+
+text = await repairMathText(text);
 
     /* ================= AI REQUEST ================= */
 
@@ -555,15 +713,24 @@ app.post("/generate-test", async (req, res) => {
               content: `
 You are an academic exam generator.
 
-Create 5 university-level MCQs ONLY from the study material below.
+The syllabus text below was extracted from a PDF and may contain
+missing or corrupted mathematical symbols.
+
+Your task:
+1. If mathematical expressions appear, reconstruct the intended symbols
+   such as ≥ ≤ ≠ ± × ÷ √ ^ ² ³ −.
+2. If no mathematical expressions are present, generate normal
+   conceptual or factual questions from the syllabus.
 
 Rules:
-- Questions must come from the syllabus.
-- Avoid general knowledge.
-- Avoid cover pages or introductions.
-- Each question must test understanding.
+- Generate EXACTLY 5 MCQs from the syllabus.
+- Questions can be conceptual, theoretical, numerical, or definition based.
+- Do NOT invent information outside the syllabus.
+- If math expressions appear, fix corrupted symbols before using them.
+- Each question must have exactly 4 options.
+- The correct answer MUST be exactly one of the options.
 
-Return STRICT JSON:
+Return STRICT JSON ONLY.
 
 {
  "questions":[
@@ -575,6 +742,10 @@ Return STRICT JSON:
   }
  ]
 }
+
+If the syllabus cannot generate questions, return:
+
+{"questions":[]}
 
 Syllabus:
 ${text}
@@ -594,26 +765,76 @@ ${text}
       return res.status(500).json({ error: "AI response invalid" });
     }
 
-    const raw = data.choices[0].message.content;
+const raw = data.choices[0].message.content;
 
-    let parsed;
+let parsed;
 
-    try {
-      parsed = JSON.parse(raw);
-    } catch {
+try{
 
-      const match = raw.match(/\{[\s\S]*\}/);
+let cleaned = raw
+.replace(/```json/gi,"")
+.replace(/```/g,"")
+.trim();
 
-      if (!match) {
-        console.error("AI JSON PARSE FAILED:", raw);
-        return res.status(500).json({ error: "AI response invalid JSON" });
+const match = cleaned.match(/\{[\s\S]*\}/);
+
+if(!match){
+throw new Error("No JSON detected");
+}
+
+parsed = JSON.parse(match[0]);
+
+}catch(err){
+
+console.warn("AI JSON fixed automatically");
+
+const match = raw.match(/\{[\s\S]*\}/);
+
+if(match){
+parsed = JSON.parse(match[0]);
+}else{
+return res.status(500).json({
+error:"AI returned invalid JSON"
+});
+}
+
+}
+
+    /* ================= VERIFY QUESTIONS ================= */
+
+    const verifiedQuestions = [];
+
+    for(const q of parsed.questions){
+
+await new Promise(r => setTimeout(r, 1200));
+/* FILTER BAD QUESTIONS */
+
+if(!q.options.includes(q.answer)){
+console.warn("Rejected question because answer not in options:", q.question);
+continue;
+}
+
+      const verified = await verifyWithThreeModels(
+        q.question,
+        q.options,
+        q.answer
+      );
+
+      if (verified) {
+        verifiedQuestions.push(q);
       }
-
-      parsed = JSON.parse(match[0]);
 
     }
 
-    res.json(parsed);
+    /* if AI removed too many questions */
+
+    if (verifiedQuestions.length < 3) {
+      console.warn("Too many questions rejected by verification");
+    }
+
+    res.json({
+      questions: verifiedQuestions
+    });
 
   } catch (err) {
 

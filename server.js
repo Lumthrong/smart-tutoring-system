@@ -130,19 +130,19 @@ const __dirname = path.dirname(__filename);
 
 /* ================= DASHBOARD PROTECTION ================= */
 
-app.get("/adminDashboard.html",
+app.get("/admin.html",
   verifyToken,
   requireRole("admin"),
   (req,res)=>{
-    res.sendFile(path.join(__dirname,"public/adminDashboard.html"));
+    res.sendFile(path.join(__dirname,"public/admin.html"));
   }
 );
 
-app.get("/teacherDashboard.html",
+app.get("/teacher.html",
   verifyToken,
   requireRole("teacher"),
   (req,res)=>{
-    res.sendFile(path.join(__dirname,"public/teacherDashboard.html"));
+    res.sendFile(path.join(__dirname,"public/teacher.html"));
   }
 );
 

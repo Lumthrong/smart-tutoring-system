@@ -645,7 +645,7 @@ Text:
 ${text}
 `;
 
-const repaired = await askGroq("llama-3.1-8b-instant", prompt);
+const repaired = await askGroq("llama-3.3-70b-versatile", prompt);
 
 if(!repaired || repaired === "incorrect"){
 return text;

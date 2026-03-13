@@ -111,7 +111,7 @@ btn.innerHTML=`Sending <span class="btn-spinner"></span>`;
 
 try{
 
-const res=await fetch("/send-otp",{
+const res=await fetch(API+"/send-otp",{
 method:"POST",
 headers:{ "Content-Type":"application/json"},
 body:JSON.stringify({email})
@@ -161,7 +161,7 @@ return;
 
 try{
 
-const verify=await fetch("/verify-otp",{
+const verify=await fetch(API+"/verify-otp",{
 method:"POST",
 headers:{ "Content-Type":"application/json" },
 body:JSON.stringify({email,otp})
@@ -202,10 +202,10 @@ await auth.currentUser.getIdToken(true);
 const token = await auth.currentUser.getIdToken();
 
 if(role==="admin")
-window.location.href=`/adminDashboard.html?token=${token}`;
+window.location.href=`/admin.html?token=${token}`;
 
 else if(role==="teacher" || role==="pending_teacher")
-window.location.href=`/teacherDashboard.html?token=${token}`;
+window.location.href=`/dashboard.html?token=${token}`;
 
 else
 window.location.href=`/dashboard.html?token=${token}`;
@@ -255,10 +255,10 @@ if(!role) role="student";
 const token = await auth.currentUser.getIdToken();
 
 if(role==="admin")
-window.location.href=`/adminDashboard.html?token=${token}`;
+window.location.href=`/admin.html?token=${token}`;
 
-else if(role==="teacher" || role==="pending_teacher")
-window.location.href=`/teacherDashboard.html?token=${token}`;
+else if(role==="teacher")
+window.location.href=`/teacher.html?token=${token}`;
 
 else
 window.location.href=`/dashboard.html?token=${token}`;
@@ -326,10 +326,10 @@ if(!role) role="student";
 const token = await auth.currentUser.getIdToken();
 
 if(role==="admin")
-window.location.href=`/adminDashboard.html?token=${token}`;
+window.location.href=`/admin.html?token=${token}`;
 
 else if(role==="teacher" || role==="pending_teacher")
-window.location.href=`/teacherDashboard.html?token=${token}`;
+window.location.href=`/teacher.html?token=${token}`;
 
 else
 window.location.href=`/dashboard.html?token=${token}`;
@@ -362,10 +362,10 @@ try{
 const token = await user.getIdToken();
 
 if (role === "admin")
-dashboardLink.href = `/adminDashboard.html?token=${token}`;
+dashboardLink.href = `/admin.html?token=${token}`;
 
-else if (role === "teacher" || role === "pending_teacher")
-dashboardLink.href = `/teacherDashboard.html?token=${token}`;
+else if (role === "teacher")
+dashboardLink.href = `/teacher.html?token=${token}`;
 
 else
 dashboardLink.href = `/dashboard.html?token=${token}`;

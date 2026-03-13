@@ -15,7 +15,32 @@ import {
 
 import { onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+function confirmDelete(message){
 
+return new Promise(resolve=>{
+
+const modal = document.getElementById("confirmModal");
+const text = document.getElementById("confirmMessage");
+const ok = document.getElementById("confirmOk");
+const cancel = document.getElementById("confirmCancel");
+
+text.innerText = message;
+
+modal.classList.remove("hidden");
+
+ok.onclick = ()=>{
+modal.classList.add("hidden");
+resolve(true);
+};
+
+cancel.onclick = ()=>{
+modal.classList.add("hidden");
+resolve(false);
+};
+
+});
+
+}
 let activeCourseId = null;
 let performanceChart = null;
 
@@ -84,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (!activeCourseId) {
 
-        alert("Open a course discussion first.");
+        showMessage("Open a course discussion first.");
         return;
 
       }
@@ -191,16 +216,29 @@ document.addEventListener("DOMContentLoaded", () => {
       for (const dept in grouped) {
 
         const section = document.createElement("div");
-        section.className = "dept-section";
+section.className = "dept-section";
 
-        section.innerHTML = `
-<h4 class="dept-title">${dept}</h4>
-<div class="dept-courses"></div>
-`;
+const header = document.createElement("div");
+header.className = "dept-title";
+header.innerHTML = `<span class="material-symbols-outlined">
+          newsstand
+        </span> ${dept}`;
+
+const content = document.createElement("div");
+content.className = "dept-courses hidden";
+
+/* toggle folder */
+
+header.onclick = () => {
+  content.classList.toggle("hidden");
+};
+
+section.appendChild(header);
+section.appendChild(content);
 
         courseContainer.appendChild(section);
 
-        const grid = section.querySelector(".dept-courses");
+        const grid = content;
 
         grouped[dept].forEach(course => {
 
@@ -262,7 +300,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           div.querySelector(".deleteCourse").onclick = async () => {
 
-            if (!confirm("Delete this course?")) return;
+            if (!(await confirmDelete("Delete this course?"))) return;
 
             await deleteDoc(doc(db, "courses", courseId));
 
@@ -391,76 +429,297 @@ div.innerHTML = `
 
   }
 
-  /* STUDENT PERFORMANCE */
+/* ================= STUDENT PERFORMANCE ================= */
 
-  async function loadStudentPerformance(courseId) {
+async function loadStudentPerformance(courseId) {
 
-    const container = document.getElementById("performanceList");
+  const container = document.getElementById("performanceList");
+  const resultsSnap = await getDocs(collection(db, "course_quiz_results"));
 
-    const snap = await getDocs(
-      query(collection(db, "course_quiz_results"),
-        where("courseId", "==", courseId))
-    );
+  container.innerHTML = "";
 
-    container.innerHTML = "";
+  const studentScores = {};
+  const studentNames = {};
 
-    let scores = [];
-    let names = [];
+  for (const docSnap of resultsSnap.docs) {
 
-    snap.forEach(doc => {
+    const data = docSnap.data();
 
-      const data = doc.data();
+    if (!data.quizId) continue;
 
-      scores.push(data.score);
-      names.push(data.studentName);
+    const quizSnap = await getDoc(doc(db, "quizzes", data.quizId));
+    if (!quizSnap.exists()) continue;
 
-      const div = document.createElement("div");
+    const quiz = quizSnap.data();
 
-      div.innerHTML = `
-<strong>${data.studentName}</strong>
-<p>${data.score}%</p>
-`;
+    if (quiz.courseId !== courseId) continue;
 
-      container.appendChild(div);
+    let studentName = "Student";
 
-    });
+    if (data.userId) {
 
-    renderPerformanceChart(names, scores);
+      const userSnap = await getDoc(doc(db, "users", data.userId));
+
+      if (userSnap.exists()) {
+
+        const user = userSnap.data();
+
+        studentName =
+          user.firstName ||
+          user.name ||
+          user.fullName ||
+          user.email ||
+          "Student";
+
+      }
+
+    }
+
+    if (!studentScores[data.userId]) {
+      studentScores[data.userId] = [];
+      studentNames[data.userId] = studentName;
+    }
+
+    studentScores[data.userId].push(data.score);
 
   }
 
-  function renderPerformanceChart(names, scores) {
+  const names = [];
+  const scores = [];
+  const userIds = [];
 
-    const ctx = document.getElementById("performanceChart");
+  for (const uid in studentScores) {
 
-    if (performanceChart) performanceChart.destroy();
+    const arr = studentScores[uid];
+    const avg = arr.reduce((a,b)=>a+b,0) / arr.length;
 
-    performanceChart = new Chart(ctx, {
+    names.push(studentNames[uid]);
+    scores.push(Math.round(avg));
+    userIds.push(uid);
 
-      type: "bar",
+    const div = document.createElement("div");
 
-      data: {
-        labels: names,
-        datasets: [{
-          label: "Student Performance %",
+    div.innerHTML = `
+<strong>${studentNames[uid]}</strong>
+<p>${Math.round(avg)}%</p>
+`;
+
+    container.appendChild(div);
+
+  }
+
+  renderLollipopChart(names, scores);
+
+  /* ===== Find Top & Lowest ===== */
+
+  const maxScore = Math.max(...scores);
+  const minScore = Math.min(...scores);
+
+  const topIndex = scores.indexOf(maxScore);
+  const lowIndex = scores.indexOf(minScore);
+
+  showMentorshipInsights(
+    names[topIndex],
+    userIds[topIndex],
+    maxScore,
+    names[lowIndex],
+    userIds[lowIndex],
+    minScore,
+    courseId
+  );
+
+}
+
+/* ================= LOLLIPOP CHART ================= */
+
+function renderLollipopChart(names, scores) {
+
+  const ctx = document.getElementById("performanceChart");
+
+  if (performanceChart) performanceChart.destroy();
+
+  performanceChart = new Chart(ctx, {
+
+    type: "bar",
+
+    data: {
+      labels: names,
+      datasets: [
+
+        {
+          type: "line",
           data: scores,
-          backgroundColor: "#4f46e5"
-        }]
+          borderColor: "#4f46e5",
+          borderWidth: 2,
+          pointRadius: 7,
+          pointBackgroundColor: "#4f46e5",
+          fill: false
+        },
+
+        {
+          type: "bar",
+          data: scores,
+          backgroundColor: "#e0e7ff",
+          borderWidth: 0
+        }
+
+      ]
+    },
+
+    options: {
+
+      responsive: true,
+
+      plugins: {
+        legend: { display:false }
       },
 
-      options: {
-        responsive: true,
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 100
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          title: {
+            display: true,
+            text: "Performance %"
           }
         }
       }
 
-    });
+    }
+
+  });
+
+}
+
+/* ================= MENTORSHIP PANEL ================= */
+
+function showMentorshipInsights(topName, topId, topScore, lowName, lowId, lowScore, courseId) {
+
+  let box = document.getElementById("mentorshipBox");
+
+  if (!box) {
+
+    box = document.createElement("div");
+    box.id = "mentorshipBox";
+    box.className = "mentorship-box";
+
+    document.getElementById("performanceChart").before(box);
 
   }
+
+  box.innerHTML = `
+
+<div class="mentor-item top">
+🏆 Top Performer:
+<span class="student-link" data-id="${topId}" data-course="${courseId}">
+${topName} (${topScore}%)
+</span>
+</div>
+
+<div class="mentor-item low">
+⚠ Needs Mentorship:
+<span class="student-link" data-id="${lowId}" data-course="${courseId}">
+${lowName} (${lowScore}%)
+</span>
+</div>
+
+`;
+
+  document.querySelectorAll(".student-link").forEach(el => {
+
+    el.onclick = () => {
+
+      const studentId = el.dataset.id;
+      const courseId = el.dataset.course;
+
+      loadStudentWeeklyChart(studentId, courseId);
+
+    };
+
+  });
+
+}
+
+/* ================= WEEKLY PERFORMANCE ================= */
+
+async function loadStudentWeeklyChart(studentId, courseId) {
+
+  const resultsSnap = await getDocs(collection(db, "course_quiz_results"));
+
+  const weeklyScores = {};
+
+  for (const docSnap of resultsSnap.docs) {
+
+    const data = docSnap.data();
+
+    if (!data.quizId) continue;
+    if (data.userId !== studentId) continue;
+
+    const quizSnap = await getDoc(doc(db, "quizzes", data.quizId));
+    if (!quizSnap.exists()) continue;
+
+    const quiz = quizSnap.data();
+
+    if (quiz.courseId !== courseId) continue;
+
+    const date = data.submittedAt.toDate();
+
+    const week = `${date.getFullYear()}-${date.getMonth()+1}-W${Math.ceil(date.getDate()/7)}`;
+
+    if (!weeklyScores[week]) weeklyScores[week] = [];
+
+    weeklyScores[week].push(data.score);
+
+  }
+
+  const weeks = Object.keys(weeklyScores);
+
+  const scores = weeks.map(w => {
+
+    const arr = weeklyScores[w];
+
+    return Math.round(arr.reduce((a,b)=>a+b,0)/arr.length);
+
+  });
+
+  renderWeeklyChart(weeks, scores);
+
+}
+
+/* ================= WEEKLY BAR CHART ================= */
+
+function renderWeeklyChart(weeks, scores) {
+
+  const ctx = document.getElementById("performanceChart");
+
+  if (performanceChart) performanceChart.destroy();
+
+  performanceChart = new Chart(ctx, {
+
+    type: "bar",
+
+    data: {
+      labels: weeks,
+      datasets: [{
+        label: "Weekly Performance %",
+        data: scores,
+        backgroundColor: "#4f46e5"
+      }]
+    },
+
+    options: {
+      responsive:true,
+      scales:{
+        y:{
+          beginAtZero:true,
+          max:100
+        }
+      }
+    }
+
+  });
+
+}
 
   /* COMMENTS */
 
@@ -504,19 +763,19 @@ div.innerHTML = `
   }
 
   /* QUIZ RESULTS */
-
 async function loadQuizResults() {
 
   const container = document.getElementById("quizResults");
+  container.innerHTML = "";
 
   const snap = await getDocs(collection(db, "course_quiz_results"));
-
-  container.innerHTML = "";
 
   if (snap.empty) {
     container.innerHTML = "<p>No results yet.</p>";
     return;
   }
+
+  const departmentMap = {};
 
   for (const resultDoc of snap.docs) {
 
@@ -524,91 +783,153 @@ async function loadQuizResults() {
 
     let studentName = "Unknown Student";
     let courseName = "Unknown Course";
+    let department = "Others";
     let submitTime = "Unknown time";
 
-    /* FETCH STUDENT NAME */
+    /* FETCH USER */
 
     if (data.userId) {
+      const userSnap = await getDoc(doc(db, "users", data.userId));
 
-      try {
-
-        const userSnap = await getDoc(doc(db, "users", data.userId));
-
-        if (userSnap.exists()) {
-
-          const user = userSnap.data();
-
-          studentName =
-            user.firstName ||
-            user.name ||
-            user.fullName ||
-            user.email ||
-            "Student";
-
-        }
-
-      } catch (err) {
-        console.error("User fetch error:", err);
+      if (userSnap.exists()) {
+        const user = userSnap.data();
+        studentName =
+          user.firstName ||
+          user.name ||
+          user.fullName ||
+          user.email ||
+          "Student";
       }
     }
 
-    /* FETCH COURSE NAME FROM ENROLLMENTS */
+    /* FETCH QUIZ → COURSE */
 
-    if (data.userId) {
+    if (data.quizId) {
 
-      try {
+      const quizSnap = await getDoc(doc(db, "quizzes", data.quizId));
 
-        const enrollSnap = await getDocs(
-          query(
-            collection(db, "enrollments"),
-            where("userId", "==", data.userId)
-          )
-        );
+      if (quizSnap.exists()) {
 
-        if (!enrollSnap.empty) {
+        const quiz = quizSnap.data();
 
-          const enrollment = enrollSnap.docs[0].data();
+        const courseSnap = await getDoc(doc(db, "courses", quiz.courseId));
 
-          const courseSnap = await getDoc(
-            doc(db, "courses", enrollment.courseId)
-          );
+        if (courseSnap.exists()) {
 
-          if (courseSnap.exists()) {
+          const course = courseSnap.data();
 
-            courseName = courseSnap.data().course;
-
-          }
+          courseName = course.course;
+          department = course.department || "Others";
 
         }
 
-      } catch (err) {
-        console.error("Enrollment fetch error:", err);
       }
+
     }
 
-    /* FORMAT SUBMISSION TIME */
+    /* FORMAT TIME */
 
     if (data.submittedAt) {
-
-      const date = data.submittedAt.toDate();
-
-      submitTime = date.toLocaleString();
-
+      submitTime = data.submittedAt.toDate().toLocaleString();
     }
 
-    const div = document.createElement("div");
+    /* ORGANIZE STRUCTURE */
 
-    div.innerHTML = `
-      <strong>${studentName}</strong>
-      <p>Course: ${courseName}</p>
-      <p>Score: ${data.score}</p>
-      <p>Submitted: ${submitTime}</p>
-      <hr>
-    `;
+    if (!departmentMap[department]) {
+      departmentMap[department] = {};
+    }
 
-    container.appendChild(div);
+    if (!departmentMap[department][courseName]) {
+      departmentMap[department][courseName] = [];
+    }
+
+    departmentMap[department][courseName].push({
+      studentName,
+      score: data.score,
+      submitTime
+    });
 
   }
+
+  /* RENDER FOLDER STRUCTURE */
+
+for (const dept in departmentMap) {
+
+  const deptDiv = document.createElement("div");
+  deptDiv.className = "dept-folder";
+
+  const deptHeader = document.createElement("div");
+  deptHeader.className = "dept-title";
+  deptHeader.innerHTML = `<span class="material-symbols-outlined">
+newsstand
+</span> ${dept}`;
+
+  const deptContent = document.createElement("div");
+  deptContent.className = "dept-content hidden";
+
+  deptHeader.onclick = () => {
+    deptContent.classList.toggle("hidden");
+  };
+
+  const courses = departmentMap[dept];
+
+  for (const course in courses) {
+
+    const courseDiv = document.createElement("div");
+
+    const courseHeader = document.createElement("div");
+    courseHeader.className = "course-title";
+    courseHeader.innerHTML = `<span class="material-symbols-outlined">
+newsstand
+</span> ${course}`;
+
+    const courseContent = document.createElement("div");
+    courseContent.className = "course-content hidden";
+
+    courseHeader.onclick = () => {
+      courseContent.classList.toggle("hidden");
+    };
+
+    /* HEADER */
+
+    const header = document.createElement("div");
+    header.className = "results-header";
+
+    header.innerHTML = `
+<span>Name</span>
+<span>Marks</span>
+<span>Date Submitted</span>
+`;
+
+    courseContent.appendChild(header);
+
+    courses[course].forEach(r => {
+
+      const div = document.createElement("div");
+      div.className = "result-item";
+
+      div.innerHTML = `
+<span>${r.studentName}</span>
+<span class="result-score">${r.score}%</span>
+<span>${r.submitTime}</span>
+`;
+
+      courseContent.appendChild(div);
+
+    });
+
+    courseDiv.appendChild(courseHeader);
+    courseDiv.appendChild(courseContent);
+    deptContent.appendChild(courseDiv);
+
+  }
+
+  deptDiv.appendChild(deptHeader);
+  deptDiv.appendChild(deptContent);
+
+  container.appendChild(deptDiv);
+
+}
 
 }
 
@@ -663,7 +984,7 @@ async function loadQuizResults() {
 
         div.querySelector(".deleteQuiz").onclick = async () => {
 
-          if (!confirm("Delete this quiz?")) return;
+         if (!(await confirmDelete("Delete this quiz?"))) return;
 
           try {
 

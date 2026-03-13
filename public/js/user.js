@@ -1,20 +1,20 @@
 import { db, auth } from "./firebase.js";
 
 import {
-collection,
-addDoc,
-onSnapshot,
-doc,
-query,
-where,
-getDocs,
-getDoc,
-orderBy,
-setDoc
+  collection,
+  addDoc,
+  onSnapshot,
+  doc,
+  query,
+  where,
+  getDocs,
+  getDoc,
+  orderBy,
+  setDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
-onAuthStateChanged
+  onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 
 /* ================= SHOW MESSAGE ================= */
@@ -45,89 +45,89 @@ let aiChartInstance = null;
 let courseChartInstance = null;
 /* ================= INIT ================= */
 
-document.addEventListener("DOMContentLoaded",()=>{
+document.addEventListener("DOMContentLoaded", () => {
 
-onAuthStateChanged(auth,(user)=>{
+  onAuthStateChanged(auth, (user) => {
 
-if(!user){
-window.location.href="login.html";
-return;
-}
+    if (!user) {
+      window.location.href = "login.html";
+      return;
+    }
 
-loadCourses(user.uid);
-loadLearningHistory(user.uid);
-loadStats(user.uid);
-loadCharts(user.uid);
+    loadCourses(user.uid);
+    loadLearningHistory(user.uid);
+    loadStats(user.uid);
+    loadCharts(user.uid);
 
-});
+  });
 
 });
 
 
 /* ================= LOAD COURSES ================= */
 
-async function loadCourses(uid){
+async function loadCourses(uid) {
 
-const enrollQuery=query(
-collection(db,"enrollments"),
-where("userId","==",uid)
-);
+  const enrollQuery = query(
+    collection(db, "enrollments"),
+    where("userId", "==", uid)
+  );
 
-const enrolledDiv=document.getElementById("enrolledCourses");
-const courseSelect=document.getElementById("courseSelect");
+  const enrolledDiv = document.getElementById("enrolledCourses");
+  const courseSelect = document.getElementById("courseSelect");
 
-onSnapshot(enrollQuery,async(snapshot)=>{
+  onSnapshot(enrollQuery, async (snapshot) => {
 
-enrolledDiv.innerHTML="";
-courseSelect.innerHTML="";
+    enrolledDiv.innerHTML = "";
+    courseSelect.innerHTML = "";
 
-document.getElementById("courseCount").innerText=snapshot.size;
+    document.getElementById("courseCount").innerText = snapshot.size;
 
-for(const enrollDoc of snapshot.docs){
+    for (const enrollDoc of snapshot.docs) {
 
-const courseId=enrollDoc.data().courseId;
+      const courseId = enrollDoc.data().courseId;
 
-const courseDoc=await getDoc(doc(db,"courses",courseId));
+      const courseDoc = await getDoc(doc(db, "courses", courseId));
 
-if(!courseDoc.exists()) continue;
+      if (!courseDoc.exists()) continue;
 
-const data=courseDoc.data();
+      const data = courseDoc.data();
 
-const option=document.createElement("option");
-option.value=courseId;
-option.textContent=data.course;
-courseSelect.appendChild(option);
+      const option = document.createElement("option");
+      option.value = courseId;
+      option.textContent = data.course;
+      courseSelect.appendChild(option);
 
-const quizQuery=query(
-collection(db,"quizzes"),
-where("courseId","==",courseId)
-);
+      const quizQuery = query(
+        collection(db, "quizzes"),
+        where("courseId", "==", courseId)
+      );
 
-const quizSnap=await getDocs(quizQuery);
+      const quizSnap = await getDocs(quizQuery);
 
-let quizButton="";
+      let quizButton = "";
 
-if(!quizSnap.empty){
-quizButton=`<button class="quizBtn">Take Quiz</button>`;
-}
+      if (!quizSnap.empty) {
+        quizButton = `<button class="quizBtn">Take Quiz</button>`;
+      }
 
-const div=document.createElement("div");
+      const div = document.createElement("div");
 
-div.innerHTML=`
+      div.innerHTML = `
 
 <p>
 <strong>${data.course}</strong>
 (${data.department} - Sem ${data.semester})
 </p>
 
-${data.pdfURL?`<a href="${data.pdfURL}" target="_blank">📄 View PDF</a>`:""}
+${data.pdfURL ? `<a href="${data.pdfURL}" target="_blank">📄 View PDF</a>` : ""}
 
 <br><br>
 
-${data.videoURL?`
+${data.videoURL ? `
 <video width="350" controls>
 <source src="${data.videoURL}">
-</video>`:""}
+</video>`: ""}
 
 <br><br>
 
@@ -138,59 +138,59 @@ ${quizButton}
 <hr>
 `;
 
-div.querySelector(".discussionBtn").onclick=()=>{
+      div.querySelector(".discussionBtn").onclick = () => {
 
-activeCourseId=courseId;
+        activeCourseId = courseId;
 
-loadComments(courseId);
+        loadComments(courseId);
 
-document.getElementById("chatBox").classList.remove("hidden");
+        document.getElementById("chatBox").classList.remove("hidden");
 
-};
+      };
 
-if(!quizSnap.empty){
-div.querySelector(".quizBtn").onclick=()=>{
-startTeacherQuiz(courseId);
-};
-}
+      if (!quizSnap.empty) {
+        div.querySelector(".quizBtn").onclick = () => {
+          startTeacherQuiz(courseId);
+        };
+      }
 
-enrolledDiv.appendChild(div);
+      enrolledDiv.appendChild(div);
 
-}
+    }
 
-});
+  });
 
 }
 
 
 /* ================= LEARNING HISTORY ================= */
 
-async function loadLearningHistory(uid){
+async function loadLearningHistory(uid) {
 
-const historyDiv=document.getElementById("learningHistory");
+  const historyDiv = document.getElementById("learningHistory");
 
-const enrollQuery=query(
-collection(db,"enrollments"),
-where("userId","==",uid)
-);
+  const enrollQuery = query(
+    collection(db, "enrollments"),
+    where("userId", "==", uid)
+  );
 
-const snap=await getDocs(enrollQuery);
+  const snap = await getDocs(enrollQuery);
 
-historyDiv.innerHTML="";
+  historyDiv.innerHTML = "";
 
-for(const docSnap of snap.docs){
+  for (const docSnap of snap.docs) {
 
-const courseId=docSnap.data().courseId;
+    const courseId = docSnap.data().courseId;
 
-const courseDoc=await getDoc(doc(db,"courses",courseId));
+    const courseDoc = await getDoc(doc(db, "courses", courseId));
 
-if(!courseDoc.exists()) continue;
+    if (!courseDoc.exists()) continue;
 
-const data=courseDoc.data();
+    const data = courseDoc.data();
 
-const div=document.createElement("div");
+    const div = document.createElement("div");
 
-div.innerHTML=`
+    div.innerHTML = `
 
 <strong>${data.course}</strong>
 
@@ -202,490 +202,534 @@ div.innerHTML=`
 
 `;
 
-historyDiv.appendChild(div);
+    historyDiv.appendChild(div);
 
-}
+  }
 
 }
 
 
 /* ================= STATS ================= */
 
-async function loadStats(uid){
+async function loadStats(uid) {
 
-const aiQuery=query(
-collection(db,"ai_quiz_results"),
-where("userId","==",uid)
-);
+  const aiQuery = query(
+    collection(db, "ai_quiz_results"),
+    where("userId", "==", uid)
+  );
 
-const aiSnap=await getDocs(aiQuery);
-document.getElementById("aiQuizCount").innerText=aiSnap.size;
+  const aiSnap = await getDocs(aiQuery);
+  document.getElementById("aiQuizCount").innerText = aiSnap.size;
 
-const courseQuery=query(
-collection(db,"course_quiz_results"),
-where("userId","==",uid)
-);
+  const courseQuery = query(
+    collection(db, "course_quiz_results"),
+    where("userId", "==", uid)
+  );
 
-const courseSnap=await getDocs(courseQuery);
-document.getElementById("courseQuizCount").innerText=courseSnap.size;
+  const courseSnap = await getDocs(courseQuery);
+  document.getElementById("courseQuizCount").innerText = courseSnap.size;
 
 }
 
 
 /* ================= CHARTS ================= */
 
-async function loadCharts(uid){
+async function loadCharts(uid) {
 
-const aiCanvas=document.getElementById("aiQuizChart");
-const courseCanvas=document.getElementById("courseQuizChart");
+  const aiCanvas = document.getElementById("aiQuizChart");
+  const courseCanvas = document.getElementById("courseQuizChart");
 
-/* ================= AI QUIZ CHART ================= */
+  /* ================= AI QUIZ CHART ================= */
 
-const aiQuery=query(
-collection(db,"ai_quiz_results"),
-where("userId","==",uid)
-);
+  const aiQuery = query(
+    collection(db, "ai_quiz_results"),
+    where("userId", "==", uid)
+  );
 
-const aiSnap=await getDocs(aiQuery);
+  const aiSnap = await getDocs(aiQuery);
 
-const aiLabels=[];
-const aiScores=[];
+  const aiLabels = [];
+  const aiScores = [];
 
-aiSnap.forEach(doc=>{
-const data=doc.data();
+  aiSnap.forEach(doc => {
+    const data = doc.data();
 
-aiLabels.push("AI Quiz "+(aiLabels.length+1));
-aiScores.push(data.score);
-});
+    aiLabels.push("AI Quiz " + (aiLabels.length + 1));
+    aiScores.push(data.score);
+  });
 
-if(aiCanvas){
+  if (aiCanvas) {
 
-if(aiChartInstance) aiChartInstance.destroy();
+    if (aiChartInstance) aiChartInstance.destroy();
 
-aiChartInstance=new Chart(aiCanvas,{
-type:"bar",
-data:{
-labels:aiLabels,
-datasets:[{
-label:"AI Quiz Score",
-data:aiScores,
-backgroundColor:"#6366f1"
-}]
-}
-});
+    aiChartInstance = new Chart(aiCanvas, {
+      type: "bar",
+      data: {
+        labels: aiLabels,
+        datasets: [{
+          label: "AI Quiz Score",
+          data: aiScores,
+          backgroundColor: "#6366f1"
+        }]
+      }
+    });
 
-}
+  }
 
 
-/* ================= COURSE QUIZ CHART ================= */
+  /* ================= COURSE QUIZ CHART ================= */
 
-const courseQuery=query(
-collection(db,"course_quiz_results"),
-where("userId","==",uid)
-);
+  const courseQuery = query(
+    collection(db, "course_quiz_results"),
+    where("userId", "==", uid)
+  );
 
-const courseSnap=await getDocs(courseQuery);
+  const courseSnap = await getDocs(courseQuery);
 
-const courseLabels=[];
-const courseScores=[];
+  const courseLabels = [];
+  const courseScores = [];
 
-courseSnap.forEach(doc=>{
-const data=doc.data();
+  courseSnap.forEach(doc => {
+    const data = doc.data();
 
-courseLabels.push("Quiz "+(courseLabels.length+1));
-courseScores.push(data.score);
-});
+    courseLabels.push("Quiz " + (courseLabels.length + 1));
+    courseScores.push(data.score);
+  });
 
-if(courseCanvas){
+  if (courseCanvas) {
 
-if(courseChartInstance) courseChartInstance.destroy();
+    if (courseChartInstance) courseChartInstance.destroy();
 
-courseChartInstance=new Chart(courseCanvas,{
-type:"bar",
-data:{
-labels:courseLabels,
-datasets:[{
-label:"Course Quiz Score",
-data:courseScores,
-backgroundColor:"#22c55e"
-}]
-}
-});
+    courseChartInstance = new Chart(courseCanvas, {
+      type: "bar",
+      data: {
+        labels: courseLabels,
+        datasets: [{
+          label: "Course Quiz Score",
+          data: courseScores,
+          backgroundColor: "#22c55e"
+        }]
+      }
+    });
 
-}
+  }
 
 }
 
 
 /* ================= COURSE QUIZ ================= */
 
-async function startTeacherQuiz(courseId){
+async function startTeacherQuiz(courseId) {
 
-const quizQuery=query(
-collection(db,"quizzes"),
-where("courseId","==",courseId)
-);
+  const quizQuery = query(
+    collection(db, "quizzes"),
+    where("courseId", "==", courseId)
+  );
 
-const quizSnap=await getDocs(quizQuery);
+  const quizSnap = await getDocs(quizQuery);
 
-if(quizSnap.empty){
-showMessage("No quiz available");
-return;
-}
+  if (quizSnap.empty) {
+    showMessage("No quiz available");
+    return;
+  }
 
-const quizDoc=quizSnap.docs[0];
-const quizId=quizDoc.id;
-const quizData=quizDoc.data();
+  const quizDoc = quizSnap.docs[0];
+  const quizId = quizDoc.id;
+  const quizData = quizDoc.data();
 
-/* prevent reattempt */
+  /* prevent reattempt */
 
-const resultId = auth.currentUser.uid + "_" + quizId;
-const resultDoc = await getDoc(doc(db,"course_quiz_results",resultId));
+  const resultId = auth.currentUser.uid + "_" + quizId;
+  const resultDoc = await getDoc(doc(db, "course_quiz_results", resultId));
 
-if(resultDoc.exists()){
-showMessage("You already attempted this quiz");
-return;
-}
+  if (resultDoc.exists()) {
+    showMessage("You already attempted this quiz");
+    return;
+  }
 
-const questionQuery=query(
-collection(db,"quiz_questions"),
-where("quizId","==",quizId)
-);
+  const questionQuery = query(
+    collection(db, "quiz_questions"),
+    where("quizId", "==", quizId)
+  );
 
-const questionSnap=await getDocs(questionQuery);
+  const questionSnap = await getDocs(questionQuery);
 
-const questions=questionSnap.docs.map(d=>d.data());
+  const questions = questionSnap.docs.map(d => d.data());
 
-renderQuiz(questions,quizId,quizData);
+  renderQuiz(questions, quizId, quizData);
 
 }
 
 
 /* ================= AI QUIZ ================= */
 
-window.startTest = async function(){
+window.startTest = async function () {
 
-window.scrollTo({
-top:0,
-behavior:"smooth"
-});
+  window.scrollTo({
+    top: 0,
+    behavior: "smooth"
+  });
 
-const dashboard=document.querySelector(".dashboard");
+  const dashboard = document.querySelector(".dashboard");
 
-const loading=document.createElement("div");
-loading.className="card";
+  const loading = document.createElement("div");
+  loading.className = "card";
 
-loading.innerHTML=`
+  loading.innerHTML = `
 <h3>Generating AI Quiz...</h3>
 <div class="spinner"></div>
 `;
 
-dashboard.prepend(loading);
+  dashboard.prepend(loading);
 
-try{
+  try {
 
-const courseSelect=document.getElementById("courseSelect");
+    const courseSelect = document.getElementById("courseSelect");
 
-if(!courseSelect.value){
-showMessage("Select a course first");
-loading.remove();
-return;
-}
+    if (!courseSelect.value) {
+      showMessage("Select a course first");
+      loading.remove();
+      return;
+    }
 
-const courseId=courseSelect.value;
+    const courseId = courseSelect.value;
 
-const courseDoc=await getDoc(doc(db,"courses",courseId));
-const courseData=courseDoc.data();
+    const courseDoc = await getDoc(doc(db, "courses", courseId));
+    const courseData = courseDoc.data();
 
-const res=await fetch("/generate-test",{
-method:"POST",
-headers:{ "Content-Type":"application/json" },
-body:JSON.stringify({
-pdfURL:courseData.pdfURL
-})
-});
+    const res = await fetch("/generate-test", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        pdfURL: courseData.pdfURL
+      })
+    });
 
-const data=await res.json();
+    const data = await res.json();
 
-loading.remove();
+    loading.remove();
 
-if(!data.questions || !Array.isArray(data.questions)){
-showMessage("AI quiz generation failed");
-return;
-}
+    if (!data.questions || !Array.isArray(data.questions)) {
+      showMessage("AI quiz generation failed");
+      return;
+    }
 
-/* create unique attempt id */
-const attemptId = auth.currentUser.uid + "_ai_" + Date.now();
+    /* create unique attempt id */
+    const attemptId = auth.currentUser.uid + "_ai_" + Date.now();
 
-renderQuiz(data.questions,"aiQuiz",{
-title:"AI Quick Quiz",
-attemptId
-});
+    renderQuiz(data.questions, "aiQuiz", {
+      title: "AI Quick Quiz",
+      attemptId
+    });
 
-}
-catch(err){
+  }
+  catch (err) {
 
-console.error(err);
+    console.error(err);
 
-loading.remove();
-showMessage("Quiz generation failed");
+    loading.remove();
+    showMessage("Quiz generation failed");
 
-}
+  }
 
 };
 
 /* ================= RENDER QUIZ ================= */
 
-function renderQuiz(questions,quizId,quizData){
+function renderQuiz(questions, quizId, quizData) {
 
-const attemptId = quizData.attemptId || null;
+  const attemptId = quizData.attemptId || null;
 
-const dashboard=document.querySelector(".dashboard");
+  const dashboard = document.querySelector(".dashboard");
 
-const container=document.createElement("div");
+  const container = document.createElement("div");
 
-container.className="card";
+  container.className = "card";
 
-container.innerHTML=`
+  container.innerHTML = `
 <h3>${quizData.title}</h3>
-${quizId!=="aiQuiz" && quizData.timeLimit ? `<div id="timer"></div>`:""}
+${quizId !== "aiQuiz" && quizData.timeLimit ? `<div id="timer"></div>` : ""}
 `;
 
-dashboard.prepend(container);
+  dashboard.prepend(container);
 
-if(quizId!=="aiQuiz" && quizData.timeLimit){
-startTimer(quizData.timeLimit);
-}
+  if (quizId !== "aiQuiz" && quizData.timeLimit) {
+    startTimer(quizData.timeLimit);
+  }
 
-questions.forEach((q,i)=>{
+  questions.forEach((q, i) => {
 
-const div=document.createElement("div");
+    const div = document.createElement("div");
 
-div.innerHTML=`<p><b>${i+1}. ${q.question}</b></p>`;
+    div.innerHTML = `<p><b>${i + 1}. ${q.question}</b></p>`;
 
-(q.options || []).forEach((opt,index)=>{
-div.innerHTML+=`
+    (q.options || []).forEach((opt, index) => {
+      div.innerHTML += `
 <label>
 <input type="radio" name="q${i}" value="${index}">
 ${opt}
 </label><br>
 `;
+    });
+
+    div.innerHTML += `<div id="explain${i}" style="display:none;"></div>`;
+
+    container.appendChild(div);
+
+  });
+
+/* ================= QUIZ BUTTON CONTAINER ================= */
+
+const buttonBox = document.createElement("div");
+buttonBox.className = "quiz-action-buttons";
+  const submit = document.createElement("button");
+
+  submit.className = "quiz-submit-btn";
+submit.innerText = "Submit Quiz";
+
+  submit.onclick = async () => {
+
+    clearInterval(quizTimer);
+
+    let score = 0;
+
+    questions.forEach((q, i) => {
+
+      const selected = document.querySelector(`input[name="q${i}"]:checked`);
+
+      let correctIndex = -1;
+
+      const letterMap = ["a", "b", "c", "d"];
+
+      if (letterMap.includes(String(q.answer).toLowerCase().trim())) {
+        correctIndex = letterMap.indexOf(String(q.answer).toLowerCase().trim());
+      }
+      else {
+        correctIndex = q.options.findIndex(
+          opt => opt.trim().toLowerCase() === String(q.answer).trim().toLowerCase()
+        );
+      }
+
+      const options = document.querySelectorAll(`input[name="q${i}"]`);
+
+options.forEach(opt => {
+
+  const label = opt.parentElement;
+
+  if(Number(opt.value) === correctIndex){
+    label.style.background = "#dcfce7";   // green
+    label.style.border = "2px solid #22c55e";
+  }
+
+  if(opt.checked && Number(opt.value) !== correctIndex){
+    label.style.background = "#fee2e2";   // red
+    label.style.border = "2px solid #ef4444";
+  }
+
 });
-
-div.innerHTML+=`<div id="explain${i}" style="display:none;"></div>`;
-
-container.appendChild(div);
-
-});
-
-
-const submit=document.createElement("button");
-
-submit.innerText="Submit Quiz";
-
-submit.onclick=async()=>{
-
-clearInterval(quizTimer);
-
-let score=0;
-
-questions.forEach((q,i)=>{
-
-const selected=document.querySelector(`input[name="q${i}"]:checked`);
-
-let correctIndex = -1;
-
-const letterMap = ["a","b","c","d"];
-
-if(letterMap.includes(String(q.answer).toLowerCase().trim())){
-  correctIndex = letterMap.indexOf(String(q.answer).toLowerCase().trim());
-}
-else{
-  correctIndex = q.options.findIndex(
-    opt => opt.trim().toLowerCase() === String(q.answer).trim().toLowerCase()
-  );
-}
 
 if(selected && Number(selected.value) === correctIndex){
 score++;
 }
 
-/* show explanation */
-if(quizId==="aiQuiz"){
+      /* show explanation */
+      if (quizId === "aiQuiz") {
 
-const explain=document.getElementById(`explain${i}`);
+        const explain = document.getElementById(`explain${i}`);
 
-explain.style.display="block";
+        explain.style.display = "block";
 
-explain.innerHTML=`
+        explain.innerHTML = `
 <p><b>Correct Answer:</b> ${q.answer}</p>
 <p><b>Explanation:</b> ${q.explanation || "No explanation available."}</p>
 `;
 
-}
+      }
 
-});
+    });
 
-const percent=(score/questions.length)*100;
+    const percent = (score / questions.length) * 100;
 
-if(quizId!=="aiQuiz"){
+    if (quizId !== "aiQuiz") {
 
-const resultId=auth.currentUser.uid+"_"+quizId;
+      const resultId = auth.currentUser.uid + "_" + quizId;
 
-await setDoc(doc(db,"course_quiz_results",resultId),{
-userId:auth.currentUser.uid,
-quizId,
-score:percent,
-submittedAt:new Date()
-});
+      await setDoc(doc(db, "course_quiz_results", resultId), {
+        userId: auth.currentUser.uid,
+        quizId,
+        score: percent,
+        submittedAt: new Date()
+      });
 
-showMessage("Quiz submitted successfully.");
+      showMessage("Quiz submitted successfully.");
 
-container.remove();
-loadStats(auth.currentUser.uid);
-loadCharts(auth.currentUser.uid);
+      container.remove();
+      loadStats(auth.currentUser.uid);
+      loadCharts(auth.currentUser.uid);
 
-}else{
+    } else {
 
-/* save AI quiz result */
+      /* save AI quiz result */
 
-const resultId = attemptId;
+      const resultId = attemptId;
 
-const resultDoc = await getDoc(doc(db,"ai_quiz_results",resultId));
+      const resultDoc = await getDoc(doc(db, "ai_quiz_results", resultId));
 
-if(resultDoc.exists()){
-showMessage("You already submitted this quiz.");
-return;
-}
+      if (resultDoc.exists()) {
+        showMessage("You already submitted this quiz.");
+        return;
+      }
 
-await setDoc(doc(db,"ai_quiz_results",resultId),{
-userId:auth.currentUser.uid,
-score:percent,
-submittedAt:new Date()
-});
+      await setDoc(doc(db, "ai_quiz_results", resultId), {
+        userId: auth.currentUser.uid,
+        score: percent,
+        submittedAt: new Date()
+      });
 
-aiQuizUsed=true;
+      aiQuizUsed = true;
 
-showMessage("AI Quiz submitted! Score: "+percent+"%");
-loadStats(auth.currentUser.uid);
-loadCharts(auth.currentUser.uid);
-}
+      showMessage("AI Quiz submitted! Score: " + percent + "%");
+      loadStats(auth.currentUser.uid);
+      loadCharts(auth.currentUser.uid);
+    }
 
-};
+  };
+  /* ================= REGENERATE BUTTON ================= */
 
-container.appendChild(submit);
+  if (quizId === "aiQuiz") {
+
+    const regen = document.createElement("button");
+regen.className = "quiz-regenerate-btn";
+
+    regen.innerText = "Regenerate Quiz";
+
+    regen.style.marginLeft = "10px";
+
+    regen.onclick = () => {
+
+      container.remove();
+
+      startTest(); // generate new AI quiz
+
+    };
+
+    buttonBox.appendChild(regen);
+
+  }
+  buttonBox.appendChild(submit);
+  container.appendChild(buttonBox);
 
 }
 
 
 /* ================= TIMER ================= */
 
-function startTimer(minutes){
+function startTimer(minutes) {
 
-let time=minutes*60;
+  let time = minutes * 60;
 
-const timer=document.getElementById("timer");
+  const timer = document.getElementById("timer");
 
-quizTimer=setInterval(()=>{
+  quizTimer = setInterval(() => {
 
-time--;
+    time--;
 
-const m=Math.floor(time/60);
-const s=time%60;
+    const m = Math.floor(time / 60);
+    const s = time % 60;
 
-timer.innerText=`Time: ${m}:${s}`;
+    timer.innerText = `Time: ${m}:${s}`;
 
-if(time<=0){
+    if (time <= 0) {
 
-clearInterval(quizTimer);
+      clearInterval(quizTimer);
 
-showMessage("Time up!");
+      showMessage("Time up!");
 
-}
+    }
 
-},1000);
+  }, 1000);
 
 }
 
 
 /* ================= DISCUSSION ================= */
 
-async function loadComments(courseId){
+async function loadComments(courseId) {
 
-const q=query(
-collection(db,"course_comments"),
-where("courseId","==",courseId),
-orderBy("createdAt","asc")
-);
+  const q = query(
+    collection(db, "course_comments"),
+    where("courseId", "==", courseId),
+    orderBy("createdAt", "asc")
+  );
 
-const list=document.querySelector(".commentList");
+  const list = document.querySelector(".commentList");
 
-onSnapshot(q,(snap)=>{
+  onSnapshot(q, (snap) => {
 
-list.innerHTML="";
+    list.innerHTML = "";
 
-snap.forEach(docSnap=>{
+    snap.forEach(docSnap => {
 
-const data=docSnap.data();
+      const data = docSnap.data();
 
-const div=document.createElement("div");
+      const div = document.createElement("div");
 
-const role=data.userId===auth.currentUser.uid?"teacher":"student";
+      const role = data.userId === auth.currentUser.uid ? "teacher" : "student";
 
-div.className="chatMsg "+role;
+      div.className = "chatMsg " + role;
 
-div.innerHTML=`
+      div.innerHTML = `
 <strong>${data.userName}</strong>
 <p>${data.message}</p>
 `;
 
-list.appendChild(div);
+      list.appendChild(div);
 
-});
+    });
 
-list.scrollTop=list.scrollHeight;
+    list.scrollTop = list.scrollHeight;
 
-});
+  });
 
 }
 
 
 /* ================= SEND COMMENT ================= */
 
-document.querySelector(".sendComment").onclick=async()=>{
+document.querySelector(".sendComment").onclick = async () => {
 
-const input=document.querySelector(".commentInput");
+  const input = document.querySelector(".commentInput");
 
-if(!input.value.trim()) return;
+  if (!input.value.trim()) return;
 
-const userDoc=await getDoc(doc(db,"users",auth.currentUser.uid));
+  const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
 
-const user=userDoc.data();
+  const user = userDoc.data();
 
-await addDoc(collection(db,"course_comments"),{
+  await addDoc(collection(db, "course_comments"), {
 
-courseId:activeCourseId,
-userId:auth.currentUser.uid,
-userName:user.firstName||user.email,
-message:input.value,
-createdAt:new Date()
+    courseId: activeCourseId,
+    userId: auth.currentUser.uid,
+    userName: user.firstName || user.email,
+    message: input.value,
+    createdAt: new Date()
 
-});
+  });
 
-input.value="";
+  input.value = "";
 
 };
 
 
 /* ================= CHAT CLOSE ================= */
 
-const chatBox=document.getElementById("chatBox");
-const closeBtn=document.getElementById("chatClose");
+const chatBox = document.getElementById("chatBox");
+const closeBtn = document.getElementById("chatClose");
 
-if(chatBox && closeBtn){
+if (chatBox && closeBtn) {
 
-closeBtn.onclick=()=>{
-chatBox.classList.add("hidden");
-};
+  closeBtn.onclick = () => {
+    chatBox.classList.add("hidden");
+  };
 
 }

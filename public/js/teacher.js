@@ -15,30 +15,30 @@ import {
 
 import { onAuthStateChanged }
   from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-function confirmDelete(message){
+function confirmDelete(message) {
 
-return new Promise(resolve=>{
+  return new Promise(resolve => {
 
-const modal = document.getElementById("confirmModal");
-const text = document.getElementById("confirmMessage");
-const ok = document.getElementById("confirmOk");
-const cancel = document.getElementById("confirmCancel");
+    const modal = document.getElementById("confirmModal");
+    const text = document.getElementById("confirmMessage");
+    const ok = document.getElementById("confirmOk");
+    const cancel = document.getElementById("confirmCancel");
 
-text.innerText = message;
+    text.innerText = message;
 
-modal.classList.remove("hidden");
+    modal.classList.remove("hidden");
 
-ok.onclick = ()=>{
-modal.classList.add("hidden");
-resolve(true);
-};
+    ok.onclick = () => {
+      modal.classList.add("hidden");
+      resolve(true);
+    };
 
-cancel.onclick = ()=>{
-modal.classList.add("hidden");
-resolve(false);
-};
+    cancel.onclick = () => {
+      modal.classList.add("hidden");
+      resolve(false);
+    };
 
-});
+  });
 
 }
 let activeCourseId = null;
@@ -166,6 +166,7 @@ document.addEventListener("DOMContentLoaded", () => {
         semester: data.semester,
         course: data.course,
 
+        coverURL: data.coverURL,        // ADD THIS
         pdfURL: data.pdfURL,
         videoURL: data.videoURL,
 
@@ -216,25 +217,25 @@ document.addEventListener("DOMContentLoaded", () => {
       for (const dept in grouped) {
 
         const section = document.createElement("div");
-section.className = "dept-section";
+        section.className = "dept-section";
 
-const header = document.createElement("div");
-header.className = "dept-title";
-header.innerHTML = `<span class="material-symbols-outlined">
+        const header = document.createElement("div");
+        header.className = "dept-title";
+        header.innerHTML = `<span class="material-symbols-outlined">
           newsstand
         </span> ${dept}`;
 
-const content = document.createElement("div");
-content.className = "dept-courses hidden";
+        const content = document.createElement("div");
+        content.className = "dept-courses hidden";
 
-/* toggle folder */
+        /* toggle folder */
 
-header.onclick = () => {
-  content.classList.toggle("hidden");
-};
+        header.onclick = () => {
+          content.classList.toggle("hidden");
+        };
 
-section.appendChild(header);
-section.appendChild(content);
+        section.appendChild(header);
+        section.appendChild(content);
 
         courseContainer.appendChild(section);
 
@@ -378,9 +379,9 @@ section.appendChild(content);
 
       const div = document.createElement("div");
 
-div.className = "enrollment-card";
+      div.className = "enrollment-card";
 
-div.innerHTML = `
+      div.innerHTML = `
 <div>
   <div class="enrollment-course">${c.data().course}</div>
   <div class="enrollment-label">Students Enrolled</div>
@@ -429,185 +430,185 @@ div.innerHTML = `
 
   }
 
-/* ================= STUDENT PERFORMANCE ================= */
+  /* ================= STUDENT PERFORMANCE ================= */
 
-async function loadStudentPerformance(courseId) {
+  async function loadStudentPerformance(courseId) {
 
-  const container = document.getElementById("performanceList");
-  const resultsSnap = await getDocs(collection(db, "course_quiz_results"));
+    const container = document.getElementById("performanceList");
+    const resultsSnap = await getDocs(collection(db, "course_quiz_results"));
 
-  container.innerHTML = "";
+    container.innerHTML = "";
 
-  const studentScores = {};
-  const studentNames = {};
+    const studentScores = {};
+    const studentNames = {};
 
-  for (const docSnap of resultsSnap.docs) {
+    for (const docSnap of resultsSnap.docs) {
 
-    const data = docSnap.data();
+      const data = docSnap.data();
 
-    if (!data.quizId) continue;
+      if (!data.quizId) continue;
 
-    const quizSnap = await getDoc(doc(db, "quizzes", data.quizId));
-    if (!quizSnap.exists()) continue;
+      const quizSnap = await getDoc(doc(db, "quizzes", data.quizId));
+      if (!quizSnap.exists()) continue;
 
-    const quiz = quizSnap.data();
+      const quiz = quizSnap.data();
 
-    if (quiz.courseId !== courseId) continue;
+      if (quiz.courseId !== courseId) continue;
 
-    let studentName = "Student";
+      let studentName = "Student";
 
-    if (data.userId) {
+      if (data.userId) {
 
-      const userSnap = await getDoc(doc(db, "users", data.userId));
+        const userSnap = await getDoc(doc(db, "users", data.userId));
 
-      if (userSnap.exists()) {
+        if (userSnap.exists()) {
 
-        const user = userSnap.data();
+          const user = userSnap.data();
 
-        studentName =
-          user.firstName ||
-          user.name ||
-          user.fullName ||
-          user.email ||
-          "Student";
+          studentName =
+            user.firstName ||
+            user.name ||
+            user.fullName ||
+            user.email ||
+            "Student";
+
+        }
 
       }
 
+      if (!studentScores[data.userId]) {
+        studentScores[data.userId] = [];
+        studentNames[data.userId] = studentName;
+      }
+
+      studentScores[data.userId].push(data.score);
+
     }
 
-    if (!studentScores[data.userId]) {
-      studentScores[data.userId] = [];
-      studentNames[data.userId] = studentName;
-    }
+    const names = [];
+    const scores = [];
+    const userIds = [];
 
-    studentScores[data.userId].push(data.score);
+    for (const uid in studentScores) {
 
-  }
+      const arr = studentScores[uid];
+      const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
 
-  const names = [];
-  const scores = [];
-  const userIds = [];
+      names.push(studentNames[uid]);
+      scores.push(Math.round(avg));
+      userIds.push(uid);
 
-  for (const uid in studentScores) {
+      const div = document.createElement("div");
 
-    const arr = studentScores[uid];
-    const avg = arr.reduce((a,b)=>a+b,0) / arr.length;
-
-    names.push(studentNames[uid]);
-    scores.push(Math.round(avg));
-    userIds.push(uid);
-
-    const div = document.createElement("div");
-
-    div.innerHTML = `
+      div.innerHTML = `
 <strong>${studentNames[uid]}</strong>
 <p>${Math.round(avg)}%</p>
 `;
 
-    container.appendChild(div);
-
-  }
-
-  renderLollipopChart(names, scores);
-
-  /* ===== Find Top & Lowest ===== */
-
-  const maxScore = Math.max(...scores);
-  const minScore = Math.min(...scores);
-
-  const topIndex = scores.indexOf(maxScore);
-  const lowIndex = scores.indexOf(minScore);
-
-  showMentorshipInsights(
-    names[topIndex],
-    userIds[topIndex],
-    maxScore,
-    names[lowIndex],
-    userIds[lowIndex],
-    minScore,
-    courseId
-  );
-
-}
-
-/* ================= LOLLIPOP CHART ================= */
-
-function renderLollipopChart(names, scores) {
-
-  const ctx = document.getElementById("performanceChart");
-
-  if (performanceChart) performanceChart.destroy();
-
-  performanceChart = new Chart(ctx, {
-
-    type: "bar",
-
-    data: {
-      labels: names,
-      datasets: [
-
-        {
-          type: "line",
-          data: scores,
-          borderColor: "#4f46e5",
-          borderWidth: 2,
-          pointRadius: 7,
-          pointBackgroundColor: "#4f46e5",
-          fill: false
-        },
-
-        {
-          type: "bar",
-          data: scores,
-          backgroundColor: "#e0e7ff",
-          borderWidth: 0
-        }
-
-      ]
-    },
-
-    options: {
-
-      responsive: true,
-
-      plugins: {
-        legend: { display:false }
-      },
-
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 100,
-          title: {
-            display: true,
-            text: "Performance %"
-          }
-        }
-      }
+      container.appendChild(div);
 
     }
 
-  });
+    renderLollipopChart(names, scores);
 
-}
+    /* ===== Find Top & Lowest ===== */
 
-/* ================= MENTORSHIP PANEL ================= */
+    const maxScore = Math.max(...scores);
+    const minScore = Math.min(...scores);
 
-function showMentorshipInsights(topName, topId, topScore, lowName, lowId, lowScore, courseId) {
+    const topIndex = scores.indexOf(maxScore);
+    const lowIndex = scores.indexOf(minScore);
 
-  let box = document.getElementById("mentorshipBox");
-
-  if (!box) {
-
-    box = document.createElement("div");
-    box.id = "mentorshipBox";
-    box.className = "mentorship-box";
-
-    document.getElementById("performanceChart").before(box);
+    showMentorshipInsights(
+      names[topIndex],
+      userIds[topIndex],
+      maxScore,
+      names[lowIndex],
+      userIds[lowIndex],
+      minScore,
+      courseId
+    );
 
   }
 
-  box.innerHTML = `
+  /* ================= LOLLIPOP CHART ================= */
+
+  function renderLollipopChart(names, scores) {
+
+    const ctx = document.getElementById("performanceChart");
+
+    if (performanceChart) performanceChart.destroy();
+
+    performanceChart = new Chart(ctx, {
+
+      type: "bar",
+
+      data: {
+        labels: names,
+        datasets: [
+
+          {
+            type: "line",
+            data: scores,
+            borderColor: "#4f46e5",
+            borderWidth: 2,
+            pointRadius: 7,
+            pointBackgroundColor: "#4f46e5",
+            fill: false
+          },
+
+          {
+            type: "bar",
+            data: scores,
+            backgroundColor: "#e0e7ff",
+            borderWidth: 0
+          }
+
+        ]
+      },
+
+      options: {
+
+        responsive: true,
+
+        plugins: {
+          legend: { display: false }
+        },
+
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100,
+            title: {
+              display: true,
+              text: "Performance %"
+            }
+          }
+        }
+
+      }
+
+    });
+
+  }
+
+  /* ================= MENTORSHIP PANEL ================= */
+
+  function showMentorshipInsights(topName, topId, topScore, lowName, lowId, lowScore, courseId) {
+
+    let box = document.getElementById("mentorshipBox");
+
+    if (!box) {
+
+      box = document.createElement("div");
+      box.id = "mentorshipBox";
+      box.className = "mentorship-box";
+
+      document.getElementById("performanceChart").before(box);
+
+    }
+
+    box.innerHTML = `
 
 <div class="mentor-item top">
 🏆 Top Performer:
@@ -625,101 +626,101 @@ ${lowName} (${lowScore}%)
 
 `;
 
-  document.querySelectorAll(".student-link").forEach(el => {
+    document.querySelectorAll(".student-link").forEach(el => {
 
-    el.onclick = () => {
+      el.onclick = () => {
 
-      const studentId = el.dataset.id;
-      const courseId = el.dataset.course;
+        const studentId = el.dataset.id;
+        const courseId = el.dataset.course;
 
-      loadStudentWeeklyChart(studentId, courseId);
+        loadStudentWeeklyChart(studentId, courseId);
 
-    };
+      };
 
-  });
-
-}
-
-/* ================= WEEKLY PERFORMANCE ================= */
-
-async function loadStudentWeeklyChart(studentId, courseId) {
-
-  const resultsSnap = await getDocs(collection(db, "course_quiz_results"));
-
-  const weeklyScores = {};
-
-  for (const docSnap of resultsSnap.docs) {
-
-    const data = docSnap.data();
-
-    if (!data.quizId) continue;
-    if (data.userId !== studentId) continue;
-
-    const quizSnap = await getDoc(doc(db, "quizzes", data.quizId));
-    if (!quizSnap.exists()) continue;
-
-    const quiz = quizSnap.data();
-
-    if (quiz.courseId !== courseId) continue;
-
-    const date = data.submittedAt.toDate();
-
-    const week = `${date.getFullYear()}-${date.getMonth()+1}-W${Math.ceil(date.getDate()/7)}`;
-
-    if (!weeklyScores[week]) weeklyScores[week] = [];
-
-    weeklyScores[week].push(data.score);
+    });
 
   }
 
-  const weeks = Object.keys(weeklyScores);
+  /* ================= WEEKLY PERFORMANCE ================= */
 
-  const scores = weeks.map(w => {
+  async function loadStudentWeeklyChart(studentId, courseId) {
 
-    const arr = weeklyScores[w];
+    const resultsSnap = await getDocs(collection(db, "course_quiz_results"));
 
-    return Math.round(arr.reduce((a,b)=>a+b,0)/arr.length);
+    const weeklyScores = {};
 
-  });
+    for (const docSnap of resultsSnap.docs) {
 
-  renderWeeklyChart(weeks, scores);
+      const data = docSnap.data();
 
-}
+      if (!data.quizId) continue;
+      if (data.userId !== studentId) continue;
 
-/* ================= WEEKLY BAR CHART ================= */
+      const quizSnap = await getDoc(doc(db, "quizzes", data.quizId));
+      if (!quizSnap.exists()) continue;
 
-function renderWeeklyChart(weeks, scores) {
+      const quiz = quizSnap.data();
 
-  const ctx = document.getElementById("performanceChart");
+      if (quiz.courseId !== courseId) continue;
 
-  if (performanceChart) performanceChart.destroy();
+      const date = data.submittedAt.toDate();
 
-  performanceChart = new Chart(ctx, {
+      const week = `${date.getFullYear()}-${date.getMonth() + 1}-W${Math.ceil(date.getDate() / 7)}`;
 
-    type: "bar",
+      if (!weeklyScores[week]) weeklyScores[week] = [];
 
-    data: {
-      labels: weeks,
-      datasets: [{
-        label: "Weekly Performance %",
-        data: scores,
-        backgroundColor: "#4f46e5"
-      }]
-    },
+      weeklyScores[week].push(data.score);
 
-    options: {
-      responsive:true,
-      scales:{
-        y:{
-          beginAtZero:true,
-          max:100
-        }
-      }
     }
 
-  });
+    const weeks = Object.keys(weeklyScores);
 
-}
+    const scores = weeks.map(w => {
+
+      const arr = weeklyScores[w];
+
+      return Math.round(arr.reduce((a, b) => a + b, 0) / arr.length);
+
+    });
+
+    renderWeeklyChart(weeks, scores);
+
+  }
+
+  /* ================= WEEKLY BAR CHART ================= */
+
+  function renderWeeklyChart(weeks, scores) {
+
+    const ctx = document.getElementById("performanceChart");
+
+    if (performanceChart) performanceChart.destroy();
+
+    performanceChart = new Chart(ctx, {
+
+      type: "bar",
+
+      data: {
+        labels: weeks,
+        datasets: [{
+          label: "Weekly Performance %",
+          data: scores,
+          backgroundColor: "#4f46e5"
+        }]
+      },
+
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            beginAtZero: true,
+            max: 100
+          }
+        }
+      }
+
+    });
+
+  }
 
   /* COMMENTS */
 
@@ -763,175 +764,175 @@ function renderWeeklyChart(weeks, scores) {
   }
 
   /* QUIZ RESULTS */
-async function loadQuizResults() {
+  async function loadQuizResults() {
 
-  const container = document.getElementById("quizResults");
-  container.innerHTML = "";
+    const container = document.getElementById("quizResults");
+    container.innerHTML = "";
 
-  const snap = await getDocs(collection(db, "course_quiz_results"));
+    const snap = await getDocs(collection(db, "course_quiz_results"));
 
-  if (snap.empty) {
-    container.innerHTML = "<p>No results yet.</p>";
-    return;
-  }
-
-  const departmentMap = {};
-
-  for (const resultDoc of snap.docs) {
-
-    const data = resultDoc.data();
-
-    let studentName = "Unknown Student";
-    let courseName = "Unknown Course";
-    let department = "Others";
-    let submitTime = "Unknown time";
-
-    /* FETCH USER */
-
-    if (data.userId) {
-      const userSnap = await getDoc(doc(db, "users", data.userId));
-
-      if (userSnap.exists()) {
-        const user = userSnap.data();
-        studentName =
-          user.firstName ||
-          user.name ||
-          user.fullName ||
-          user.email ||
-          "Student";
-      }
+    if (snap.empty) {
+      container.innerHTML = "<p>No results yet.</p>";
+      return;
     }
 
-    /* FETCH QUIZ → COURSE */
+    const departmentMap = {};
 
-    if (data.quizId) {
+    for (const resultDoc of snap.docs) {
 
-      const quizSnap = await getDoc(doc(db, "quizzes", data.quizId));
+      const data = resultDoc.data();
 
-      if (quizSnap.exists()) {
+      let studentName = "Unknown Student";
+      let courseName = "Unknown Course";
+      let department = "Others";
+      let submitTime = "Unknown time";
 
-        const quiz = quizSnap.data();
+      /* FETCH USER */
 
-        const courseSnap = await getDoc(doc(db, "courses", quiz.courseId));
+      if (data.userId) {
+        const userSnap = await getDoc(doc(db, "users", data.userId));
 
-        if (courseSnap.exists()) {
+        if (userSnap.exists()) {
+          const user = userSnap.data();
+          studentName =
+            user.firstName ||
+            user.name ||
+            user.fullName ||
+            user.email ||
+            "Student";
+        }
+      }
 
-          const course = courseSnap.data();
+      /* FETCH QUIZ → COURSE */
 
-          courseName = course.course;
-          department = course.department || "Others";
+      if (data.quizId) {
+
+        const quizSnap = await getDoc(doc(db, "quizzes", data.quizId));
+
+        if (quizSnap.exists()) {
+
+          const quiz = quizSnap.data();
+
+          const courseSnap = await getDoc(doc(db, "courses", quiz.courseId));
+
+          if (courseSnap.exists()) {
+
+            const course = courseSnap.data();
+
+            courseName = course.course;
+            department = course.department || "Others";
+
+          }
 
         }
 
       }
 
+      /* FORMAT TIME */
+
+      if (data.submittedAt) {
+        submitTime = data.submittedAt.toDate().toLocaleString();
+      }
+
+      /* ORGANIZE STRUCTURE */
+
+      if (!departmentMap[department]) {
+        departmentMap[department] = {};
+      }
+
+      if (!departmentMap[department][courseName]) {
+        departmentMap[department][courseName] = [];
+      }
+
+      departmentMap[department][courseName].push({
+        studentName,
+        score: data.score,
+        submitTime
+      });
+
     }
 
-    /* FORMAT TIME */
+    /* RENDER FOLDER STRUCTURE */
 
-    if (data.submittedAt) {
-      submitTime = data.submittedAt.toDate().toLocaleString();
-    }
+    for (const dept in departmentMap) {
 
-    /* ORGANIZE STRUCTURE */
+      const deptDiv = document.createElement("div");
+      deptDiv.className = "dept-folder";
 
-    if (!departmentMap[department]) {
-      departmentMap[department] = {};
-    }
-
-    if (!departmentMap[department][courseName]) {
-      departmentMap[department][courseName] = [];
-    }
-
-    departmentMap[department][courseName].push({
-      studentName,
-      score: data.score,
-      submitTime
-    });
-
-  }
-
-  /* RENDER FOLDER STRUCTURE */
-
-for (const dept in departmentMap) {
-
-  const deptDiv = document.createElement("div");
-  deptDiv.className = "dept-folder";
-
-  const deptHeader = document.createElement("div");
-  deptHeader.className = "dept-title";
-  deptHeader.innerHTML = `<span class="material-symbols-outlined">
+      const deptHeader = document.createElement("div");
+      deptHeader.className = "dept-title";
+      deptHeader.innerHTML = `<span class="material-symbols-outlined">
 newsstand
 </span> ${dept}`;
 
-  const deptContent = document.createElement("div");
-  deptContent.className = "dept-content hidden";
+      const deptContent = document.createElement("div");
+      deptContent.className = "dept-content hidden";
 
-  deptHeader.onclick = () => {
-    deptContent.classList.toggle("hidden");
-  };
+      deptHeader.onclick = () => {
+        deptContent.classList.toggle("hidden");
+      };
 
-  const courses = departmentMap[dept];
+      const courses = departmentMap[dept];
 
-  for (const course in courses) {
+      for (const course in courses) {
 
-    const courseDiv = document.createElement("div");
+        const courseDiv = document.createElement("div");
 
-    const courseHeader = document.createElement("div");
-    courseHeader.className = "course-title";
-    courseHeader.innerHTML = `<span class="material-symbols-outlined">
+        const courseHeader = document.createElement("div");
+        courseHeader.className = "course-title";
+        courseHeader.innerHTML = `<span class="material-symbols-outlined">
 newsstand
 </span> ${course}`;
 
-    const courseContent = document.createElement("div");
-    courseContent.className = "course-content hidden";
+        const courseContent = document.createElement("div");
+        courseContent.className = "course-content hidden";
 
-    courseHeader.onclick = () => {
-      courseContent.classList.toggle("hidden");
-    };
+        courseHeader.onclick = () => {
+          courseContent.classList.toggle("hidden");
+        };
 
-    /* HEADER */
+        /* HEADER */
 
-    const header = document.createElement("div");
-    header.className = "results-header";
+        const header = document.createElement("div");
+        header.className = "results-header";
 
-    header.innerHTML = `
+        header.innerHTML = `
 <span>Name</span>
 <span>Marks</span>
 <span>Date Submitted</span>
 `;
 
-    courseContent.appendChild(header);
+        courseContent.appendChild(header);
 
-    courses[course].forEach(r => {
+        courses[course].forEach(r => {
 
-      const div = document.createElement("div");
-      div.className = "result-item";
+          const div = document.createElement("div");
+          div.className = "result-item";
 
-      div.innerHTML = `
+          div.innerHTML = `
 <span>${r.studentName}</span>
 <span class="result-score">${r.score}%</span>
 <span>${r.submitTime}</span>
 `;
 
-      courseContent.appendChild(div);
+          courseContent.appendChild(div);
 
-    });
+        });
 
-    courseDiv.appendChild(courseHeader);
-    courseDiv.appendChild(courseContent);
-    deptContent.appendChild(courseDiv);
+        courseDiv.appendChild(courseHeader);
+        courseDiv.appendChild(courseContent);
+        deptContent.appendChild(courseDiv);
+
+      }
+
+      deptDiv.appendChild(deptHeader);
+      deptDiv.appendChild(deptContent);
+
+      container.appendChild(deptDiv);
+
+    }
 
   }
-
-  deptDiv.appendChild(deptHeader);
-  deptDiv.appendChild(deptContent);
-
-  container.appendChild(deptDiv);
-
-}
-
-}
 
   /* QUIZZES */
 
@@ -984,7 +985,7 @@ newsstand
 
         div.querySelector(".deleteQuiz").onclick = async () => {
 
-         if (!(await confirmDelete("Delete this quiz?"))) return;
+          if (!(await confirmDelete("Delete this quiz?"))) return;
 
           try {
 

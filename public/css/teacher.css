@@ -23,6 +23,47 @@
 
   animation: fadeIn .3s ease;
 }
+.file-upload{
+position:relative;
+margin-bottom:12px;
+display: flex;
+}
+
+.file-upload input{
+opacity:0;
+position:absolute;
+width:100%;
+height:100%;
+cursor:pointer;
+}
+
+.file-preview{
+border:2px dashed #d1d5db;
+padding:12px;
+border-radius:8px;
+text-align:center;
+background:#fafafa;
+font-size:14px;
+color:#555;
+transition:0.2s;
+}
+.file-preview .material-symbols-outlined{
+  color:#333;
+}
+.file-preview img{
+width:240px;
+height:320px;
+object-fit:cover;
+border-radius:6px;
+display:block;
+margin:auto;
+}
+
+.file-preview.ready{
+border-color:#4f46e5;
+background:#eef2ff;
+color:#4f46e5;
+}
 /* ================= CONFIRM MODAL ================= */
 
 .confirm-modal{
@@ -351,6 +392,7 @@ backdrop-filter: blur(12px);
 
 .upload-btn {
   position: relative;
+  display: flex;
   padding: 12px;
   border-radius: 12px;
   border: none;
@@ -769,109 +811,189 @@ font-weight:600;
 .student-link:hover{
 text-decoration:underline;
 }
-/* ================= RESPONSIVE ================= */
 
-/* Tablets */
-@media (max-width: 1024px) {
 
-  .dashboard {
-    padding: 30px 20px;
-  }
+/*RESPONSIVE DESIGNS*/
+/* ================= LARGE DESKTOP ================= */
 
-  #myLectures {
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  }
+@media (max-width: 1400px){
 
-  .card {
-    padding: 20px;
-  }
-
-  #enrollmentStats {
-    font-size: 22px;
-  }
+.dashboard{
+grid-template-columns: repeat(2,1fr);
+gap:20px;
+}
 
 }
 
-/* Large Phones */
-@media (max-width: 768px) {
 
-  .dashboard {
-    padding: 20px 15px;
-  }
+/* ================= LAPTOP ================= */
 
-  .card {
-    padding: 18px;
-  }
+@media (max-width: 1100px){
 
-  #myLectures {
-    grid-template-columns: 1fr;
-  }
+.dashboard{
+grid-template-columns:1fr;
+}
 
-  #uploadLectureForm {
-    gap: 12px;
-  }
+.card{
+padding:20px;
+}
 
-  #uploadLectureForm input,
-  #uploadLectureForm select {
-    font-size: 13px;
-  }
-
-  .upload-btn {
-    font-size: 14px;
-  }
-
-  #enrollmentStats {
-    font-size: 20px;
-  }
-
-  .chatBox {
-    height: 280px;
-  }
+.file-preview img{
+width:110px;
+height:150px;
+}
 
 }
 
-/* Small Phones */
-@media (max-width: 480px) {
 
-  .dashboard {
-    padding: 15px 10px;
-  }
+/* ================= TABLET ================= */
 
-  .card {
-    padding: 15px;
-    border-radius: 14px;
-  }
+@media (max-width: 900px){
 
-  .card h3 {
-    font-size: 18px;
-  }
+header h1{
+font-size:20px;
+}
 
-  #systemMessage {
-    width: 90%;
-    font-size: 13px;
-  }
+.sidebar{
+width:260px;
+}
 
-  #uploadLectureForm input,
-  #uploadLectureForm select {
-    padding: 10px;
-  }
+.file-preview img{
+width:100px;
+height:140px;
+}
 
-  .upload-btn {
-    padding: 10px;
-    font-size: 13px;
-  }
+.upload-btn{
+width:100%;
+}
 
-  #myLectures > div {
-    padding: 14px;
-  }
+}
 
-  #myLectures button {
-    font-size: 12px;
-    padding: 6px 8px;
-  }
 
-  .chatBox {
-    height: 250px;
-  }
+/* ================= LARGE PHONE ================= */
+
+@media (max-width: 700px){
+
+.card{
+padding:18px;
+}
+
+select,
+input{
+font-size:14px;
+}
+
+.file-preview{
+padding:10px;
+}
+
+.file-preview img{
+width:90px;
+height:130px;
+}
+
+.dashboard{
+gap:16px;
+}
+
+}
+
+
+/* ================= PHONE ================= */
+
+@media (max-width: 520px){
+
+header{
+padding:10px 14px;
+}
+
+header h1{
+font-size:18px;
+}
+
+.card{
+padding:16px;
+border-radius:10px;
+}
+
+.file-preview img{
+width:80px;
+height:115px;
+}
+
+select,
+input{
+font-size:13px;
+padding:8px;
+}
+
+.upload-btn{
+font-size:14px;
+padding:10px;
+}
+
+}
+
+
+/* ================= SMALL PHONE ================= */
+
+@media (max-width: 400px){
+
+header h1{
+font-size:16px;
+}
+
+.card{
+padding:14px;
+}
+
+.file-preview img{
+width:70px;
+height:100px;
+}
+
+select,
+input{
+font-size:12px;
+}
+
+.upload-btn{
+font-size:13px;
+}
+
+}
+
+
+/* ================= VERY SMALL DEVICES ================= */
+
+@media (max-width: 320px){
+
+header h1{
+font-size:15px;
+}
+
+.card{
+padding:12px;
+}
+
+.file-preview img{
+width:60px;
+height:90px;
+}
+
+.file-preview{
+font-size:12px;
+}
+
+select,
+input{
+font-size:11px;
+padding:6px;
+}
+
+.upload-btn{
+font-size:12px;
+padding:8px;
+}
 
 }

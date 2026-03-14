@@ -321,7 +321,9 @@ height:3px;
 background:linear-gradient(90deg,#4f46e5,#bebebe);
 border-radius:3px;
 }
-
+.dept-title  .material-symbols-outlined{
+  color: #333;
+}
 /* ================= SLIDER ================= */
 
 .dept-slider{

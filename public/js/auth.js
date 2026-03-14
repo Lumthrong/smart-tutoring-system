@@ -1,5 +1,5 @@
 import { auth, db } from "./firebase.js";
-
+window.API = "https://smart-tutoring-system-ndjb.onrender.com";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,

@@ -68,6 +68,72 @@ document.addEventListener("DOMContentLoaded", () => {
   const sendBtn = document.querySelector(".sendComment");
   const input = document.querySelector(".commentInput");
 
+  /* ===== FILE INPUT PREVIEW ===== */
+
+const coverInput = document.getElementById("coverInput");
+const pdfInput = document.getElementById("pdfInput");
+const videoInput = document.getElementById("videoInput");
+
+const coverPreview = document.getElementById("coverPreview");
+const pdfPreview = document.getElementById("pdfPreview");
+const videoPreview = document.getElementById("videoPreview");
+
+/* COVER PREVIEW */
+
+if(coverInput){
+coverInput.onchange = () => {
+
+const file = coverInput.files[0];
+if(!file) return;
+
+const reader = new FileReader();
+
+reader.onload = e => {
+
+coverPreview.innerHTML =
+`<img src="${e.target.result}">`;
+
+coverPreview.classList.add("ready");
+
+};
+
+reader.readAsDataURL(file);
+
+};
+}
+
+/* PDF PREVIEW */
+
+if(pdfInput){
+pdfInput.onchange = () => {
+
+const file = pdfInput.files[0];
+if(!file) return;
+
+pdfPreview.innerHTML =
+`📄 ${file.name}`;
+
+pdfPreview.classList.add("ready");
+
+};
+}
+
+/* VIDEO PREVIEW */
+
+if(videoInput){
+videoInput.onchange = () => {
+
+const file = videoInput.files[0];
+if(!file) return;
+
+videoPreview.innerHTML =
+`🎥 ${file.name}`;
+
+videoPreview.classList.add("ready");
+
+};
+}
+
   /* AUTH */
 
   onAuthStateChanged(auth, user => {

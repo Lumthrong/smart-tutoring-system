@@ -99,16 +99,12 @@ button{
   border-radius:8px;
   border:none;
   cursor:pointer;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(12px);
   color:#fff;
   font-weight:500;
   transition:.25s;
 }
 
 button:hover{
-  background: rgba(0, 0, 1, 0.35);
-  backdrop-filter: blur(12px);
   transform:translateY(-2px);
 }
 
@@ -235,7 +231,37 @@ button:disabled{
 .chatInput button{
   padding:0 18px;
 }
+.dashbtn{
+    background: rgba(0, 0, 1, 0.35);
+  backdrop-filter: blur(12px);
+}
+.quiz-action-buttons{
+display:flex;
+gap:10px;
+margin-top:20px;
+}
 
+.quiz-submit-btn{
+background:#22c55e;
+color:white;
+padding:10px 16px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+
+.quiz-regenerate-btn{
+  background: rgba(0, 0, 1, 0.35);
+  backdrop-filter: blur(12px);
+color:white;
+padding:10px 16px;
+border:none;
+border-radius:8px;
+cursor:pointer;
+}
+.quiz-regenerate-btn:hover{
+  background: #7c7c7c;
+}
 /* ================= SYSTEM MESSAGE ================= */
 
 #systemMessage{

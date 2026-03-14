@@ -242,11 +242,71 @@ onSnapshot(coursesRef,(snapshot)=>{
   }));
 
   renderCourses();
+  loadPopularBooks();
 
 });
 
+async function loadPopularBooks(){
 
+  const container = document.getElementById("popularBooks");
+  if(!container) return;
 
+  const enrollSnap = await getDocs(collection(db,"enrollments"));
+
+  const counts = {};
+
+  enrollSnap.forEach(doc=>{
+    const courseId = doc.data().courseId;
+    if(!counts[courseId]) counts[courseId] = 0;
+    counts[courseId]++;
+  });
+
+  const popularCourses = allCourses
+    .filter(course => counts[course.id] > 0)
+    .sort((a,b)=>counts[b.id] - counts[a.id])
+    .slice(0,10);
+
+  container.innerHTML = "";
+
+  if(popularCourses.length === 0){
+    container.innerHTML = "<p>No popular books yet.</p>";
+    return;
+  }
+
+  for(const course of popularCourses){
+
+    const card = template.content.cloneNode(true);
+
+    const cover = card.querySelector(".book-cover");
+    const title = card.querySelector(".course-title");
+    const semester = card.querySelector(".course-semester");
+    const pdfBtn = card.querySelector(".pdf-btn");
+    const joinBtn = card.querySelector(".join-btn");
+    const locked = card.querySelector(".locked");
+
+    title.textContent = course.course;
+    semester.textContent = "Semester " + course.semester;
+
+    if(course.coverURL){
+      cover.src = course.coverURL;
+    }
+
+    const isJoined = joinedCourses.has(course.id);
+
+    if(isJoined){
+      joinBtn.textContent = "Joined";
+      joinBtn.disabled = true;
+      locked.style.display = "none";
+      pdfBtn.href = course.pdfURL;
+    }else{
+      pdfBtn.style.display = "none";
+      joinBtn.textContent = "Join Course";
+    }
+
+    container.appendChild(card);
+  }
+
+}
 /* ================= RENDER COURSES ================= */
 
 function renderCourses(){
@@ -259,7 +319,7 @@ function renderCourses(){
   }
 
 const latestCourses = [...allCourses]
-.sort((a,b)=> new Date(b.uploadedAt) - new Date(a.uploadedAt))
+.sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt))
 .slice(0,11);
 
 const grouped = {};

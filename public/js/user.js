@@ -46,26 +46,24 @@ let courseChartInstance = null;
 /* ================= INIT ================= */
 
 document.addEventListener("DOMContentLoaded", () => {
+onAuthStateChanged(auth, (user) => {
 
-  onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.href = "login.html";
+    return;
+  }
 
-    if (!user) {
-      window.location.href = "login.html";
-      return;
-    }
+  loadCourses(user.uid);
+  loadLearningHistory(user.uid);
+  loadStats(user.uid);
+  loadCharts(user.uid);
+  generateRecommendations(user.uid);
 
-    loadCourses(user.uid);
-    loadLearningHistory(user.uid);
-    loadStats(user.uid);
-    loadCharts(user.uid);
-
-  });
-
+});
 });
 
 
 /* ================= LOAD COURSES ================= */
-
 async function loadCourses(uid) {
 
   const enrollQuery = query(
@@ -88,15 +86,18 @@ async function loadCourses(uid) {
       const courseId = enrollDoc.data().courseId;
 
       const courseDoc = await getDoc(doc(db, "courses", courseId));
-
       if (!courseDoc.exists()) continue;
 
       const data = courseDoc.data();
+
+      /* ===== dropdown select ===== */
 
       const option = document.createElement("option");
       option.value = courseId;
       option.textContent = data.course;
       courseSelect.appendChild(option);
+
+      /* ===== check quiz ===== */
 
       const quizQuery = query(
         collection(db, "quizzes"),
@@ -106,52 +107,102 @@ async function loadCourses(uid) {
       const quizSnap = await getDocs(quizQuery);
 
       let quizButton = "";
-
       if (!quizSnap.empty) {
         quizButton = `<button class="quizBtn">Take Quiz</button>`;
       }
 
+      /* ===== course card ===== */
+
       const div = document.createElement("div");
 
       div.innerHTML = `
+      <p>
+      <strong>${data.course}</strong>
+      (${data.department} - Sem ${data.semester})
+      </p>
 
-<p>
-<strong>${data.course}</strong>
-(${data.department} - Sem ${data.semester})
-</p>
+      ${data.pdfURL ? `<a class="pdfLink">📄 View PDF</a>` : ""}
 
-${data.pdfURL ? `<a href="${data.pdfURL}" target="_blank">📄 View PDF</a>` : ""}
+      <br><br>
 
-<br><br>
+      ${data.videoURL ? `
+      <video width="350" controls>
+      <source src="${data.videoURL}">
+      </video>` : ""}
 
-${data.videoURL ? `
-<video width="350" controls>
-<source src="${data.videoURL}">
-</video>`: ""}
+      <br><br>
 
-<br><br>
+      <button class="discussionBtn">💬 Discussion</button>
 
-<button class="discussionBtn">💬 Discussion</button>
+      ${quizButton}
 
-${quizButton}
+      <hr>
+      `;
 
-<hr>
-`;
+      /* ===== TRACK PDF OPEN ===== */
 
-      div.querySelector(".discussionBtn").onclick = () => {
+      const pdfLink = div.querySelector(".pdfLink");
 
-        activeCourseId = courseId;
+      if (pdfLink) {
 
-        loadComments(courseId);
+        pdfLink.href = data.pdfURL;
+        pdfLink.target = "_blank";
 
-        document.getElementById("chatBox").classList.remove("hidden");
+        pdfLink.addEventListener("click", async () => {
 
-      };
+          try {
+
+            await addDoc(collection(db, "learning_activity"), {
+              userId: auth.currentUser.uid,
+              courseId: courseId,
+              department: data.department,
+              openedAt: new Date()
+            });
+
+          } catch (err) {
+
+            console.error("Activity tracking failed:", err);
+
+          }
+
+        });
+
+      }
+
+      /* ===== discussion button ===== */
+
+      const discussionBtn = div.querySelector(".discussionBtn");
+
+      if (discussionBtn) {
+
+        discussionBtn.onclick = () => {
+
+          activeCourseId = courseId;
+
+          loadComments(courseId);
+
+          document
+            .getElementById("chatBox")
+            .classList.remove("hidden");
+
+        };
+
+      }
+
+      /* ===== quiz button ===== */
 
       if (!quizSnap.empty) {
-        div.querySelector(".quizBtn").onclick = () => {
-          startTeacherQuiz(courseId);
-        };
+
+        const quizBtn = div.querySelector(".quizBtn");
+
+        if (quizBtn) {
+
+          quizBtn.onclick = () => {
+            startTeacherQuiz(courseId);
+          };
+
+        }
+
       }
 
       enrolledDiv.appendChild(div);
@@ -161,7 +212,128 @@ ${quizButton}
   });
 
 }
+async function generateRecommendations(uid){
 
+  const container = document.getElementById("recommendedBooks");
+  if(!container) return;
+
+  /* ===== USER ACTIVITY ===== */
+
+  const activitySnap = await getDocs(
+    query(collection(db,"learning_activity"),
+    where("userId","==",uid))
+  );
+
+  if(activitySnap.empty){
+    container.innerHTML="No recommendations yet.";
+    return;
+  }
+
+  const tagScore = {};
+  const readCourses = new Set();
+
+  /* ===== GET TAGS FROM READ BOOKS ===== */
+
+  for(const activity of activitySnap.docs){
+
+    const courseId = activity.data().courseId;
+    readCourses.add(courseId);
+
+    const courseDoc = await getDoc(doc(db,"courses",courseId));
+    if(!courseDoc.exists()) continue;
+
+    const tags = courseDoc.data().tags || [];
+
+    tags.forEach(tag=>{
+      const t = tag.toLowerCase();
+
+      if(!tagScore[t]) tagScore[t]=0;
+      tagScore[t]++;
+    });
+
+  }
+
+  /* ===== LOAD ALL COURSES ===== */
+
+  const courseSnap = await getDocs(collection(db,"courses"));
+
+  const recommendations = [];
+
+  courseSnap.forEach(docSnap=>{
+
+    const data = docSnap.data();
+    const courseId = docSnap.id;
+
+    /* skip already read books */
+
+    if(readCourses.has(courseId)) return;
+
+    const tags = (data.tags || []).map(t=>t.toLowerCase());
+
+    let score = 0;
+
+    tags.forEach(tag=>{
+      if(tagScore[tag]) score += tagScore[tag];
+    });
+
+    if(score > 0){
+
+      recommendations.push({
+        id:courseId,
+        ...data,
+        score
+      });
+
+    }
+
+  });
+
+  /* ===== SORT BY RELEVANCE ===== */
+
+  recommendations.sort((a,b)=>b.score-a.score);
+
+  const topBooks = recommendations.slice(0,6);
+
+  container.innerHTML="";
+
+const template = document.getElementById("courseCardTemplate");
+
+topBooks.forEach(book=>{
+
+const card = template.content.cloneNode(true);
+
+const cover = card.querySelector(".book-cover");
+const title = card.querySelector(".course-title");
+const semester = card.querySelector(".course-semester");
+const pdfBtn = card.querySelector(".pdf-btn");
+const joinBtn = card.querySelector(".join-btn");
+const locked = card.querySelector(".locked");
+
+title.textContent = book.course;
+semester.textContent = "Semester " + book.semester;
+
+if(book.coverURL){
+cover.src = book.coverURL;
+}else{
+cover.style.display = "none";
+}
+
+pdfBtn.href = book.pdfURL;
+
+/* dashboard recommendations don't require join */
+/* Hide all action elements for recommendation cards */
+
+pdfBtn.style.display = "none";
+joinBtn.style.display = "none";
+locked.style.display = "none";
+joinBtn.style.display = "none";
+locked.style.display = "none";
+
+container.appendChild(card);
+
+});
+
+}
 
 /* ================= LEARNING HISTORY ================= */
 

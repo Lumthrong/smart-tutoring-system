@@ -157,17 +157,34 @@
         <input type="text" name="tags" placeholder="Tags">
 
         <label>Book Cover</label>
-        <input type="file" name="cover" accept="image/*">
+        <div class="file-upload">
+          <input type="file" name="cover" id="coverInput" accept="image/*">
+          <div class="file-preview" id="coverPreview"><span class="material-symbols-outlined">
+add_photo_alternate
+</span>Select cover</div>
+        </div>
 
         <label>Upload PDF</label>
-        <input type="file" name="pdf" accept="application/pdf" required>
+        <div class="file-upload">
+          <input type="file" name="pdf" id="pdfInput" accept="application/pdf" required>
+          <div class="file-preview" id="pdfPreview"><span class="material-symbols-outlined">
+upload_file
+</span></div>
+        </div>
 
         <label>Upload Video</label>
-        <input type="file" name="video" accept="video/*">
+        <div class="file-upload">
+          <input type="file" name="video" id="videoInput" accept="video/*">
+          <div class="file-preview" id="videoPreview"><span class="material-symbols-outlined">
+video_camera_back_add
+</span></div>
+        </div>
 
         <button type="submit" id="uploadBtn" class="upload-btn">
 
-          <span class="btn-text">Upload</span>
+          <span class="btn-text"><span class="material-symbols-outlined">
+upload
+</span>Upload</span>
           <span class="btn-loader"></span>
 
         </button>
@@ -221,7 +238,7 @@
       <div id="teacherQuizzes"></div>
 
     </div>
-    
+
     <!-- Courses enrolled -->
 
     <div class="card">
@@ -265,22 +282,22 @@
       </div>
 
     </div>
-<div id="confirmModal" class="confirm-modal hidden">
+    <div id="confirmModal" class="confirm-modal hidden">
 
-  <div class="confirm-box">
+      <div class="confirm-box">
 
-    <h3 id="confirmTitle">Confirm Action</h3>
+        <h3 id="confirmTitle">Confirm Action</h3>
 
-    <p id="confirmMessage">Are you sure?</p>
+        <p id="confirmMessage">Are you sure?</p>
 
-    <div class="confirm-actions">
-      <button id="confirmCancel">Cancel</button>
-      <button id="confirmOk">Delete</button>
+        <div class="confirm-actions">
+          <button id="confirmCancel">Cancel</button>
+          <button id="confirmOk">Delete</button>
+        </div>
+
+      </div>
+
     </div>
-
-  </div>
-
-</div>
   </section>
 
 

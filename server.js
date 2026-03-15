@@ -905,8 +905,11 @@ app.post("/summarize-course", async (req, res) => {
     const ai = await askGroq(
       "llama-3.1-8b-instant",
       `
-Summarize this course material in simple for students.
-rule: skip cover pages. 
+Summarize this course in simple.
+rule: 
+1. skip cover pages.
+2. summarize what this course is about.(a little insight)
+3. do not explain the specific details. analyse the course carefully and summarise it.
 
 Text:
 ${text}

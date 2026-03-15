@@ -132,9 +132,14 @@ async function loadCourses(uid) {
 
       <br><br>
 
-      <button class="discussionBtn">💬 Discussion</button>
+<button class="discussionBtn"><span class="material-symbols-outlined">
+chat_bubble
+</span> Discussion</button>
+<button class="summaryBtn"><span class="material-symbols-outlined">
+neurology
+</span> AI Summary</button>
 
-      ${quizButton}
+${quizButton}
 
       <hr>
       `;
@@ -188,7 +193,178 @@ pdfLink.target = "_self";
         };
 
       }
+      /* ===== AI SUMMARY BUTTON ===== */
 
+const summaryBtn = div.querySelector(".summaryBtn");
+
+if(summaryBtn){
+
+summaryBtn.onclick = async () => {
+
+const originalText = summaryBtn.innerHTML;
+
+/* ===== SHOW LOADING ===== */
+
+summaryBtn.disabled = true;
+summaryBtn.innerHTML = `<span class="summarySpinner"></span> Generating...`;
+
+try{
+
+const res = await fetch("/summarize-course",{
+method:"POST",
+headers:{ "Content-Type":"application/json" },
+body:JSON.stringify({
+pdfURL:data.pdfURL
+})
+});
+
+const result = await res.json();
+
+let summaryBox = div.querySelector(".aiSummary");
+
+if(!summaryBox){
+summaryBox = document.createElement("div");
+summaryBox.className = "aiSummary";
+div.appendChild(summaryBox);
+}
+const raw = result.summary || "Summary failed";
+
+const lines = raw.split("\n");
+
+let html = "";
+let listOpen = false;
+
+lines.forEach(line => {
+
+  line = line.trim();
+
+  if(line.startsWith("**") && line.endsWith("**")){
+    if(listOpen){
+      html += "</ul>";
+      listOpen = false;
+    }
+
+    const title = line.replace(/\*\*/g,"");
+    html += `<h4>${title}</h4>`;
+  }
+
+else if(line.startsWith("*") || line.startsWith("-")){
+    if(!listOpen){
+      html += "<ul>";
+      listOpen = true;
+    }
+
+   html += `<li>${line.replace(/^[-*]/,"").trim()}</li>`;
+  }
+
+  else{
+    if(listOpen){
+      html += "</ul>";
+      listOpen = false;
+    }
+
+    html += `<p>${line}</p>`;
+  }
+
+});
+
+if(listOpen){
+  html += "</ul>";
+}
+
+summaryBox.innerHTML = `
+<div class="aiSummaryHeader">
+<span> AI Summary</span>
+<button class="closeSummary">✖</button>
+</div>
+
+<div class="aiSummaryContent"></div>
+`;
+const closeBtn = summaryBox.querySelector(".closeSummary");
+
+closeBtn.onclick = () => {
+  summaryBox.remove();
+};
+
+const content = summaryBox.querySelector(".aiSummaryContent");
+
+typeSummary(lines, content);
+summaryBtn.disabled = false;
+summaryBtn.innerHTML = originalText;
+}catch(err){
+
+console.error(err);
+alert("AI summary failed");
+
+summaryBtn.disabled = false;
+summaryBtn.innerHTML = originalText;
+
+}
+
+};
+
+}
+async function typeSummary(lines, container){
+
+let list;
+let listOpen = false;
+
+for(const rawLine of lines){
+
+  const line = rawLine.trim();
+
+  if(!line) continue;
+
+  await new Promise(r => setTimeout(r, 250)); // typing delay
+
+  /* ===== TITLE ===== */
+
+  if(line.startsWith("**") && line.endsWith("**")){
+
+    if(listOpen){
+      list = null;
+      listOpen = false;
+    }
+
+    const title = line.replace(/\*\*/g,"");
+
+    const h = document.createElement("h4");
+    h.textContent = title;
+
+    container.appendChild(h);
+  }
+
+  /* ===== BULLETS ===== */
+
+  else if(line.startsWith("*") || line.startsWith("-")){
+
+    if(!listOpen){
+      list = document.createElement("ul");
+      container.appendChild(list);
+      listOpen = true;
+    }
+
+    const li = document.createElement("li");
+    li.textContent = line.replace(/^[-*]/,"").trim();
+
+    list.appendChild(li);
+  }
+
+  /* ===== PARAGRAPH ===== */
+
+  else{
+
+    listOpen = false;
+
+    const p = document.createElement("p");
+    p.textContent = line;
+
+    container.appendChild(p);
+  }
+
+}
+
+}
       /* ===== quiz button ===== */
 
       if (!quizSnap.empty) {
@@ -578,6 +754,27 @@ window.startTest = async function () {
     });
 
     const data = await res.json();
+    /* ================= STORE AI QUIZ ================= */
+
+const aiQuizRef = await addDoc(collection(db,"ai_generated_quizzes"),{
+  userId: auth.currentUser.uid,
+  courseId,
+  createdAt: new Date()
+});
+
+const quizId = aiQuizRef.id;
+
+for(const q of data.questions){
+
+  await addDoc(collection(db,"ai_quiz_questions"),{
+    quizId,
+    question: q.question,
+    options: q.options,
+    answer: q.answer,
+    explanation: q.explanation
+  });
+
+}
 
     loading.remove();
 
@@ -589,10 +786,11 @@ window.startTest = async function () {
     /* create unique attempt id */
     const attemptId = auth.currentUser.uid + "_ai_" + Date.now();
 
-    renderQuiz(data.questions, "aiQuiz", {
-      title: "AI Quick Quiz",
-      attemptId
-    });
+renderQuiz(data.questions, quizId, {
+  title: "AI Quick Quiz",
+  attemptId,
+  ai:true
+});
 
   }
   catch (err) {
@@ -605,6 +803,7 @@ window.startTest = async function () {
   }
 
 };
+
 
 /* ================= RENDER QUIZ ================= */
 
@@ -620,12 +819,12 @@ function renderQuiz(questions, quizId, quizData) {
 
   container.innerHTML = `
 <h3>${quizData.title}</h3>
-${quizId !== "aiQuiz" && quizData.timeLimit ? `<div id="timer"></div>` : ""}
+${!quizData.ai && quizData.timeLimit ? `<div id="timer"></div>` : ""}
 `;
 
   dashboard.prepend(container);
 
-  if (quizId !== "aiQuiz" && quizData.timeLimit) {
+if (!quizData.ai && quizData.timeLimit) {
     startTimer(quizData.timeLimit);
   }
 
@@ -704,25 +903,25 @@ if(selected && Number(selected.value) === correctIndex){
 score++;
 }
 
-      /* show explanation */
-      if (quizId === "aiQuiz") {
+     /* show explanation */
+if (quizData.ai) {
 
-        const explain = document.getElementById(`explain${i}`);
+  const explain = document.getElementById(`explain${i}`);
 
-        explain.style.display = "block";
+  explain.style.display = "block";
 
-        explain.innerHTML = `
+  explain.innerHTML = `
 <p><b>Correct Answer:</b> ${q.answer}</p>
 <p><b>Explanation:</b> ${q.explanation || "No explanation available."}</p>
 `;
 
-      }
+}
 
     });
 
     const percent = (score / questions.length) * 100;
 
-    if (quizId !== "aiQuiz") {
+   if (!quizData.ai) {
 
       const resultId = auth.currentUser.uid + "_" + quizId;
 
@@ -752,11 +951,12 @@ score++;
         return;
       }
 
-      await setDoc(doc(db, "ai_quiz_results", resultId), {
-        userId: auth.currentUser.uid,
-        score: percent,
-        submittedAt: new Date()
-      });
+    await setDoc(doc(db, "ai_quiz_results", resultId), {
+  userId: auth.currentUser.uid,
+  quizId,
+  score: percent,
+  submittedAt: new Date()
+});
 
       aiQuizUsed = true;
 
@@ -768,7 +968,7 @@ score++;
   };
   /* ================= REGENERATE BUTTON ================= */
 
-  if (quizId === "aiQuiz") {
+if (quizData.ai) {
 
     const regen = document.createElement("button");
 regen.className = "quiz-regenerate-btn";

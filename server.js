@@ -884,6 +884,45 @@ ${text}
   }
 
 });
+/* ================= AI COURSE SUMMARY ================= */
+
+app.post("/summarize-course", async (req, res) => {
+
+  const { pdfURL } = req.body;
+
+  if (!pdfURL)
+    return res.status(400).json({ error: "PDF required" });
+
+  try {
+
+    const response = await fetch(pdfURL);
+    const buffer = Buffer.from(await response.arrayBuffer());
+
+    const pdfData = await pdfParse(buffer);
+
+    const text = pdfData.text.substring(0, 4000);
+
+    const ai = await askGroq(
+      "llama-3.1-8b-instant",
+      `
+Summarize this course material in simple for students.
+rule: skip cover pages. 
+
+Text:
+${text}
+`
+    );
+
+    res.json({ summary: ai });
+
+  } catch (err) {
+
+    console.error(err);
+    res.status(500).json({ error: "AI summary failed" });
+
+  }
+
+});
 /* ================= FALLBACK ================= */
 
 app.use((req, res) => {

@@ -145,8 +145,8 @@ async function loadCourses(uid) {
 
       if (pdfLink) {
 
-        pdfLink.href = data.pdfURL;
-        pdfLink.target = "_blank";
+        pdfLink.href = "/viewer.html?file=" + encodeURIComponent(data.pdfURL);
+pdfLink.target = "_self";
 
         pdfLink.addEventListener("click", async () => {
 

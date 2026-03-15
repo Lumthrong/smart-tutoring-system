@@ -434,6 +434,36 @@ app.post("/upload", multiUpload, async (req, res) => {
 
 });
 
+/* ================= SECURE PDF ================= */
+app.get("/secure-pdf", verifyToken, async (req, res) => {
+
+  const url = req.query.file;
+
+  if (!url) {
+    return res.status(400).send("File missing");
+  }
+
+  try {
+
+    const response = await fetch(url);
+
+    if (!response.ok) {
+      return res.status(500).send("Failed to fetch PDF");
+    }
+
+    const buffer = Buffer.from(await response.arrayBuffer());
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.send(buffer);
+
+  } catch (err) {
+
+    console.error("PDF STREAM ERROR:", err);
+    res.status(500).send("PDF stream failed");
+
+  }
+
+});
 /* ================= DELETE FILE ================= */
 
 app.delete("/delete-course/:publicId", async (req, res) => {
@@ -587,9 +617,9 @@ incorrect
 
 }
 
-async function verifyWithThreeModels(question, options, answer){
+async function verifyWithThreeModels(question, options, answer) {
 
-const prompt = `
+  const prompt = `
 Question:
 ${question}
 
@@ -605,37 +635,37 @@ or
 incorrect
 `;
 
-try{
+  try {
 
-const [groq1, groq2, gemini] = await Promise.all([
+    const [groq1, groq2, gemini] = await Promise.all([
 
-askGroq("llama-3.3-70b-versatile",prompt),
-askGroq("llama-3.1-8b-instant",prompt),
-verifyGemini(question,options,answer)
+      askGroq("llama-3.3-70b-versatile", prompt),
+      askGroq("llama-3.1-8b-instant", prompt),
+      verifyGemini(question, options, answer)
 
-]);
+    ]);
 
-const r1 = String(groq1).toLowerCase().includes("correct");
-const r2 = String(groq2).toLowerCase().includes("correct");
-const r3 = gemini;
+    const r1 = String(groq1).toLowerCase().includes("correct");
+    const r2 = String(groq2).toLowerCase().includes("correct");
+    const r3 = gemini;
 
-const votes = [r1,r2,r3].filter(v => v).length;
+    const votes = [r1, r2, r3].filter(v => v).length;
 
-return votes >= 2;
+    return votes >= 2;
 
-}catch(err){
+  } catch (err) {
 
-console.error("Verification error:",err);
-return false;
+    console.error("Verification error:", err);
+    return false;
 
-}
+  }
 
 }
 
 /*regenerate math*/
-async function repairMathText(text){
+async function repairMathText(text) {
 
-const prompt = `
+  const prompt = `
 The following text was extracted from a PDF and contains
 broken mathematical symbols.
 
@@ -645,13 +675,13 @@ Text:
 ${text}
 `;
 
-const repaired = await askGroq("llama-3.3-70b-versatile", prompt);
+  const repaired = await askGroq("llama-3.3-70b-versatile", prompt);
 
-if(!repaired || repaired === "incorrect"){
-return text;
-}
+  if (!repaired || repaired === "incorrect") {
+    return text;
+  }
 
-return repaired;
+  return repaired;
 
 }
 app.post("/generate-test", async (req, res) => {
@@ -695,13 +725,13 @@ app.post("/generate-test", async (req, res) => {
       Math.random() * Math.max(1, words.length - chunkSize)
     );
 
-  let text = words.slice(start, start + chunkSize).join(" ");
+    let text = words.slice(start, start + chunkSize).join(" ");
 
-/* Repair corrupted math expressions */
+    /* Repair corrupted math expressions */
 
-if(/[=√×÷^≤≥±]/.test(text)){
-text = await repairMathText(text);
-}
+    if (/[=√×÷^≤≥±]/.test(text)) {
+      text = await repairMathText(text);
+    }
 
     /* ================= AI REQUEST ================= */
 
@@ -775,54 +805,54 @@ ${text}
       return res.status(500).json({ error: "AI response invalid" });
     }
 
-const raw = data.choices[0].message.content;
+    const raw = data.choices[0].message.content;
 
-let parsed;
+    let parsed;
 
-try{
+    try {
 
-let cleaned = raw
-.replace(/```json/gi,"")
-.replace(/```/g,"")
-.trim();
+      let cleaned = raw
+        .replace(/```json/gi, "")
+        .replace(/```/g, "")
+        .trim();
 
-const match = cleaned.match(/\{[\s\S]*\}/);
+      const match = cleaned.match(/\{[\s\S]*\}/);
 
-if(!match){
-throw new Error("No JSON detected");
-}
+      if (!match) {
+        throw new Error("No JSON detected");
+      }
 
-parsed = JSON.parse(match[0]);
+      parsed = JSON.parse(match[0]);
 
-}catch(err){
+    } catch (err) {
 
-console.warn("AI JSON fixed automatically");
+      console.warn("AI JSON fixed automatically");
 
-const match = raw.match(/\{[\s\S]*\}/);
+      const match = raw.match(/\{[\s\S]*\}/);
 
-if(match){
-parsed = JSON.parse(match[0]);
-}else{
-return res.status(500).json({
-error:"AI returned invalid JSON"
-});
-}
+      if (match) {
+        parsed = JSON.parse(match[0]);
+      } else {
+        return res.status(500).json({
+          error: "AI returned invalid JSON"
+        });
+      }
 
-}
+    }
 
     /* ================= VERIFY QUESTIONS ================= */
 
     const verifiedQuestions = [];
 
-    for(const q of parsed.questions){
+    for (const q of parsed.questions) {
 
-await new Promise(r => setTimeout(r, 1200));
-/* FILTER BAD QUESTIONS */
+      await new Promise(r => setTimeout(r, 1200));
+      /* FILTER BAD QUESTIONS */
 
-if(!q.options.includes(q.answer)){
-console.warn("Rejected question because answer not in options:", q.question);
-continue;
-}
+      if (!q.options.includes(q.answer)) {
+        console.warn("Rejected question because answer not in options:", q.question);
+        continue;
+      }
 
       const verified = await verifyWithThreeModels(
         q.question,

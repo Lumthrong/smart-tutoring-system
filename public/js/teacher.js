@@ -217,29 +217,40 @@ videoPreview.classList.add("ready");
 
       const formData = new FormData(uploadForm);
 
-      const res = await fetch("/upload", {
+const res = await fetch("/upload", {
+  method: "POST",
+  body: formData
+});
 
-        method: "POST",
-        body: formData
+const data = await res.json();
 
-      });
+/* ===== READ TAGS ===== */
 
-      const data = await res.json();
+const tagsInput = uploadForm.tags.value || "";
 
-      await addDoc(collection(db, "courses"), {
+const tags = tagsInput
+  .split(",")
+  .map(tag => tag.trim().toLowerCase())
+  .filter(tag => tag.length > 0);
 
-        department: data.department,
-        semester: data.semester,
-        course: data.course,
+/* ===== SAVE COURSE ===== */
 
-        coverURL: data.coverURL,        // ADD THIS
-        pdfURL: data.pdfURL,
-        videoURL: data.videoURL,
+await addDoc(collection(db, "courses"), {
 
-        uploadedBy: auth.currentUser.uid,
-        createdAt: new Date()
+  department: data.department,
+  semester: data.semester,
+  course: data.course,
 
-      });
+  tags: tags,   // ⭐ IMPORTANT
+
+  coverURL: data.coverURL,
+  pdfURL: data.pdfURL,
+  videoURL: data.videoURL,
+
+  uploadedBy: auth.currentUser.uid,
+  createdAt: new Date()
+
+});
 
       btn.classList.remove("loading");
       btn.disabled = false;

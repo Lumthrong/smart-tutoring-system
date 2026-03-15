@@ -464,11 +464,6 @@ padding:18px;
 .quiz-action-buttons{
 flex-direction:column;
 }
-
-button{
-width:100%;
-}
-
 }
 
 @media (max-width:480px){

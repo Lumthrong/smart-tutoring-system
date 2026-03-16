@@ -128,14 +128,53 @@ button:disabled{
   display:inline-block;
   margin-top:5px;
   font-size:13px;
-  color:#4f46e5;
   text-decoration:none;
 }
 
-#enrolledCourses a:hover{
-  text-decoration:underline;
+.dept-folder{
+margin-bottom:5px;
 }
 
+.dept-title{
+cursor:pointer;
+padding:10px;
+background:#f3f4f6;
+border-radius:6px;
+font-weight:600;
+}
+
+.dept-title:hover{
+background:#e5e7eb;
+}
+
+.dept-courses{
+margin-left:15px;
+}
+
+.hidden{
+display:none;
+}
+.pdfLink{
+display:inline-flex;
+align-items:center;
+gap:6px;
+
+padding:6px 12px;
+background:rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+color:white;
+
+text-decoration:none;
+font-size:14px;
+border-radius:6px;
+
+transition:0.25s;
+}
+
+.pdfLink:hover{
+background:#7c7c7c;
+transform:translateY(-1px);
+}
 /* ================= CHAT ================= */
 .chat{
   padding:20px;

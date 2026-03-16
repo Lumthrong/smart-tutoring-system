@@ -308,6 +308,59 @@ app.post("/verify-otp", (req, res) => {
 
 });
 
+
+/* ================= TEACHER ACCESS REQUEST ================= */
+app.post("/notify-teacher-request", async (req, res) => {
+
+  const data = req.body;
+
+  try {
+
+    await fetch("https://api.brevo.com/v3/smtp/email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-key": process.env.BREVO_API_KEY
+      },
+      body: JSON.stringify({
+
+        sender: {
+          email: process.env.EMAIL_USER,
+          name: "Smart Tutor"
+        },
+
+        to: [{ email: process.env.ADMIN_EMAIL }],
+
+        subject: "New Teacher Access Request",
+
+        htmlContent: `
+<h2>Teacher Request</h2>
+
+<p><b>Name:</b> ${data.name}</p>
+<p><b>Email:</b> ${data.email}</p>
+<p><b>Qualification:</b> ${data.qualification}</p>
+<p><b>Institution:</b> ${data.institution}</p>
+<p><b>Experience:</b> ${data.experience}</p>
+
+<p><b>Document:</b> ${data.document}</p>
+
+<p><b>Message:</b></p>
+<p>${data.message}</p>
+`
+      })
+
+    });
+
+    res.json({ success: true });
+
+  } catch (err) {
+
+    console.error(err);
+    res.status(500).json({ error: "Email failed" });
+
+  }
+
+});
 /* ================= SET USER ROLE CLAIM ================= */
 
 app.post("/set-role", async (req, res) => {

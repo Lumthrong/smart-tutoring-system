@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const container = document.getElementById("bookContainer");
   const searchInput = document.getElementById("searchInput");
   const pendingContainer = document.getElementById("pendingTeachers");
+  const teacherAppContainer = document.getElementById("teacherApplications");
 
   const totalUsersEl = document.getElementById("totalUsers");
   const totalTeachersEl = document.getElementById("totalTeachers");
@@ -55,42 +56,135 @@ totalLecturesEl.textContent = lecturesSnap.size;
 
     /* ================= PENDING TEACHERS ================= */
 
-    const pendingQuery = query(
-      collection(db, "users"),
-      where("role", "==", "pending_teacher")
-    );
+   /* ================= PENDING TEACHERS ================= */
 
-    const pendingSnap = await getDocs(pendingQuery);
-    pendingContainer.innerHTML = "";
+const pendingQuery = query(
+  collection(db, "users"),
+  where("role", "==", "pending_teacher")
+);
 
-    pendingSnap.forEach(docSnap => {
+const pendingSnap = await getDocs(pendingQuery);
+pendingContainer.innerHTML = "";
 
-      const data = docSnap.data();
+pendingSnap.forEach(docSnap => {
 
-      const div = document.createElement("div");
-      div.className = "pending-item";
+  const data = docSnap.data();
 
-      div.innerHTML = `
-        ${data.email}
-        <button class="approve-btn">Approve</button>
-      `;
+  const div = document.createElement("div");
+  div.className = "pending-item";
 
-      div.querySelector(".approve-btn")
-        .addEventListener("click", async () => {
+  div.innerHTML = `
+    <span>${data.email}</span>
 
-          await updateDoc(doc(db, "users", docSnap.id), {
-            role: "teacher"
-          });
+    <div class="pending-actions">
+      <button class="approve-btn">Approve</button>
+      <button class="reject-btn">Reject</button>
+    </div>
+  `;
 
-          div.remove();
-          totalTeachersEl.textContent =
-            parseInt(totalTeachersEl.textContent) + 1;
-        });
+  /* ===== APPROVE ===== */
 
-      pendingContainer.appendChild(div);
+  div.querySelector(".approve-btn")
+  .addEventListener("click", async () => {
+
+    await updateDoc(doc(db, "users", docSnap.id), {
+      role: "teacher"
     });
 
+    div.remove();
 
+    totalTeachersEl.textContent =
+      parseInt(totalTeachersEl.textContent) + 1;
+
+  });
+
+  /* ===== REJECT ===== */
+
+  div.querySelector(".reject-btn")
+  .addEventListener("click", async () => {
+
+    await updateDoc(doc(db, "users", docSnap.id), {
+      role: "student"
+    });
+
+    div.remove();
+
+  });
+
+  pendingContainer.appendChild(div);
+
+});
+
+/* ================= TEACHER APPLICATIONS ================= */
+
+const teacherRequestQuery = query(collection(db,"teacher_requests"));
+
+onSnapshot(teacherRequestQuery,(snapshot)=>{
+
+teacherAppContainer.innerHTML="";
+
+snapshot.forEach(docSnap=>{
+
+const data = docSnap.data();
+
+if(data.status !== "pending") return;
+
+const div = document.createElement("div");
+div.className="teacher-request";
+
+div.innerHTML = `
+
+<p><b>Name:</b> ${data.name}</p>
+<p><b>Email:</b> ${data.email}</p>
+<p><b>Qualification:</b> ${data.qualification}</p>
+<p><b>Institution:</b> ${data.institution}</p>
+<p><b>Experience:</b> ${data.experience}</p>
+
+<p>
+<b>Document:</b>
+<a href="${data.document}" target="_blank">View Document</a>
+</p>
+
+<div class="request-actions">
+<button class="approve">Approve</button>
+<button class="reject">Reject</button>
+</div>
+
+`;
+
+/* APPROVE */
+
+div.querySelector(".approve").onclick = async ()=>{
+
+await updateDoc(doc(db,"users",data.userId),{
+role:"teacher"
+});
+
+await updateDoc(doc(db,"teacher_requests",docSnap.id),{
+status:"approved"
+});
+
+div.remove();
+
+};
+
+/* REJECT */
+
+div.querySelector(".reject").onclick = async ()=>{
+
+await updateDoc(doc(db,"teacher_requests",docSnap.id),{
+status:"rejected"
+});
+
+div.remove();
+
+};
+
+teacherAppContainer.appendChild(div);
+
+});
+
+});
     /* ================= COURSE UPLOAD ================= */
 
 uploadForm.addEventListener("submit", async (e) => {

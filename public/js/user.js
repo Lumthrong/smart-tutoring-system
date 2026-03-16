@@ -121,7 +121,9 @@ async function loadCourses(uid) {
       (${data.department} - Sem ${data.semester})
       </p>
 
-      ${data.pdfURL ? `<a class="pdfLink">📄 View PDF</a>` : ""}
+      ${data.pdfURL ? `<a class="pdfLink"><span class="material-symbols-outlined">
+file_open
+</span>Open</a>` : ""}
 
       <br><br>
 
@@ -381,7 +383,33 @@ for(const rawLine of lines){
 
       }
 
-      enrolledDiv.appendChild(div);
+let deptSection = document.querySelector(`[data-dept="${data.department}"]`);
+
+if(!deptSection){
+
+const folder = document.createElement("div");
+folder.className = "dept-folder";
+
+const title = document.createElement("h4");
+title.className = "dept-title";
+title.textContent = data.department;
+
+deptSection = document.createElement("div");
+deptSection.className = "dept-courses hidden";
+deptSection.setAttribute("data-dept", data.department);
+
+title.onclick = () => {
+  deptSection.classList.toggle("hidden");
+};
+
+folder.appendChild(title);
+folder.appendChild(deptSection);
+
+enrolledDiv.appendChild(folder);
+
+}
+
+deptSection.appendChild(div);
 
     }
 

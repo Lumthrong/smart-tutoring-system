@@ -404,6 +404,67 @@ margin-right:6px;
 0%{transform:rotate(0deg);}
 100%{transform:rotate(360deg);}
 }
+.transcriptBtn{
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  margin-top:10px;
+}
+
+/* ===== WRAPPER ===== */
+.videoWrapper {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.videoBox {
+  flex: none;                     /* 🔥 allows resize */
+  resize: horizontal;             /* only horizontal resize */
+  overflow: auto;
+  min-width: 250px;
+  max-width: 100%;
+  border-radius: 12px;
+}
+
+
+.videoTranscript {
+  width: 100%;
+}
+
+
+.videoBox video {
+  width: 100%;
+  display: block;
+  border-radius: 12px;
+}
+
+/* ===== VIDEO ===== */
+.resizableVideo {
+  width: 100%;
+  max-width: 420px;
+  border-radius: 12px;
+  resize: both;
+  overflow: auto;
+}
+
+/* ===== TRANSCRIPT ===== */
+.videoTranscript {
+  flex: 1;                        /* fills remaining space */
+  max-height: 280px;
+  overflow-y: auto;
+
+  padding: 12px;
+  background: #f9fafb;
+  border-radius: 12px;
+
+  scroll-behavior: smooth;
+}
+.aiSummaryContent {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
 .spinner{
 width:40px;
 height:40px;
@@ -503,7 +564,18 @@ padding:18px;
 flex-direction:column;
 }
 }
+@media (max-width:768px){
 
+  .videoWrapper {
+    flex-direction: column;
+  }
+
+  .videoBox,
+  .videoTranscript {
+    width: 100%;
+  }
+
+}
 @media (max-width:480px){
 
 .dashboard{

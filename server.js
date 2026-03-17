@@ -1003,33 +1003,41 @@ app.post("/generate-transcript", async (req, res) => {
 
     const audioPath = "temp_audio.mp3";
 
-    /* ===== DOWNLOAD VIDEO ===== */
+    /* ===== DOWNLOAD AUDIO FILE (FROM CLOUDINARY) ===== */
     const response = await fetch(videoURL, {
-  signal: AbortSignal.timeout(120000) // 2 min
-});
+      signal: AbortSignal.timeout(120000) // 2 min timeout
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to download audio");
+    }
+
     const buffer = Buffer.from(await response.arrayBuffer());
 
-    /* ===== EXTRACT AUDIO ===== */
-await execAsync(`ffmpeg -y -i "${videoURL}" ${audioPath}`);
-    /* ===== RUN LOCAL WHISPER ===== */
-let allSegments = [];
-let offset = 0;
+    fs.writeFileSync(audioPath, buffer);
 
-const { stdout } = await execAsync(`python transcribe.py ${audioPath}`);
-const segments = JSON.parse(stdout);
+    /* ===== RUN WHISPER ===== */
+    const { stdout } = await execAsync(`python transcribe.py ${audioPath}`);
 
-fs.unlinkSync(audioPath);
+    let segments;
 
-res.json({ segments });
+    try {
+      segments = JSON.parse(stdout);
+    } catch (e) {
+      console.error("JSON parse error:", stdout);
+      throw new Error("Transcript parsing failed");
+    }
 
     /* ===== CLEANUP ===== */
     fs.unlinkSync(audioPath);
 
-res.json({ segments: allSegments });
+    /* ===== RESPONSE ===== */
+    res.json({ segments });
 
   } catch (err) {
 
-    console.error(err);
+    console.error("TRANSCRIPT ERROR:", err);
+
     res.status(500).json({ error: "Transcript failed" });
 
   }

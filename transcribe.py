@@ -1,15 +1,21 @@
 import whisper
 import sys
 import json
+import os
 
-model = whisper.load_model("tiny")
+# fix ffmpeg path
+os.environ["PATH"] += os.pathsep + "/usr/bin"
 
-audio_file = sys.argv[1]
+try:
+    model = whisper.load_model("tiny", device="cpu")
 
-result = model.transcribe(audio_file)
+    audio_file = sys.argv[1]
 
+    result = model.transcribe(audio_file)
 
+    segments = result.get("segments", [])
 
-segments = result["segments"]
+    print(json.dumps(segments))
 
-print(json.dumps(segments))
+except Exception as e:
+    print(json.dumps({"error": str(e)}))

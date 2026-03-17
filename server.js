@@ -12,6 +12,16 @@ const pdfParse = require("pdf-parse");
 import admin from "firebase-admin";
 dotenv.config();
 
+import { exec } from "child_process";
+import { promisify } from "util";
+import { setGlobalDispatcher, Agent } from "undici";
+
+setGlobalDispatcher(
+  new Agent({
+    connect: { timeout: 60000 } // 60 seconds
+  })
+);
+
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
 
 if (!admin.apps.length) {
@@ -975,6 +985,67 @@ ${text}
 
     console.error(err);
     res.status(500).json({ error: "AI summary failed" });
+
+  }
+
+});
+
+const execAsync = promisify(exec);
+
+app.post("/generate-transcript", async (req, res) => {
+
+  const { videoURL } = req.body;
+
+  if (!videoURL)
+    return res.status(400).json({ error: "Video required" });
+
+  try {
+
+    const audioPath = "temp_audio.mp3";
+
+    /* ===== DOWNLOAD VIDEO ===== */
+    const response = await fetch(videoURL, {
+  signal: AbortSignal.timeout(120000) // 2 min
+});
+    const buffer = Buffer.from(await response.arrayBuffer());
+
+    /* ===== EXTRACT AUDIO ===== */
+await execAsync(`ffmpeg -y -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -i "${videoURL}" -q:a 0 -map a ${audioPath}`);
+await execAsync(`ffmpeg -i ${audioPath} -f segment -segment_time 60 -c copy chunk_%03d.mp3`);
+
+    /* ===== RUN LOCAL WHISPER ===== */
+let allSegments = [];
+let offset = 0;
+
+const files = fs.readdirSync(".").filter(f => f.startsWith("chunk_"));
+
+for(const file of files){
+
+  const { stdout } = await execAsync(`python transcribe.py ${file}`);
+  
+  let segments = JSON.parse(stdout);
+
+  segments = segments.map(s => ({
+    ...s,
+    start: s.start + offset
+  }));
+
+  allSegments = allSegments.concat(segments);
+
+  offset += 60; // each chunk = 60s
+
+  fs.unlinkSync(file);
+}
+
+    /* ===== CLEANUP ===== */
+    fs.unlinkSync(audioPath);
+
+res.json({ segments: allSegments });
+
+  } catch (err) {
+
+    console.error(err);
+    res.status(500).json({ error: "Transcript failed" });
 
   }
 

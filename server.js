@@ -1010,32 +1010,17 @@ app.post("/generate-transcript", async (req, res) => {
     const buffer = Buffer.from(await response.arrayBuffer());
 
     /* ===== EXTRACT AUDIO ===== */
-await execAsync(`ffmpeg -y -reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5 -i "${videoURL}" -q:a 0 -map a ${audioPath}`);
-await execAsync(`ffmpeg -i ${audioPath} -f segment -segment_time 60 -c copy chunk_%03d.mp3`);
-
+await execAsync(`ffmpeg -y -i "${videoURL}" ${audioPath}`);
     /* ===== RUN LOCAL WHISPER ===== */
 let allSegments = [];
 let offset = 0;
 
-const files = fs.readdirSync(".").filter(f => f.startsWith("chunk_"));
+const { stdout } = await execAsync(`python transcribe.py ${audioPath}`);
+const segments = JSON.parse(stdout);
 
-for(const file of files){
+fs.unlinkSync(audioPath);
 
-  const { stdout } = await execAsync(`python transcribe.py ${file}`);
-  
-  let segments = JSON.parse(stdout);
-
-  segments = segments.map(s => ({
-    ...s,
-    start: s.start + offset
-  }));
-
-  allSegments = allSegments.concat(segments);
-
-  offset += 60; // each chunk = 60s
-
-  fs.unlinkSync(file);
-}
+res.json({ segments });
 
     /* ===== CLEANUP ===== */
     fs.unlinkSync(audioPath);

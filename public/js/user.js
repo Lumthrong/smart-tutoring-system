@@ -127,10 +127,25 @@ file_open
 
       <br><br>
 
-      ${data.videoURL ? `
-      <video width="350" controls>
-      <source src="${data.videoURL}">
-      </video>` : ""}
+     ${data.videoURL ? `
+<div class="videoWrapper">
+
+<div class="videoBox">
+  <video controls>
+    <source src="${data.videoURL}">
+  </video>
+</div>
+
+  <div class="videoTranscript hidden"></div>
+
+</div>
+
+<button class="transcriptBtn">
+<span class="material-symbols-outlined">subtitles</span>
+Transcript
+</button>
+
+` : ""}
 
       <br><br>
 
@@ -302,6 +317,162 @@ summaryBtn.disabled = false;
 summaryBtn.innerHTML = originalText;
 
 }
+
+};
+
+}
+/* ===== VIDEO TRANSCRIPT BUTTON ===== */
+
+const transcriptBtn = div.querySelector(".transcriptBtn");
+
+if(transcriptBtn){
+
+transcriptBtn.onclick = async () => {
+
+const originalText = transcriptBtn.innerHTML;
+
+transcriptBtn.disabled = true;
+transcriptBtn.innerHTML = `<span class="summarySpinner"></span> Generating...`;
+
+try{
+
+/* ===== FIRESTORE CACHE ===== */
+const transcriptRef = doc(db, "video_transcripts", courseId + "_" + auth.currentUser.uid);
+const existing = await getDoc(transcriptRef);
+if(!existing.exists()){
+  console.log("No cached transcript");
+}
+let segments;
+
+if(existing.exists()){
+
+  segments = existing.data().segments;
+  if(!segments || !Array.isArray(segments)){
+  throw new Error("Cached transcript corrupted");
+}
+
+}else{
+
+  const res = await fetch("/generate-transcript",{
+    method:"POST",
+    headers:{ "Content-Type":"application/json" },
+    body:JSON.stringify({
+      videoURL: data.videoURL
+    })
+  });
+
+  if(!res.ok) throw new Error("Server error");
+
+  const result = await res.json();
+  segments = result.segments;
+
+  await setDoc(transcriptRef, {
+    courseId,
+    segments,
+    createdAt: new Date()
+  });
+
+}
+
+/* ===== UI ===== */
+
+let box = div.querySelector(".videoTranscript");
+
+box.classList.remove("hidden");
+
+box.innerHTML = `
+<div class="aiSummaryHeader">
+<span> Video Transcript</span>
+<button class="closeSummary">✖</button>
+</div>
+
+<div class="aiSummaryContent"></div>
+`;
+
+const closeBtn = box.querySelector(".closeSummary");
+
+closeBtn.onclick = () => {
+  box.classList.add("hidden");
+  box.innerHTML = "";
+};
+
+const content = box.querySelector(".aiSummaryContent");
+const video = div.querySelector("video");
+
+content.innerHTML = "";
+
+const wrapper = div.querySelector(".videoWrapper");
+const videoBox = div.querySelector(".videoBox");
+const transcript = div.querySelector(".videoTranscript");
+
+new ResizeObserver(() => {
+  transcript.style.width = videoBox.offsetWidth + "px";
+}).observe(videoBox);
+/* ===== CREATE LINES ===== */
+
+segments.forEach((seg) => {
+
+  const line = document.createElement("div");
+  line.textContent = seg.text.trim();
+  line.dataset.start = seg.start;
+
+  line.style.padding = "6px 10px";
+  line.style.marginBottom = "6px";
+  line.style.borderRadius = "6px";
+  line.style.transition = "0.3s";
+  line.style.opacity = "0.5";
+
+  content.appendChild(line);
+
+});
+
+/* ===== AUTOSCROLL FIX ===== */
+
+let lastActiveIndex = -1;
+function updateTranscriptHighlight() {
+
+  const current = video.currentTime;
+  const lines = Array.from(content.children);
+
+  lines.forEach((line, index) => {
+
+    const start = parseFloat(line.dataset.start);
+    const next = lines[index + 1]
+      ? parseFloat(lines[index + 1].dataset.start)
+      : Infinity;
+
+    if(current >= start && current < next){
+
+      if(lastActiveIndex === index) return;
+      lastActiveIndex = index;
+
+      lines.forEach(l => {
+        l.style.background = "none";
+        l.style.opacity = "0.5";
+      });
+
+      line.style.background = "#fde68a";
+      line.style.opacity = "1";
+
+     content.scrollTop =
+  line.offsetTop - content.offsetTop - content.clientHeight / 2 + line.clientHeight / 2;
+    }
+
+  });
+
+}
+video.ontimeupdate = updateTranscriptHighlight;
+video.onplay = updateTranscriptHighlight;
+
+}catch(err){
+
+console.error(err);
+alert("Transcript failed");
+
+}
+
+transcriptBtn.disabled = false;
+transcriptBtn.innerHTML = originalText;
 
 };
 

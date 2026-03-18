@@ -58,6 +58,23 @@ function showMessage(text) {
 }
 
 document.addEventListener("DOMContentLoaded", () => {
+  /* ===== UPLOAD DROPDOWN TOGGLE ===== */
+
+const toggleBtn = document.getElementById("uploadToggleBtn");
+const dropdown = document.getElementById("uploadDropdown");
+const closeUpload = document.getElementById("closeUpload");
+
+if(toggleBtn && dropdown){
+  toggleBtn.onclick = () => {
+    dropdown.classList.toggle("hidden");
+  };
+}
+
+if(closeUpload){
+  closeUpload.onclick = () => {
+    dropdown.classList.add("hidden");
+  };
+}
 
   const uploadForm = document.getElementById("uploadLectureForm");
   const courseContainer = document.getElementById("myLectures");
@@ -256,6 +273,7 @@ await addDoc(collection(db, "courses"), {
       btn.disabled = false;
 
       showMessage("Lecture uploaded successfully");
+      dropdown.classList.add("hidden");
 
       uploadForm.reset();
 

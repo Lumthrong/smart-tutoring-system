@@ -35,49 +35,79 @@ dashboard
   <button class="menu-btn" id="menuBtn"><span class="material-symbols-outlined">
 menu
 </span></button>
-  <h1>Smart Tutoring System</h1>
+  <h1>Signup</h1>
 </header>
 
 <section class="auth-section">
   <div class="auth-box">
-  <h2>Create Account</h2>
+    <h2>Create Account</h2>
 
-  <input type="email" id="email" placeholder="Email" required>
+    <!-- ===== TAB SWITCH ===== -->
+    <div class="role-tabs">
+      <button id="studentTab" class="tab active">Student</button>
+      <button id="teacherTab" class="tab">Teacher</button>
+    </div>
 
-  <input type="password" id="password" placeholder="Password (min 6, alphanumeric)" required>
+    <!-- ===== STUDENT FORM ===== -->
+    <div id="studentForm">
 
-<p id="passwordStrength" style="
-  font-size:14px;
-  margin-top:4px;
-  margin-bottom:10px;
-  color:#888;
-"></p>
+      <input type="text" id="studentFirstName" placeholder="First Name" required>
+      <input type="text" id="studentLastName" placeholder="Last Name" required>
 
-<input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+      <input type="email" id="studentEmail" placeholder="Email" required>
 
-  <label style="display:block; margin-top:10px;">
-    <input type="checkbox" id="teacherRequest">
-    Request Teacher Access
-  </label>
+      <input type="password" id="studentPassword" placeholder="Password" required>
 
-  <button onclick="sendOTP()" class="btnlogin" id="sendOtpBtn">
-Send OTP
-</button>
+      <p id="passwordStrength" style="
+        font-size:14px;
+        margin-top:4px;
+        margin-bottom:10px;
+        color:#888;
+      "></p>
 
-  <input
-type="text"
-id="otpInput"
-placeholder="Enter OTP"
-style="display:none;">
-<div id="formMessage" class="form-message"></div>
-  <button id="verifyBtn" onclick="verifyOTP()" class="btnlogin" >
-Verify & Sign Up
-</button>
+      <input type="password" id="studentConfirmPassword" placeholder="Confirm Password" required>
 
-  <p>Already have an account?
-    <a href="login.html">Login</a>
-  </p>
-</div>
+    </div>
+
+    <!-- ===== TEACHER FORM ===== -->
+    <div id="teacherForm" style="display:none; margin-top:15px;">
+
+      <input type="text" id="name" placeholder="Full Name" required>
+      <input type="text" id="qualification" placeholder="Qualification" required>
+      <input type="text" id="institution" placeholder="Institution" required>
+      <input type="number" id="experience" placeholder="Years of Experience" required>
+      <input type="text" id="document" placeholder="Certificate URL" required>
+      <textarea id="message" placeholder="Additional Message"></textarea>
+
+      <input type="email" id="teacherEmail" placeholder="Email" required>
+      <input type="password" id="teacherPassword" placeholder="Password" required>
+      <input type="password" id="teacherConfirmPassword" placeholder="Confirm Password" required>
+
+    </div>
+
+    <!-- ===== COMMON OTP ===== -->
+    <button onclick="sendOTP()" class="btnlogin" id="sendOtpBtn">
+      Send OTP
+    </button>
+
+    <input
+      type="text"
+      id="otpInput"
+      placeholder="Enter OTP"
+      style="display:none;"
+    >
+
+    <div id="formMessage" class="form-message"></div>
+
+    <button id="verifyBtn" onclick="verifyOTP()" class="btnlogin">
+      Verify & Sign Up
+    </button>
+
+    <p>Already have an account?
+      <a href="login.html">Login</a>
+    </p>
+
+  </div>
 </section>
 
 <script type="module" src="js/auth.js"></script>

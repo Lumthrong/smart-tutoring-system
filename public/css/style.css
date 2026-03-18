@@ -470,11 +470,12 @@ header h1 {
   color: white;
   font-weight: 500;
   transition: 0.3s ease;
-  box-shadow: 0 10px 20px rgba(0,0,0,0.3);
+  margin-bottom: 10px;
 }
 
 button:hover {
-  transform: translateY(-3px);
+  background: #626262;
+  color: white;
 }
 
 button:disabled {
@@ -505,6 +506,7 @@ button:disabled {
   justify-content: center;
   align-items: center;
   padding: 20px;
+  height: 110vh;
 }
 
 .auth-box {
@@ -514,6 +516,12 @@ button:disabled {
   max-width: 600px;
   box-shadow: 0 15px 30px rgba(0,0,0,0.3);
   color: #333;
+}
+.auth-box a{
+  text-decoration: none;
+}
+.auth-box a:hover{
+ color:#333;
 }
 #message{
 text-align: center;

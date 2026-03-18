@@ -29,8 +29,41 @@ function showMessage(message, type = "error") {
 
 /* ================= PASSWORD STRENGTH ================= */
 
-const passwordInput = document.getElementById("password");
+const passwordInput = document.getElementById("studentPassword");
 const strengthText = document.getElementById("passwordStrength");
+/* ===== ROLE TAB SWITCH ===== */
+
+const studentTab = document.getElementById("studentTab");
+const teacherTab = document.getElementById("teacherTab");
+
+const studentForm = document.getElementById("studentForm");
+const teacherForm = document.getElementById("teacherForm");
+
+let isTeacher = false;
+
+if(studentTab && teacherTab){
+
+  studentTab.onclick = () => {
+    isTeacher = false;
+
+    studentTab.classList.add("active");
+    teacherTab.classList.remove("active");
+
+    studentForm.style.display = "block";
+    teacherForm.style.display = "none";
+  };
+
+  teacherTab.onclick = () => {
+    isTeacher = true;
+
+    teacherTab.classList.add("active");
+    studentTab.classList.remove("active");
+
+    studentForm.style.display = "none";
+    teacherForm.style.display = "block";
+  };
+
+}
 
 if (passwordInput && strengthText) {
 
@@ -97,8 +130,13 @@ window.sendOTP = async function () {
     showMessage("Please wait before requesting another OTP");
     return;
   }
+let email;
 
-  const email = document.getElementById("email").value;
+if(isTeacher){
+  email = document.getElementById("teacherEmail")?.value;
+}else{
+  email = document.getElementById("studentEmail")?.value;
+}
   const btn = document.getElementById("sendOtpBtn");
 
   if (!email) {
@@ -146,13 +184,69 @@ window.sendOTP = async function () {
 }
 
 /* ================= VERIFY OTP + SIGNUP ================= */
-
 window.verifyOTP = async function () {
 
-  const email = document.getElementById("email")?.value;
-  const password = document.getElementById("password")?.value;
+  let teacherToggle = isTeacher;
+  let teacherData = null;
+
+  let email, password;
+
+  if(isTeacher){
+    email = document.getElementById("teacherEmail")?.value;
+    password = document.getElementById("teacherPassword")?.value;
+  }else{
+    email = document.getElementById("studentEmail")?.value;
+    password = document.getElementById("studentPassword")?.value;
+  }
+
   const otp = document.getElementById("otpInput")?.value;
-  const teacherRequest = document.getElementById("teacherRequest")?.checked;
+
+  let confirmPassword;
+
+if(isTeacher){
+  confirmPassword = document.getElementById("teacherConfirmPassword")?.value;
+}else{
+  confirmPassword = document.getElementById("studentConfirmPassword")?.value;
+}
+
+if(!email || !password){
+  showMessage("Fill all required fields");
+  return;
+}
+
+if(password.length < 6){
+  showMessage("Password must be at least 6 characters");
+  return;
+}
+
+if(password !== confirmPassword){
+  showMessage("Passwords do not match");
+  return;
+}
+if(isTeacher){
+
+  const name = document.getElementById("name")?.value;
+  const qualification = document.getElementById("qualification")?.value;
+  const institution = document.getElementById("institution")?.value;
+  const experience = document.getElementById("experience")?.value;
+  const documentURL = document.getElementById("document")?.value;
+  const message = document.getElementById("message")?.value;
+
+  if(!name || !qualification || !institution || !experience || !documentURL){
+    showMessage("Fill all teacher fields");
+    return;
+  }
+
+  teacherData = {
+    name,
+    qualification,
+    institution,
+    experience,
+    documentURL,
+    message,
+    email
+  };
+}
 
   if (!otp) {
     showMessage("Enter verification code");
@@ -179,13 +273,25 @@ window.verifyOTP = async function () {
     let role = "student";
 
     if (email === "admin@smart.com") role = "admin";
-    if (teacherRequest) role = "pending_teacher";
+if (teacherToggle) role = "pending_teacher";
 
     await setDoc(doc(db, "users", userCred.user.uid), {
       email,
       role,
       requestedAt: new Date()
     });
+    if(teacherData){
+  await setDoc(doc(db, "teacher_requests", userCred.user.uid), {
+    ...teacherData,
+    status: "pending",
+    createdAt: new Date()
+  });
+   await fetch(API + "/notify-teacher-request", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(teacherData)
+  });
+}
 
     await fetch("/set-role", {
       method: "POST",
@@ -212,7 +318,21 @@ window.verifyOTP = async function () {
 
   } catch (err) {
 
-    showMessage(err.message);
+ if(err.code === "auth/email-already-in-use"){
+  showMessage("Email already registered");
+}else{
+console.error(err);
+
+if(err.code === "auth/email-already-in-use"){
+  showMessage("Email already registered");
+}else if(err.code === "auth/invalid-email"){
+  showMessage("Invalid email");
+}else if(err.code === "auth/weak-password"){
+  showMessage("Weak password (min 6 characters)");
+}else{
+  showMessage(err.message);
+}
+}
 
   }
 

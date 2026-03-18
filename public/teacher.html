@@ -110,88 +110,95 @@
 
     <!-- Upload Lecture -->
 
-    <div class="card">
+   <!-- FLOATING UPLOAD BUTTON -->
+<button id="uploadToggleBtn" class="upload-toggle-btn">
+  <span class="material-symbols-outlined">upload</span>
+  Upload Lecture
+</button>
 
+<!-- DROPDOWN FORM -->
+<div id="uploadDropdown" class="upload-dropdown hidden">
+
+  <div class="card">
+
+    <div class="upload-header">
       <h3>Upload Lecture</h3>
-
-      <form id="uploadLectureForm" enctype="multipart/form-data">
-
-        <select name="department" required>
-
-          <option value="">Select Category</option>
-
-          <option value="Information Technology">Information Technology</option>
-          <option value="Computer Science">Computer Science</option>
-          <option value="Science">Science</option>
-          <option value="Business">Business</option>
-          <option value="Humanities">Humanities</option>
-          <option value="History">History</option>
-          <option value="Languages">Languages</option>
-          <option value="Health">Health & Fitness</option>
-          <option value="Education">Education</option>
-          <option value="Personal Development">Personal Development</option>
-          <option value="General Knowledge">General Knowledge</option>
-          <option value="Others">Others</option>
-
-        </select>
-
-        <select name="semester" required>
-
-          <option value="">Select Semester</option>
-
-          <option value="general">General</option>
-
-          <option value="1">Semester 1</option>
-          <option value="2">Semester 2</option>
-          <option value="3">Semester 3</option>
-          <option value="4">Semester 4</option>
-          <option value="5">Semester 5</option>
-          <option value="6">Semester 6</option>
-          <option value="7">Semester 7</option>
-          <option value="8">Semester 8</option>
-
-        </select>
-
-        <input type="text" name="course" placeholder="Course Name" required>
-
-        <input type="text" name="tags" placeholder="Tags">
-
-        <label>Book Cover</label>
-        <div class="file-upload">
-          <input type="file" name="cover" id="coverInput" accept="image/*">
-          <div class="file-preview" id="coverPreview"><span class="material-symbols-outlined">
-add_photo_alternate
-</span> Select cover</div>
-        </div>
-
-        <label>Upload PDF</label>
-        <div class="file-upload">
-          <input type="file" name="pdf" id="pdfInput" accept="application/pdf" required>
-          <div class="file-preview" id="pdfPreview"><span class="material-symbols-outlined">
-upload_file
-</span> Select pdf</div>
-        </div>
-
-        <label>Upload Video</label>
-        <div class="file-upload">
-          <input type="file" name="video" id="videoInput" accept="video/*">
-          <div class="file-preview" id="videoPreview"><span class="material-symbols-outlined">
-video_camera_back_add
-</span> Select Video</div>
-        </div>
-
-        <button type="submit" id="uploadBtn" class="upload-btn">
-
-          <span class="btn-text"><span class="material-symbols-outlined">
-upload
-</span>Upload</span>
-          <span class="btn-loader"></span>
-
-        </button>
-
-      </form>
-
+      <button id="closeUpload">✕</button>
     </div>
+
+    <form id="uploadLectureForm" enctype="multipart/form-data">
+
+      <select name="department" required>
+        <option value="">Select Category</option>
+        <option value="Information Technology">Information Technology</option>
+        <option value="Computer Science">Computer Science</option>
+        <option value="Science">Science</option>
+        <option value="Business">Business</option>
+        <option value="Humanities">Humanities</option>
+        <option value="History">History</option>
+        <option value="Languages">Languages</option>
+        <option value="Health">Health & Fitness</option>
+        <option value="Education">Education</option>
+        <option value="Personal Development">Personal Development</option>
+        <option value="General Knowledge">General Knowledge</option>
+        <option value="Others">Others</option>
+      </select>
+
+      <select name="semester" required>
+        <option value="">Select Semester</option>
+        <option value="general">General</option>
+        <option value="1">Semester 1</option>
+        <option value="2">Semester 2</option>
+        <option value="3">Semester 3</option>
+        <option value="4">Semester 4</option>
+        <option value="5">Semester 5</option>
+        <option value="6">Semester 6</option>
+        <option value="7">Semester 7</option>
+        <option value="8">Semester 8</option>
+      </select>
+
+      <input type="text" name="course" placeholder="Course Name" required>
+      <input type="text" name="tags" placeholder="Tags">
+
+      <label>Book Cover</label>
+      <div class="file-upload">
+        <input type="file" name="cover" id="coverInput" accept="image/*">
+        <div class="file-preview" id="coverPreview">
+          <span class="material-symbols-outlined">add_photo_alternate</span>
+          Select cover
+        </div>
+      </div>
+
+      <label>Upload PDF</label>
+      <div class="file-upload">
+        <input type="file" name="pdf" id="pdfInput" accept="application/pdf" required>
+        <div class="file-preview" id="pdfPreview">
+          <span class="material-symbols-outlined">upload_file</span>
+          Select pdf
+        </div>
+      </div>
+
+      <label>Upload Video</label>
+      <div class="file-upload">
+        <input type="file" name="video" id="videoInput" accept="video/*">
+        <div class="file-preview" id="videoPreview">
+          <span class="material-symbols-outlined">video_camera_back_add</span>
+          Select Video
+        </div>
+      </div>
+
+      <button type="submit" id="uploadBtn" class="upload-btn">
+        <span class="btn-text">
+          <span class="material-symbols-outlined">upload</span> Upload
+        </span>
+        <span class="btn-loader"></span>
+      </button>
+
+    </form>
+
+  </div>
+
+</div>
 
     <div id="systemMessage"></div>
 

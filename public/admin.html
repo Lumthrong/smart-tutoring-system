@@ -124,52 +124,10 @@ notifications
       <h2 id="totalLectures">0</h2>
     </div>
   </div>
-
-  <!-- 🔥 Pending Teacher Requests -->
-  <div class="card">
-    <h3>Pending Teacher Requests</h3>
-    <div id="pendingTeachers"></div>
-  </div>
 <div class="card">
   <h3>Teacher Applications</h3>
   <div id="teacherApplications"></div>
 </div>
-  <!-- 🔥 Upload Course -->
-  <div class="card">
-<form id="uploadForm" enctype="multipart/form-data">
-
-  <select name="department" required>
-    <option value="">Select Department</option>
-    <option value="CSE">CSE</option>
-    <option value="ECE">ECE</option>
-    <option value="IT">IT</option>
-    <option value="ME">ME</option>
-  </select>
-
-  <select name="semester" required>
-    <option value="">Select Semester</option>
-    <option value="1">Semester 1</option>
-    <option value="2">Semester 2</option>
-    <option value="3">Semester 3</option>
-    <option value="4">Semester 4</option>
-    <option value="5">Semester 5</option>
-    <option value="6">Semester 6</option>
-    <option value="7">Semester 7</option>
-    <option value="8">Semester 8</option>
-  </select>
-
-  <input type="text" name="course" placeholder="Course Name" required>
-
-  <label>Upload PDF (Required)</label>
-  <input type="file" name="pdf" accept="application/pdf" required>
-
-  <label>Upload Video (Optional)</label>
-  <input type="file" name="video" accept="video/*">
-
-  <button type="submit">Upload</button>
-</form>
-  </div>
-
   <!-- 🔥 Search + Course Display -->
   <div class="card">
     <input type="text" id="searchInput" placeholder="Search course...">

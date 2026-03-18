@@ -357,9 +357,7 @@ if(existing.exists()){
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({
-      videoURL: data.videoURL
-  .replace("/upload/", "/upload/fl_audio/")
-  .replace(".mp4", ".mp3")
+videoURL: data.videoURL
     })
   });
 

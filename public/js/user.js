@@ -47,6 +47,9 @@ let courseChartInstance = null;
 
 document.addEventListener("DOMContentLoaded", () => {
 onAuthStateChanged(auth, (user) => {
+  document.getElementById("courseSelect").addEventListener("change", () => {
+  loadCharts(auth.currentUser.uid);
+});
 
   if (!user) {
     window.location.href = "login.html";
@@ -56,7 +59,6 @@ onAuthStateChanged(auth, (user) => {
   loadCourses(user.uid);
   loadLearningHistory(user.uid);
   loadStats(user.uid);
-  loadCharts(user.uid);
   generateRecommendations(user.uid);
 
 });
@@ -128,10 +130,12 @@ file_open
       <br><br>
 
      ${data.videoURL ? `
-<div class="videoWrapper">
+<button class="playVideoBtn">▶ Play Video</button>
+
+<div class="videoWrapper hidden">
 
 <div class="videoBox">
-  <video controls>
+<video controls>
     <source src="${data.videoURL}">
   </video>
 </div>
@@ -160,7 +164,18 @@ ${quizButton}
 
       <hr>
       `;
+      const video = div.querySelector("video");
+const playBtn = div.querySelector(".playVideoBtn");
+const videoWrapper = div.querySelector(".videoWrapper");
 
+if (playBtn) {
+  playBtn.onclick = () => {
+    videoWrapper.classList.remove("hidden");
+    video.setAttribute("controls", true);
+    video.play();
+    playBtn.style.display = "none";
+  };
+}
       /* ===== TRACK PDF OPEN ===== */
 
       const pdfLink = div.querySelector(".pdfLink");
@@ -197,17 +212,23 @@ pdfLink.target = "_self";
 
       if (discussionBtn) {
 
-        discussionBtn.onclick = () => {
+       discussionBtn.onclick = () => {
 
-          activeCourseId = courseId;
+  activeCourseId = courseId;
 
-          loadComments(courseId);
+  loadComments(courseId);
 
-          document
-            .getElementById("chatBox")
-            .classList.remove("hidden");
+  let chatBox = document.getElementById("chatBox");
 
-        };
+  chatBox.classList.remove("hidden");
+
+  /* MOVE CHAT BELOW THIS COURSE */
+  div.appendChild(chatBox);
+
+  /* SCROLL TO CHAT */
+  chatBox.scrollIntoView({ behavior: "smooth", block: "start" });
+
+};
 
       }
       /* ===== AI SUMMARY BUTTON ===== */
@@ -347,9 +368,6 @@ let segments;
 if(existing.exists()){
 
   segments = existing.data().segments;
-  if(!segments || !Array.isArray(segments)){
-  throw new Error("Cached transcript corrupted");
-}
 
 }else{
 
@@ -357,11 +375,9 @@ if(existing.exists()){
     method:"POST",
     headers:{ "Content-Type":"application/json" },
     body:JSON.stringify({
-videoURL: data.videoURL
+      videoURL: data.videoURL
     })
   });
-
-  if(!res.ok) throw new Error("Server error");
 
   const result = await res.json();
   segments = result.segments;
@@ -371,14 +387,63 @@ videoURL: data.videoURL
     segments,
     createdAt: new Date()
   });
-
 }
+
+/* ✅ ALWAYS RUN THIS (MOVE OUTSIDE) */
+
+function generateVTT(segments) {
+
+  let vtt = "WEBVTT\n\n";
+
+  segments.forEach((seg, i) => {
+
+    const start = formatTime(seg.start);
+    const end = formatTime(
+      segments[i + 1] ? segments[i + 1].start : seg.start + 3
+    );
+
+    vtt += `${start} --> ${end}\n`;
+    vtt += `${seg.text.trim()}\n\n`;
+
+  });
+
+  return vtt;
+}
+
+function formatTime(sec) {
+  const h = String(Math.floor(sec / 3600)).padStart(2, "0");
+  const m = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
+  const s = String((sec % 60).toFixed(3)).padStart(6, "0");
+
+  return `${h}:${m}:${s}`;
+}
+
+const video = div.querySelector("video");
+
+const vttText = generateVTT(segments);
+const blob = new Blob([vttText], { type: "text/vtt" });
+const url = URL.createObjectURL(blob);
+
+let track = video.querySelector("track");
+
+if (!track) {
+  track = document.createElement("track");
+  track.kind = "subtitles";
+  track.label = "English";
+  track.srclang = "en";
+  video.appendChild(track);
+}
+
+track.src = url;
+track.default = true;
+track.mode = "showing";
+
 
 /* ===== UI ===== */
 
 let box = div.querySelector(".videoTranscript");
 
-box.classList.remove("hidden");
+box.classList.add("hidden");
 
 box.innerHTML = `
 <div class="aiSummaryHeader">
@@ -395,74 +460,6 @@ closeBtn.onclick = () => {
   box.classList.add("hidden");
   box.innerHTML = "";
 };
-
-const content = box.querySelector(".aiSummaryContent");
-const video = div.querySelector("video");
-
-content.innerHTML = "";
-
-const wrapper = div.querySelector(".videoWrapper");
-const videoBox = div.querySelector(".videoBox");
-const transcript = div.querySelector(".videoTranscript");
-
-new ResizeObserver(() => {
-  transcript.style.width = videoBox.offsetWidth + "px";
-}).observe(videoBox);
-/* ===== CREATE LINES ===== */
-
-segments.forEach((seg) => {
-
-  const line = document.createElement("div");
-  line.textContent = seg.text.trim();
-  line.dataset.start = seg.start;
-
-  line.style.padding = "6px 10px";
-  line.style.marginBottom = "6px";
-  line.style.borderRadius = "6px";
-  line.style.transition = "0.3s";
-  line.style.opacity = "0.5";
-
-  content.appendChild(line);
-
-});
-
-/* ===== AUTOSCROLL FIX ===== */
-
-let lastActiveIndex = -1;
-function updateTranscriptHighlight() {
-
-  const current = video.currentTime;
-  const lines = Array.from(content.children);
-
-  lines.forEach((line, index) => {
-
-    const start = parseFloat(line.dataset.start);
-    const next = lines[index + 1]
-      ? parseFloat(lines[index + 1].dataset.start)
-      : Infinity;
-
-    if(current >= start && current < next){
-
-      if(lastActiveIndex === index) return;
-      lastActiveIndex = index;
-
-      lines.forEach(l => {
-        l.style.background = "none";
-        l.style.opacity = "0.5";
-      });
-
-      line.style.background = "#fde68a";
-      line.style.opacity = "1";
-
-     content.scrollTop =
-  line.offsetTop - content.offsetTop - content.clientHeight / 2 + line.clientHeight / 2;
-    }
-
-  });
-
-}
-video.ontimeupdate = updateTranscriptHighlight;
-video.onplay = updateTranscriptHighlight;
 
 }catch(err){
 
@@ -583,7 +580,10 @@ enrolledDiv.appendChild(folder);
 deptSection.appendChild(div);
 
     }
-
+if (courseSelect.options.length > 0) {
+  courseSelect.selectedIndex = 0;
+  loadCharts(uid);
+}
   });
 
 }
@@ -782,16 +782,20 @@ async function loadStats(uid) {
 /* ================= CHARTS ================= */
 
 async function loadCharts(uid) {
+const courseSelect = document.getElementById("courseSelect");
+const selectedCourseId = courseSelect.value;
 
+if (!selectedCourseId) return;
   const aiCanvas = document.getElementById("aiQuizChart");
   const courseCanvas = document.getElementById("courseQuizChart");
 
   /* ================= AI QUIZ CHART ================= */
 
-  const aiQuery = query(
-    collection(db, "ai_quiz_results"),
-    where("userId", "==", uid)
-  );
+const aiQuery = query(
+  collection(db, "ai_quiz_results"),
+  where("userId", "==", uid),
+  where("courseId", "==", selectedCourseId)
+);
 
   const aiSnap = await getDocs(aiQuery);
 
@@ -826,11 +830,11 @@ async function loadCharts(uid) {
 
   /* ================= COURSE QUIZ CHART ================= */
 
-  const courseQuery = query(
-    collection(db, "course_quiz_results"),
-    where("userId", "==", uid)
-  );
-
+const courseQuery = query(
+  collection(db, "course_quiz_results"),
+  where("userId", "==", uid),
+  where("courseId", "==", selectedCourseId)
+);
   const courseSnap = await getDocs(courseQuery);
 
   const courseLabels = [];
@@ -903,7 +907,10 @@ async function startTeacherQuiz(courseId) {
 
   const questions = questionSnap.docs.map(d => d.data());
 
-  renderQuiz(questions, quizId, quizData);
+renderQuiz(questions, quizId, {
+  ...quizData,
+  courseId
+});
 
 }
 
@@ -988,7 +995,8 @@ for(const q of data.questions){
 renderQuiz(data.questions, quizId, {
   title: "AI Quick Quiz",
   attemptId,
-  ai:true
+  ai: true,
+  courseId
 });
 
   }
@@ -1124,12 +1132,13 @@ if (quizData.ai) {
 
       const resultId = auth.currentUser.uid + "_" + quizId;
 
-      await setDoc(doc(db, "course_quiz_results", resultId), {
-        userId: auth.currentUser.uid,
-        quizId,
-        score: percent,
-        submittedAt: new Date()
-      });
+await setDoc(doc(db, "course_quiz_results", resultId), {
+  userId: auth.currentUser.uid,
+  courseId: quizData.courseId,
+  quizId,
+  score: percent,
+  submittedAt: new Date()
+});
 
       showMessage("Quiz submitted successfully.");
 
@@ -1150,8 +1159,9 @@ if (quizData.ai) {
         return;
       }
 
-    await setDoc(doc(db, "ai_quiz_results", resultId), {
+await setDoc(doc(db, "ai_quiz_results", resultId), {
   userId: auth.currentUser.uid,
+  courseId: quizData.courseId,
   quizId,
   score: percent,
   submittedAt: new Date()

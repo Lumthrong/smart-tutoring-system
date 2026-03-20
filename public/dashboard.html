@@ -1,14 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Student Dashboard</title>
-<link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="css/dashboard.css">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
 </head>
 
@@ -29,31 +30,31 @@
     </div>
 
     <a href="index.html"><span class="material-symbols-outlined">home
-</span> Home</a>
+      </span> Home</a>
 
     <!-- PROFILE DROPDOWN -->
     <div class="profile-wrapper">
       <div class="profile-toggle" id="profileToggle"><span class="material-symbols-outlined">
-account_circle
-</span>
-      Profile ▾
+          account_circle
+        </span>
+        Profile ▾
       </div>
       <div class="profile-dropdown" id="profileDropdown">
         <a href="dashboard.html" id="dashboardLink"><span class="material-symbols-outlined">
-dashboard
-</span> Dashboard</a>
+            dashboard
+          </span> Dashboard</a>
         <a href="accsettings.html"><span class="material-symbols-outlined">
-settings
-</span> Profile Settings</a>
+            settings
+          </span> Profile Settings</a>
         <a href="#" id="logoutLink"><span class="material-symbols-outlined">
-logout
-</span> Logout</a>
+            logout
+          </span> Logout</a>
       </div>
     </div>
     <div class="book-wrapper">
       <div class="book-toggle" id="bookToggle"> <span class="material-symbols-outlined">
-newsstand
-</span>
+          newsstand
+        </span>
         Books ▾
       </div>
       <div class="book-dropdown" id="bookDropdown">
@@ -79,22 +80,22 @@ newsstand
     </div>
     <div class="footer">
       <a href="about.html"><span class="material-symbols-outlined">
-info
-</span> About</a>
+          info
+        </span> About</a>
     </div>
   </div>
   <div class="overlay" id="overlay"></div>
 
   <header>
     <button class="menu-btn" id="menuBtn"><span class="material-symbols-outlined">
-menu
-</span></button>
+        menu
+      </span></button>
     <h1>Home</h1>
 
     <div class="notify" id="notifyBell">
       <span class="material-symbols-outlined">
-notifications
-</span>
+        notifications
+      </span>
       <span id="notifyCount">0</span>
       <div id="notificationPanel" class="notify-panel">
         <div class="notify-header">
@@ -106,151 +107,157 @@ notifications
     </div>
   </header>
 
-<!-- ================= MAIN DASHBOARD ================= -->
+  <!-- ================= MAIN DASHBOARD ================= -->
 
-<section class="dashboard">
+  <section class="dashboard">
 
-<!-- ===== STATS ===== -->
+    <!-- ===== STATS ===== -->
 
-<div class="stats-grid">
+    <div class="stats-grid">
 
-<div class="stat-card">
-<h4>Courses</h4>
-<p id="courseCount">0</p>
+      <div class="stat-card">
+        <h4>Courses</h4>
+        <p id="courseCount">0</p>
+      </div>
+
+      <div class="stat-card">
+        <h4>AI Quizzes</h4>
+        <p id="aiQuizCount">0</p>
+      </div>
+
+      <div class="stat-card">
+        <h4>Course Quizzes</h4>
+        <p id="courseQuizCount">0</p>
+      </div>
+
+    </div>
+
+    <!-- ===== ANALYTICS ===== -->
+
+    <div class="chart-grid">
+
+      <div class="card">
+
+        <h3>Course Quiz Activity</h3>
+
+<div class="chart-container">
+  <canvas id="courseQuizChart"></canvas>
 </div>
 
-<div class="stat-card">
-<h4>AI Quizzes</h4>
-<p id="aiQuizCount">0</p>
+      </div>
+
+      <div class="card">
+
+        <h3>AI Quiz Performance</h3>
+
+<div class="chart-container">
+  <canvas id="aiQuizChart"></canvas>
 </div>
 
-<div class="stat-card">
-<h4>Course Quizzes</h4>
-<p id="courseQuizCount">0</p>
-</div>
+      </div>
 
-</div>
+    </div>
 
-<!-- ===== ANALYTICS ===== -->
+    <!-- ===== QUICK ACTION ===== -->
 
-<div class="chart-grid">
+    <div class="card quick-test">
 
-<div class="card">
+      <h3>Quick AI Quiz</h3>
 
-<h3>Course Quiz Activity</h3>
+      <p>Generate a quiz automatically from your lecture PDF.</p>
 
-<canvas id="courseQuizChart"></canvas>
+      <select id="courseSelect"></select>
 
-</div>
+      <button onclick="startTest()" class="dashbtn">
+        Try Quick Quiz
+      </button>
 
-<div class="card">
+    </div>
 
-<h3>AI Quiz Performance</h3>
+    <!-- ===== ENROLLED COURSES ===== -->
 
-<canvas id="aiQuizChart"></canvas>
+    <div class="card">
 
-</div>
+      <h3>Enrolled Courses</h3>
 
-</div>
+      <div id="enrolledCourses"></div>
+    </div>
 
-<!-- ===== QUICK ACTION ===== -->
+    <div class="card">
+      <h3>Recommended Books</h3>
 
-<div class="card quick-test">
+      <div class="dept-slider" id="recommendedBooks"></div>
 
-<h3>Quick AI Quiz</h3>
+      <template id="courseCardTemplate">
 
-<p>Generate a quiz automatically from your lecture PDF.</p>
+        <div class="book-card">
 
-<select id="courseSelect"></select>
+          <img class="book-cover">
 
-<button onclick="startTest()" class="dashbtn">
-Try Quick Quiz
-</button>
+          <div class="card-info">
+            <h3 class="course-title"></h3>
+            <p class="course-semester"></p>
+          </div>
 
-</div>
+          <a class="pdf-btn" target="_blank">View</a>
 
-<!-- ===== ENROLLED COURSES ===== -->
+          <div class="locked">
+            🔒 Join to access materials
+          </div>
 
-<div class="card">
+          <button class="join-btn"></button>
 
-<h3>Enrolled Courses</h3>
+        </div>
 
-<div id="enrolledCourses"></div>
-</div>
+      </template>
 
-<div class="card">
-<h3>Recommended Books</h3>
+    </div>
+    <!-- ================= DISCUSSION PANEL ================= -->
+    <section class="chat">
+      <div class="chatBox hidden" id="chatBox">
 
-<div class="dept-slider" id="recommendedBooks"></div>
+        <div class="chatHeader">
 
-<template id="courseCardTemplate">
+          <span>Course Discussion</span>
 
-<div class="book-card">
+          <button class="chatClose" id="chatClose">✕</button>
 
-<img class="book-cover">
+        </div>
 
-<div class="card-info">
-<h3 class="course-title"></h3>
-<p class="course-semester"></p>
-</div>
+        <div class="chatMessages commentList"></div>
 
-<a class="pdf-btn" target="_blank">View</a>
+        <div class="chatInput">
 
-<div class="locked">
-🔒 Join to access materials
-</div>
+          <input class="commentInput" placeholder="Ask a question...">
 
-<button class="join-btn"></button>
+          <button class="sendComment"><span class="material-symbols-outlined">
+send
+</span></button>
 
-</div>
+        </div>
 
-</template>
+      </div>
+    </section>
+    <!-- ===== LEARNING HISTORY ===== -->
 
-</div>
-<!-- ================= DISCUSSION PANEL ================= -->
-<section class="chat">
-<div class="chatBox hidden" id="chatBox">
+    <div class="card">
 
-<div class="chatHeader">
+      <h3>Learning History</h3>
 
-<span>Course Discussion</span>
+      <div id="learningHistory">
 
-<button class="chatClose" id="chatClose">✕</button>
+        <p>No learning history yet.</p>
 
-</div>
+      </div>
 
-<div class="chatMessages commentList"></div>
+    </div>
+  </section>
+  <!-- ================= SCRIPTS ================= -->
 
-<div class="chatInput">
-
-<input class="commentInput" placeholder="Ask a question...">
-
-<button class="sendComment">Send</button>
-
-</div>
-
-</div>
-</section>
-<!-- ===== LEARNING HISTORY ===== -->
-
-<div class="card">
-
-<h3>Learning History</h3>
-
-<div id="learningHistory">
-
-<p>No learning history yet.</p>
-
-</div>
-
-</div>
-</section>
-<!-- ================= SCRIPTS ================= -->
-
-<script type="module" src="js/script.js"></script>
-<script type="module" src="js/user.js"></script>
-<script type="module" src="js/auth.js"></script>
-<script type="module" src="js/notification.js"></script>
+  <script type="module" src="js/script.js"></script>
+  <script type="module" src="js/user.js"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/notification.js"></script>
 
 </body>
 

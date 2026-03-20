@@ -56,10 +56,23 @@ function showMessage(text) {
   }, 3000);
 
 }
-
 document.addEventListener("DOMContentLoaded", () => {
-  /* ===== UPLOAD DROPDOWN TOGGLE ===== */
+/* ===== ENROLLMENT TOGGLE ===== */
 
+const enrollToggle = document.getElementById("enrollToggle");
+const enrollmentStats = document.getElementById("enrollmentStats");
+
+if(enrollToggle && enrollmentStats){
+ enrollToggle.onclick = () => {
+
+  const isOpen = enrollmentStats.classList.toggle("show");
+
+enrollToggle.innerHTML = isOpen
+  ? `<span class="material-symbols-outlined">school</span> Total Enrollment ▴`
+  : `<span class="material-symbols-outlined">school</span> Total Enrollment ▾`;
+};
+}
+  /* ===== UPLOAD DROPDOWN TOGGLE ===== */
 const toggleBtn = document.getElementById("uploadToggleBtn");
 const dropdown = document.getElementById("uploadDropdown");
 const closeUpload = document.getElementById("closeUpload");
@@ -493,16 +506,16 @@ await addDoc(collection(db, "courses"), {
 
   /* COURSE DROPDOWN */
 
-  async function loadCourseDropdown() {
+function loadCourseDropdown() {
 
-    const select = document.getElementById("courseSelect");
+  const select = document.getElementById("courseSelect");
 
-    const snap = await getDocs(
+  const q = query(
+    collection(db, "courses"),
+    where("uploadedBy", "==", auth.currentUser.uid)
+  );
 
-      query(collection(db, "courses"),
-        where("uploadedBy", "==", auth.currentUser.uid))
-
-    );
+  onSnapshot(q, (snap) => {
 
     select.innerHTML = "<option>Select Course</option>";
 
@@ -517,13 +530,14 @@ await addDoc(collection(db, "courses"), {
 
     });
 
-    select.addEventListener("change", (e) => {
+  });
 
-      loadStudentPerformance(e.target.value);
+  /* KEEP THIS OUTSIDE SNAPSHOT */
+  select.addEventListener("change", (e) => {
+    loadStudentPerformance(e.target.value);
+  });
 
-    });
-
-  }
+}
 
   /* ================= STUDENT PERFORMANCE ================= */
 

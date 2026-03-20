@@ -67,9 +67,17 @@
 canvas{
   background:#f8f9ff;
   border-radius:12px;
-  padding:15px;
+  width:100% !important;
+  height:auto !important;
+  padding:0; /* 🔥 REMOVE THIS */
 }
-
+.chart-grid canvas{
+  max-width:100%;
+}
+.chart-container{
+  width:100%;
+  overflow:hidden;
+}
 /* ================= QUICK QUIZ ================= */
 
 .quick-test{
@@ -151,8 +159,8 @@ background:#e5e7eb;
 margin-left:15px;
 }
 
-.hidden{
-display:none;
+.hidden {
+  display: none !important;
 }
 .pdfLink{
 display:inline-flex;
@@ -188,7 +196,9 @@ transform:translateY(-1px);
   height:330px;
   overflow:hidden;
 }
-
+.sendComment{
+  background: #22c55e;
+}
 .chatBox.hidden{
   display:none;
 }
@@ -300,6 +310,10 @@ cursor:pointer;
 }
 .quiz-regenerate-btn:hover{
   background: #7c7c7c;
+}
+.playVideoBtn{
+    background: rgba(0, 0, 1, 0.35);
+  backdrop-filter: blur(12px);
 }
 /* ================= SYSTEM MESSAGE ================= */
 
@@ -416,6 +430,7 @@ margin-right:6px;
   gap: 20px;
   align-items: flex-start;
   width: 100%;
+  flex-direction: column;
 }
 
 .videoBox {
@@ -425,6 +440,7 @@ margin-right:6px;
   min-width: 250px;
   max-width: 100%;
   border-radius: 12px;
+  position: relative;
 }
 
 
@@ -438,7 +454,30 @@ margin-right:6px;
   display: block;
   border-radius: 12px;
 }
+.videoSubtitle{
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
 
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+
+  padding: 8px 14px;
+  border-radius: 8px;
+
+  font-size: 14px;
+  max-width: 90%;
+  text-align: center;
+
+  pointer-events: none;
+  transition: 0.2s;
+}
+video::cue {
+  background: rgba(0, 0, 0, 0.6); /* 🔥 change opacity here */
+  color: #fff;
+  font-size: 24px;
+}
 /* ===== VIDEO ===== */
 .resizableVideo {
   width: 100%;
@@ -620,7 +659,6 @@ width:130px;
 @media (min-width:1200px){
 
 .dashboard{
-max-width:1200px;
 margin:auto;
 }
 

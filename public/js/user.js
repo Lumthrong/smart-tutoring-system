@@ -47,15 +47,18 @@ let courseChartInstance = null;
 
 document.addEventListener("DOMContentLoaded", () => {
 onAuthStateChanged(auth, (user) => {
-  document.getElementById("courseSelect").addEventListener("change", () => {
-  loadCharts(auth.currentUser.uid);
-});
 
   if (!user) {
     window.location.href = "login.html";
     return;
   }
+document.getElementById("courseChartSelect").addEventListener("change", () => {
+  loadCourseChart(auth.currentUser.uid);
+});
 
+document.getElementById("aiChartSelect").addEventListener("change", () => {
+  loadAIChart(auth.currentUser.uid);
+});
   loadCourses(user.uid);
   loadLearningHistory(user.uid);
   loadStats(user.uid);
@@ -74,12 +77,16 @@ async function loadCourses(uid) {
   );
 
   const enrolledDiv = document.getElementById("enrolledCourses");
-  const courseSelect = document.getElementById("courseSelect");
+const courseSelect = document.getElementById("courseSelect");
+const courseChartSelect = document.getElementById("courseChartSelect");
+const aiChartSelect = document.getElementById("aiChartSelect");
 
   onSnapshot(enrollQuery, async (snapshot) => {
 
     enrolledDiv.innerHTML = "";
-    courseSelect.innerHTML = "";
+courseSelect.innerHTML = "";
+courseChartSelect.innerHTML = "";
+aiChartSelect.innerHTML = "";
 
     document.getElementById("courseCount").innerText = snapshot.size;
 
@@ -94,10 +101,16 @@ async function loadCourses(uid) {
 
       /* ===== dropdown select ===== */
 
-      const option = document.createElement("option");
-      option.value = courseId;
-      option.textContent = data.course;
-      courseSelect.appendChild(option);
+const option1 = document.createElement("option");
+option1.value = courseId;
+option1.textContent = data.course;
+
+const option2 = option1.cloneNode(true);
+const option3 = option1.cloneNode(true);
+
+courseSelect.appendChild(option1);        // Quick Quiz
+courseChartSelect.appendChild(option2);  // Course Chart
+aiChartSelect.appendChild(option3);      // AI Chart
 
       /* ===== check quiz ===== */
 
@@ -357,37 +370,19 @@ transcriptBtn.innerHTML = `<span class="summarySpinner"></span> Generating...`;
 
 try{
 
-/* ===== FIRESTORE CACHE ===== */
-const transcriptRef = doc(db, "video_transcripts", courseId + "_" + auth.currentUser.uid);
-const existing = await getDoc(transcriptRef);
-if(!existing.exists()){
-  console.log("No cached transcript");
-}
-let segments;
+/* ===== ALWAYS GENERATE (NO CACHE) ===== */
 
-if(existing.exists()){
+const res = await fetch("/generate-transcript",{
+  method:"POST",
+  headers:{ "Content-Type":"application/json" },
+  body:JSON.stringify({
+    videoURL: data.videoURL
+  })
+});
 
-  segments = existing.data().segments;
+const result = await res.json();
+const segments = result.segments;
 
-}else{
-
-  const res = await fetch("/generate-transcript",{
-    method:"POST",
-    headers:{ "Content-Type":"application/json" },
-    body:JSON.stringify({
-      videoURL: data.videoURL
-    })
-  });
-
-  const result = await res.json();
-  segments = result.segments;
-
-  await setDoc(transcriptRef, {
-    courseId,
-    segments,
-    createdAt: new Date()
-  });
-}
 
 /* ✅ ALWAYS RUN THIS (MOVE OUTSIDE) */
 
@@ -580,9 +575,14 @@ enrolledDiv.appendChild(folder);
 deptSection.appendChild(div);
 
     }
-if (courseSelect.options.length > 0) {
-  courseSelect.selectedIndex = 0;
-  loadCharts(uid);
+if (courseChartSelect.options.length > 0) {
+  courseChartSelect.selectedIndex = 0;
+  loadCourseChart(uid);
+}
+
+if (aiChartSelect.options.length > 0) {
+  aiChartSelect.selectedIndex = 0;
+  loadAIChart(uid);
 }
   });
 
@@ -779,94 +779,76 @@ async function loadStats(uid) {
 }
 
 
-/* ================= CHARTS ================= */
+async function loadCourseChart(uid) {
 
-async function loadCharts(uid) {
-const courseSelect = document.getElementById("courseSelect");
-const selectedCourseId = courseSelect.value;
+  const selectedCourseId = document.getElementById("courseChartSelect").value;
+  if (!selectedCourseId) return;
 
-if (!selectedCourseId) return;
-  const aiCanvas = document.getElementById("aiQuizChart");
-  const courseCanvas = document.getElementById("courseQuizChart");
+  const canvas = document.getElementById("courseQuizChart");
 
-  /* ================= AI QUIZ CHART ================= */
+  const snap = await getDocs(query(
+    collection(db, "course_quiz_results"),
+    where("userId", "==", uid),
+    where("courseId", "==", selectedCourseId)
+  ));
 
-const aiQuery = query(
-  collection(db, "ai_quiz_results"),
-  where("userId", "==", uid),
-  where("courseId", "==", selectedCourseId)
-);
+  const labels = [];
+  const scores = [];
 
-  const aiSnap = await getDocs(aiQuery);
-
-  const aiLabels = [];
-  const aiScores = [];
-
-  aiSnap.forEach(doc => {
-    const data = doc.data();
-
-    aiLabels.push("AI Quiz " + (aiLabels.length + 1));
-    aiScores.push(data.score);
+  snap.forEach(doc => {
+    labels.push("Quiz " + (labels.length + 1));
+    scores.push(doc.data().score);
   });
 
-  if (aiCanvas) {
+  if (courseChartInstance) courseChartInstance.destroy();
 
-    if (aiChartInstance) aiChartInstance.destroy();
-
-    aiChartInstance = new Chart(aiCanvas, {
-      type: "bar",
-      data: {
-        labels: aiLabels,
-        datasets: [{
-          label: "AI Quiz Score",
-          data: aiScores,
-          backgroundColor: "#6366f1"
-        }]
-      }
-    });
-
-  }
-
-
-  /* ================= COURSE QUIZ CHART ================= */
-
-const courseQuery = query(
-  collection(db, "course_quiz_results"),
-  where("userId", "==", uid),
-  where("courseId", "==", selectedCourseId)
-);
-  const courseSnap = await getDocs(courseQuery);
-
-  const courseLabels = [];
-  const courseScores = [];
-
-  courseSnap.forEach(doc => {
-    const data = doc.data();
-
-    courseLabels.push("Quiz " + (courseLabels.length + 1));
-    courseScores.push(data.score);
+  courseChartInstance = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "Course Quiz Score",
+        data: scores,
+        backgroundColor: "#22c55e"
+      }]
+    }
   });
-
-  if (courseCanvas) {
-
-    if (courseChartInstance) courseChartInstance.destroy();
-
-    courseChartInstance = new Chart(courseCanvas, {
-      type: "bar",
-      data: {
-        labels: courseLabels,
-        datasets: [{
-          label: "Course Quiz Score",
-          data: courseScores,
-          backgroundColor: "#22c55e"
-        }]
-      }
-    });
-
-  }
-
 }
+async function loadAIChart(uid) {
 
+  const selectedCourseId = document.getElementById("aiChartSelect").value;
+  if (!selectedCourseId) return;
+
+  const canvas = document.getElementById("aiQuizChart");
+
+  const snap = await getDocs(query(
+    collection(db, "ai_quiz_results"),
+    where("userId", "==", uid),
+    where("courseId", "==", selectedCourseId)
+  ));
+
+  const labels = [];
+  const scores = [];
+
+  snap.forEach(doc => {
+    labels.push("AI Quiz " + (labels.length + 1));
+    scores.push(doc.data().score);
+  });
+
+  if (aiChartInstance) aiChartInstance.destroy();
+
+  aiChartInstance = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels,
+      datasets: [{
+        label: "AI Quiz Score",
+        data: scores,
+        backgroundColor: "#6366f1"
+      }]
+    }
+  });
+}
 
 /* ================= COURSE QUIZ ================= */
 
@@ -1144,8 +1126,8 @@ await setDoc(doc(db, "course_quiz_results", resultId), {
 
       container.remove();
       loadStats(auth.currentUser.uid);
-      loadCharts(auth.currentUser.uid);
-
+      loadCourseChart(auth.currentUser.uid);
+loadAIChart(auth.currentUser.uid);
     } else {
 
       /* save AI quiz result */
@@ -1171,7 +1153,6 @@ await setDoc(doc(db, "ai_quiz_results", resultId), {
 
       showMessage("AI Quiz submitted! Score: " + percent + "%");
       loadStats(auth.currentUser.uid);
-      loadCharts(auth.currentUser.uid);
     }
 
   };

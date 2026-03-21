@@ -75,7 +75,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const promises = usersSnap.docs.map(userDoc => {
           return addDoc(collection(db, "notifications"), {
             userId: userDoc.id,
-            message: `📢 Admin Announcement: ${message}`,
+            message: `<span class="material-symbols-outlined">
+shield_person
+</span> Admin Announcement: ${message}`,
             read: false,
             createdAt: serverTimestamp(),
             type: "announcement"

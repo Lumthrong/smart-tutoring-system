@@ -21,8 +21,7 @@ import {
 document.addEventListener("DOMContentLoaded", () => {
 
   const bell = document.querySelector(".notify");
-  const panel = document.getElementById("notificationPanel");
-
+const panel = document.getElementById("notificationPanel");
   if (!bell || !panel) return;
 
   bell.addEventListener("click", (e) => {
@@ -44,7 +43,7 @@ onAuthStateChanged(auth, async (user) => {
   if (!user) return;
 
   const badge = document.getElementById("notifyCount");
-  const panel = document.getElementById("notificationPanel");
+const panel = document.getElementById("notificationList");
 
   if (!panel) return;
 
@@ -89,7 +88,11 @@ onAuthStateChanged(auth, async (user) => {
           div.classList.add("unread");
           unreadCount++;
         }
-
+      if (data.type === "announcement") {
+  div.classList.add("announcement");
+} else {
+  div.classList.add("quiz");
+}
         div.innerHTML = `
           <p>🧑‍🏫 ${data.name} requested teacher access</p>
           <small>${formatTime(data.createdAt)}</small>
@@ -179,15 +182,21 @@ onSnapshot(notifQuery, async (snapshot) => {
     }
 
     /* ===== EXTRACT QUIZ TITLE ===== */
-    let quizTitle = "Quiz";
+let displayText = "Notification";
 
-    if (data.message) {
-      // "📢 New quiz available: trivia"
-      const parts = data.message.split(":");
-      if (parts.length > 1) {
-        quizTitle = parts[1].trim();
-      }
+/* ===== HANDLE ANNOUNCEMENT ===== */
+if (data.type === "announcement") {
+  displayText = data.message; // full message
+} 
+else {
+  // existing quiz logic
+  if (data.message) {
+    const parts = data.message.split(":");
+    if (parts.length > 1) {
+      displayText = parts[1].trim();
     }
+  }
+}
 
     /* ===== EXTRACT COURSE NAME FROM LINK ===== */
     let courseName = "Course";
@@ -198,7 +207,7 @@ onSnapshot(notifQuery, async (snapshot) => {
     }
 
     div.innerHTML = `
-      <p>📝 ${quizTitle}</p>
+<p>${displayText}</p>
       <small>${formatTime(data.createdAt)}</small>
     `;
 

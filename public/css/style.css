@@ -49,6 +49,7 @@ header h1 {
 
 .menu-btn:hover {
   transform: scale(1.1);
+  background: none;
 }
 /*icons*/
 .material-symbols-outlined {

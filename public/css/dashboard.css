@@ -78,6 +78,16 @@ canvas{
   width:100%;
   overflow:hidden;
 }
+#courseChartSelect{
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
+#aiChartSelect{
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ddd;
+}
 /* ================= QUICK QUIZ ================= */
 
 .quick-test{
@@ -197,7 +207,8 @@ transform:translateY(-1px);
   overflow:hidden;
 }
 .sendComment{
-  background: #22c55e;
+    background: rgba(0, 0, 1, 0.35);
+  backdrop-filter: blur(12px);
 }
 .chatBox.hidden{
   display:none;
@@ -206,10 +217,12 @@ transform:translateY(-1px);
 /* chat header */
 
 .chatHeader{
-  background:#4f46e5;
+    background: rgba(0, 0, 1, 0.35);
+  backdrop-filter: blur(12px);
   color:#fff;
   padding:10px 14px;
   display:flex;
+  border-radius: 5px;
   justify-content:space-between;
   align-items:center;
 }

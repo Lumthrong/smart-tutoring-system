@@ -136,23 +136,26 @@ onAuthStateChanged(auth, async (user) => {
   }
 
 
-  /* ================= STUDENT: QUIZ NOTIFICATIONS ================= */
+ /* ================= STUDENT: QUIZ NOTIFICATIONS ================= */
 
-  const enrollSnap = await getDocs(
-    query(
-      collection(db, "enrollments"),
-      where("userId", "==", user.uid)
-    )
-  );
+const notifQuery = query(
+  collection(db, "notifications"),
+  where("userId", "==", user.uid),
+  orderBy("createdAt", "desc")
+);
 
-  const courseIds = enrollSnap.docs.map(d => d.data().courseId);
+onSnapshot(notifQuery, async (snapshot) => {
 
-  if (courseIds.length === 0) {
+  panel.innerHTML = "";
+
+  let unreadCount = 0;
+  let total = 0;
+
+  if (snapshot.empty) {
     panel.innerHTML = "<p>No notifications</p>";
-    return;
   }
 
-  /* ===== COURSE MAP ===== */
+  /* ===== LOAD COURSE MAP (ONCE) ===== */
 
   const courseSnap = await getDocs(collection(db, "courses"));
 
@@ -161,63 +164,84 @@ onAuthStateChanged(auth, async (user) => {
     courseMap[doc.id] = doc.data().course;
   });
 
-  /* ===== QUIZ QUERY ===== */
+  snapshot.forEach(docSnap => {
 
-  const quizQuery = query(
-    collection(db, "quizzes"),
-    where("courseId", "in", courseIds.slice(0, 10)),
-    orderBy("createdAt", "desc")
-  );
+    const data = docSnap.data();
+    total++;
 
-  onSnapshot(quizQuery, (snapshot) => {
+    const div = document.createElement("div");
+    div.className = "notificationItem";
 
-    panel.innerHTML = "";
-
-    let total = snapshot.size;
-
-    if (snapshot.empty) {
-      panel.innerHTML = "<p>No notifications</p>";
+    /* ✅ UNREAD STYLE */
+    if (!data.read) {
+      div.classList.add("unread");
+      unreadCount++;
     }
 
-    snapshot.forEach(docSnap => {
+    /* ===== EXTRACT QUIZ TITLE ===== */
+    let quizTitle = "Quiz";
 
-      const data = docSnap.data();
+    if (data.message) {
+      // "📢 New quiz available: trivia"
+      const parts = data.message.split(":");
+      if (parts.length > 1) {
+        quizTitle = parts[1].trim();
+      }
+    }
 
-      const div = document.createElement("div");
-      div.className = "notificationItem";
+    /* ===== EXTRACT COURSE NAME FROM LINK ===== */
+    let courseName = "Course";
 
-      const courseName = courseMap[data.courseId] || "Course";
-      const quizTitle = data.title || "Quiz";
+    if (data.link && data.link.includes("quiz=")) {
+      // optional: you can improve later if needed
+      courseName = "Course"; // fallback (since link doesn't store courseId)
+    }
 
-      div.innerHTML = `
-        <p>📝 ${courseName} – ${quizTitle}</p>
-        <small>${formatTime(data.createdAt)}</small>
-      `;
+    div.innerHTML = `
+      <p>📝 ${quizTitle}</p>
+      <small>${formatTime(data.createdAt)}</small>
+    `;
 
-      div.onclick = () => {
+    div.onclick = async () => {
 
-        const token = localStorage.getItem("token");
+      try {
+        await updateDoc(doc(db, "notifications", docSnap.id), {
+          read: true
+        });
+      } catch (err) {
+        console.error(err);
+      }
 
-        if (!token) {
-          window.location.href = "login.html";
-          return;
-        }
+      const token = localStorage.getItem("token");
 
+      if (!token) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      if (data.link) {
+        window.location.href = `${data.link}&token=${token}`;
+      } else {
         window.location.href = `dashboard.html?token=${token}`;
-      };
+      }
+    };
 
-      panel.appendChild(div);
-
-    });
-
-    /* ✅ BADGE = TOTAL QUIZZES */
-    if (badge) {
-      badge.innerText = total;
-      badge.style.display = total > 0 ? "inline-block" : "none";
-    }
+    panel.appendChild(div);
 
   });
 
+  /* ✅ SHOW NO NEW */
+  if (total > 0 && unreadCount === 0) {
+    panel.innerHTML = "<p>No new notifications</p>";
+  }
+
+  /* ✅ BADGE */
+  if (badge) {
+    badge.innerText = unreadCount;
+    badge.style.display = unreadCount > 0 ? "inline-block" : "none";
+  }
+
+});
 });
 
 

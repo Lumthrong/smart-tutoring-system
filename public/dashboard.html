@@ -30,7 +30,7 @@
     </div>
 
     <a href="index.html"><span class="material-symbols-outlined">home
-      </span> Home</a>
+      </span> Dashboard</a>
 
     <!-- PROFILE DROPDOWN -->
     <div class="profile-wrapper">
@@ -82,6 +82,9 @@
       <a href="about.html"><span class="material-symbols-outlined">
           info
         </span> About</a>
+          <a href="teacher_request.html"><span class="material-symbols-outlined">
+contract_edit
+</span> Request Access</a>
     </div>
   </div>
   <div class="overlay" id="overlay"></div>
@@ -90,7 +93,7 @@
     <button class="menu-btn" id="menuBtn"><span class="material-symbols-outlined">
         menu
       </span></button>
-    <h1>Home</h1>
+    <h1>Dashboard</h1>
 
     <div class="notify" id="notifyBell">
       <span class="material-symbols-outlined">
@@ -139,20 +142,19 @@
       <div class="card">
 
         <h3>Course Quiz Activity</h3>
-
-<div class="chart-container">
-  <canvas id="courseQuizChart"></canvas>
-</div>
+        <select id="courseChartSelect"></select>
+        <div class="chart-container">
+          <canvas id="courseQuizChart"></canvas>
+        </div>
 
       </div>
 
       <div class="card">
-
         <h3>AI Quiz Performance</h3>
-
-<div class="chart-container">
-  <canvas id="aiQuizChart"></canvas>
-</div>
+        <select id="aiChartSelect"></select>
+        <div class="chart-container">
+          <canvas id="aiQuizChart"></canvas>
+        </div>
 
       </div>
 
@@ -162,14 +164,16 @@
 
     <div class="card quick-test">
 
-      <h3>Quick AI Quiz</h3>
+      <h3>Quick Quiz</h3>
 
-      <p>Generate a quiz automatically from your lecture PDF.</p>
+      <p>Generate a quiz automatically from the course.</p>
 
       <select id="courseSelect"></select>
 
       <button onclick="startTest()" class="dashbtn">
-        Try Quick Quiz
+      <span class="material-symbols-outlined">
+network_intel_node
+</span>  Generate
       </button>
 
     </div>
@@ -183,7 +187,46 @@
       <div id="enrolledCourses"></div>
     </div>
 
+    <!-- ================= DISCUSSION PANEL ================= -->
+    <section class="chat">
+      <div class="chatBox hidden" id="chatBox">
+
+        <div class="chatHeader">
+
+          <span>Course Discussion</span>
+
+          <button class="chatClose" id="chatClose">✕</button>
+
+        </div>
+
+        <div class="chatMessages commentList"></div>
+
+        <div class="chatInput">
+
+          <input class="commentInput" placeholder="Ask a question...">
+
+          <button class="sendComment"><span class="material-symbols-outlined">
+              send
+            </span></button>
+
+        </div>
+
+      </div>
+    </section>
+    <!-- ===== LEARNING HISTORY ===== -->
+
     <div class="card">
+
+      <h3>Learning History</h3>
+
+      <div id="learningHistory">
+
+        <p>No learning history yet.</p>
+
+      </div>
+
+    </div>
+        <div class="card">
       <h3>Recommended Books</h3>
 
       <div class="dept-slider" id="recommendedBooks"></div>
@@ -210,45 +253,6 @@
         </div>
 
       </template>
-
-    </div>
-    <!-- ================= DISCUSSION PANEL ================= -->
-    <section class="chat">
-      <div class="chatBox hidden" id="chatBox">
-
-        <div class="chatHeader">
-
-          <span>Course Discussion</span>
-
-          <button class="chatClose" id="chatClose">✕</button>
-
-        </div>
-
-        <div class="chatMessages commentList"></div>
-
-        <div class="chatInput">
-
-          <input class="commentInput" placeholder="Ask a question...">
-
-          <button class="sendComment"><span class="material-symbols-outlined">
-send
-</span></button>
-
-        </div>
-
-      </div>
-    </section>
-    <!-- ===== LEARNING HISTORY ===== -->
-
-    <div class="card">
-
-      <h3>Learning History</h3>
-
-      <div id="learningHistory">
-
-        <p>No learning history yet.</p>
-
-      </div>
 
     </div>
   </section>

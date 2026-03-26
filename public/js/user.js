@@ -381,37 +381,76 @@ try{
 
 /* ===== ALWAYS GENERATE (NO CACHE) ===== */
 
-const res = await fetch("/generate-transcript",{
-  method:"POST",
-  headers:{ "Content-Type":"application/json" },
-  body:JSON.stringify({
-    videoURL: data.videoURL
-  })
-});
-
-const result = await res.json();
-const segments = result.segments;
-
-
-/* ✅ ALWAYS RUN THIS (MOVE OUTSIDE) */
-
 function generateVTT(segments) {
+
+  if (!segments || !Array.isArray(segments)) {
+    console.error("Segments undefined:", segments);
+    return "WEBVTT\n\n";
+  }
 
   let vtt = "WEBVTT\n\n";
 
-  segments.forEach((seg, i) => {
+  for (let i = 0; i < segments.length; i++) {
+
+    const seg = segments[i];
+
+    if (!seg || seg.start === undefined) continue;
 
     const start = formatTime(seg.start);
     const end = formatTime(
-      segments[i + 1] ? segments[i + 1].start : seg.start + 3
+      segments[i + 1]?.start ?? (seg.start + 3)
     );
 
     vtt += `${start} --> ${end}\n`;
-    vtt += `${seg.text.trim()}\n\n`;
+    vtt += `${(seg.text || "").trim()}\n\n`;
 
-  });
+  }
 
   return vtt;
+}
+const res = await fetch("/generate-transcript", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    videoURL: data.videoURL
+  })
+});
+const result = await res.json();
+
+const jobId = result.jobId;
+async function waitForTranscript(jobId) {
+
+  while (true) {
+
+const res = await fetch(
+  `/transcript-status/${jobId}`
+);
+
+    const data = await res.json();
+
+    console.log("STATUS:", data);
+
+if (data.status === "done") {
+
+  const segments =
+    data.segments ||
+    data.result?.segments ||
+    [];
+
+  if (!Array.isArray(segments)) {
+    console.error("Bad transcript format:", data);
+    return [];
+  }
+
+  return segments;
+}
+
+    if (data.status === "error") {
+      throw new Error(data.error || "Transcript failed");
+    }
+
+    await new Promise(r => setTimeout(r, 3000));
+  }
 }
 
 function formatTime(sec) {
@@ -423,6 +462,12 @@ function formatTime(sec) {
 }
 
 const video = div.querySelector("video");
+
+const segments = await waitForTranscript(jobId);
+
+if (!segments || !Array.isArray(segments)) {
+  throw new Error("Invalid transcript data");
+}
 
 const vttText = generateVTT(segments);
 const blob = new Blob([vttText], { type: "text/vtt" });
@@ -447,7 +492,7 @@ track.mode = "showing";
 
 let box = div.querySelector(".videoTranscript");
 
-box.classList.add("hidden");
+box.classList.remove("hidden");
 
 box.innerHTML = `
 <div class="aiSummaryHeader">

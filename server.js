@@ -1028,25 +1028,35 @@ app.post("/generate-transcript", async (req, res) => {
       .filter(f => f.startsWith("chunk_"));
 
     console.log("CHUNKS:", chunkFiles);
+    
+    /* ===== PARALLEL UPLOAD ===== */
 
-    /* ===== TEST ONLY FIRST CHUNK ===== */
-    const firstChunk = chunkFiles[0];
+const uploadPromises = chunkFiles.map(file => {
 
-    const formData = new FormData();
-    formData.append(
-      "file",
-      fs.createReadStream(path.join(__dirname, firstChunk)),
-      {
-        filename: firstChunk,
-        contentType: "audio/mpeg"
-      }
-    );
+  const formData = new FormData();
+  formData.append(
+    "file",
+    fs.createReadStream(path.join(__dirname, file)),
+    {
+      filename: file,
+      contentType: "audio/mpeg"
+    }
+  );
 
-    const whisperRes = await axios.post(
-      "https://whisper-api-nkv2.onrender.com/transcribe",
-      formData,
-      { headers: formData.getHeaders() }
-    );
+  return axios.post(
+    "https://whisper-api-nkv2.onrender.com/transcribe",
+    formData,
+    { headers: formData.getHeaders() }
+  );
+
+});
+
+const uploadResults = await Promise.all(uploadPromises);
+
+/* ===== COLLECT JOB IDS ===== */
+const jobIds = uploadResults.map(r => r.data.jobId);
+
+console.log("JOB IDS:", jobIds);
 
     /* ===== CLEANUP SAFE ===== */
     if (fs.existsSync(tempVideo)) fs.unlinkSync(tempVideo);
@@ -1057,7 +1067,7 @@ app.post("/generate-transcript", async (req, res) => {
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     });
 
-    res.json({ jobId: whisperRes.data.jobId });
+    res.json({ jobIds });
 
   } catch (err) {
 

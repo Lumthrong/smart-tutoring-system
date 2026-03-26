@@ -1281,28 +1281,43 @@ function loadAvailableQuizzes(uid) {
 
     for (const dept in structure) {
 
-      const deptDiv = document.createElement("div");
-      deptDiv.innerHTML = `<h4>${dept}</h4>`;
+const deptDiv = document.createElement("div");
+deptDiv.className = "quiz-dept";
+
+const deptTitle = document.createElement("h4");
+deptTitle.innerText = "📁 " + dept;
+
+deptDiv.appendChild(deptTitle);
 
       for (const course in structure[dept]) {
 
-        const courseDiv = document.createElement("div");
-        courseDiv.innerHTML = `<strong>${course}</strong>`;
+const courseWrapper = document.createElement("div");
+courseWrapper.className = "quiz-course";
 
-        structure[dept][course].forEach(q => {
+const courseTitle = document.createElement("div");
+courseTitle.className = "quiz-course-title";
+courseTitle.innerText = course;
 
-          const btn = document.createElement("button");
-          btn.innerText = q.title;
+const quizRow = document.createElement("div");
+quizRow.className = "quiz-row";
 
-          btn.onclick = () => {
-            startTeacherQuiz(q.courseId);
-          };
+structure[dept][course].forEach(q => {
 
-          courseDiv.appendChild(btn);
+  const btn = document.createElement("button");
+  btn.className = "quiz-btn";
+  btn.innerText = q.title;
 
-        });
+  btn.onclick = () => {
+    startTeacherQuiz(q.courseId);
+  };
 
-        deptDiv.appendChild(courseDiv);
+  quizRow.appendChild(btn);
+});
+
+courseWrapper.appendChild(courseTitle);
+courseWrapper.appendChild(quizRow);
+
+deptDiv.appendChild(courseWrapper);
       }
 
       panel.appendChild(deptDiv);

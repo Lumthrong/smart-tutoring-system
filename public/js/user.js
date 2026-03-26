@@ -417,7 +417,7 @@ const res = await fetch("/generate-transcript", {
 });
 const result = await res.json();
 
-const jobId = result.jobId;
+const jobIds = result.jobIds;
 async function waitForTranscript(jobId) {
 
   while (true) {
@@ -463,13 +463,27 @@ function formatTime(sec) {
 
 const video = div.querySelector("video");
 
-const segments = await waitForTranscript(jobId);
+const allSegments = await Promise.all(   jobIds.map(id => waitForTranscript(id)) );
+const CHUNK_DURATION = 120;
+
+const mergedSegments = allSegments
+  .map((segments, index) => {
+
+    const offset = index * CHUNK_DURATION;
+
+    return segments.map(seg => ({
+      ...seg,
+      start: seg.start + offset
+    }));
+
+  })
+  .flat();
 
 if (!segments || !Array.isArray(segments)) {
   throw new Error("Invalid transcript data");
 }
 
-const vttText = generateVTT(segments);
+const vttText = generateVTT(mergedSegments);
 const blob = new Blob([vttText], { type: "text/vtt" });
 const url = URL.createObjectURL(blob);
 

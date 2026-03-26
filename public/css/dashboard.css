@@ -27,15 +27,104 @@
   font-size:18px;
   font-weight:600;
 }
-.card button{
-      background: rgba(0, 0, 1, 0.35);
+.card > .dashbtn {
+  background: rgba(0, 0, 1, 0.35);
   backdrop-filter: blur(12px);
 }
 .card button:hover{
       background: #7c7c7c;
 }
 /* ================= STATS ================= */
+/* ================= QUIZ PANEL ================= */
 
+#quizListPanel {
+  margin-top: 15px;
+  padding: 10px 0;
+}
+
+/* ================= DEPARTMENT ================= */
+
+.quiz-dept {
+  margin-bottom: 20px;
+}
+
+.quiz-dept h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #374151;
+  margin-bottom: 10px;
+}
+
+/* ================= COURSE CARD ================= */
+
+.quiz-course {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 14px;
+  margin-bottom: 12px;
+
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+/* COURSE TITLE */
+
+.quiz-course-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+/* ================= QUIZ ROW ================= */
+
+.quiz-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ================= QUIZ BUTTON ================= */
+
+.quiz-btn {
+  padding: 7px 14px;
+
+  background: #e0e7ff !important;
+  color: #3730a3 !important;
+
+  border: none;
+  border-radius: 20px;
+
+  font-size: 13px;
+  font-weight: 500;
+
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* HOVER */
+
+.quiz-btn:hover {
+  background: #4f46e5 !important;
+  color: white !important;
+}
+
+/* ================= FIX GLOBAL BUTTON ================= */
+
+#globalQuizBtn {
+  width: 100%;
+  margin-bottom: 10px;
+}
+
+/* ================= CLEAN SPACING ================= */
+
+.quiz-course + .quiz-course {
+  margin-top: 10px;
+}
 .stats-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(180px,1fr));

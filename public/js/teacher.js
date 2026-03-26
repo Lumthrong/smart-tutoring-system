@@ -489,7 +489,9 @@ await addDoc(collection(db, "courses"), {
 
       div.className = "enrollment-card";
 
-      div.innerHTML = `
+   div.className = "enrollment-card clickable";
+
+div.innerHTML = `
 <div>
   <div class="enrollment-course">${c.data().course}</div>
   <div class="enrollment-label">Students Enrolled</div>
@@ -497,6 +499,10 @@ await addDoc(collection(db, "courses"), {
 
 <div class="enrollment-count">${enrollSnap.size}</div>
 `;
+
+div.onclick = () => {
+  window.location = `courseStudents.html?courseId=${c.id}`;
+};
 
       container.appendChild(div);
 
@@ -914,50 +920,56 @@ ${lowName} (${lowScore}%)
 
       /* FETCH QUIZ → COURSE */
 
-      if (data.quizId) {
+    let quizTitle = "Untitled Quiz";  // ✅ declare OUTSIDE
 
-        const quizSnap = await getDoc(doc(db, "quizzes", data.quizId));
+if (data.quizId) {
 
-        if (quizSnap.exists()) {
+  const quizSnap = await getDoc(doc(db, "quizzes", data.quizId));
 
-          const quiz = quizSnap.data();
+  if (quizSnap.exists()) {
 
-          const courseSnap = await getDoc(doc(db, "courses", quiz.courseId));
+    const quiz = quizSnap.data();
 
-          if (courseSnap.exists()) {
+    quizTitle = quiz.title || "Untitled Quiz";  // ✅ assign here
 
-            const course = courseSnap.data();
+    const courseSnap = await getDoc(doc(db, "courses", quiz.courseId));
 
-            courseName = course.course;
-            department = course.department || "Others";
+    if (courseSnap.exists()) {
 
-          }
+      const course = courseSnap.data();
 
-        }
+      courseName = course.course;
+      department = course.department || "Others";
 
-      }
+    }
+
+  }
+
+}
 
       /* FORMAT TIME */
 
-      if (data.submittedAt) {
-        submitTime = data.submittedAt.toDate().toLocaleString();
-      }
+if (data.submittedAt && data.submittedAt.toDate) {
+  submitTime = data.submittedAt.toDate().toLocaleString();
+}
 
-      /* ORGANIZE STRUCTURE */
+ if (!departmentMap[department]) {
+  departmentMap[department] = {};
+}
 
-      if (!departmentMap[department]) {
-        departmentMap[department] = {};
-      }
+if (!departmentMap[department][courseName]) {
+  departmentMap[department][courseName] = {};
+}
 
-      if (!departmentMap[department][courseName]) {
-        departmentMap[department][courseName] = [];
-      }
+if (!departmentMap[department][courseName][quizTitle]) {
+  departmentMap[department][courseName][quizTitle] = [];
+}
 
-      departmentMap[department][courseName].push({
-        studentName,
-        score: data.score,
-        submitTime
-      });
+departmentMap[department][courseName][quizTitle].push({
+  studentName,
+  score: data.score,
+  submitTime
+});
 
     }
 
@@ -1000,33 +1012,52 @@ newsstand
           courseContent.classList.toggle("hidden");
         };
 
-        /* HEADER */
+       const quizzes = courses[course];
 
-        const header = document.createElement("div");
-        header.className = "results-header";
+for (const quizTitle in quizzes) {
 
-        header.innerHTML = `
+  const quizDiv = document.createElement("div");
+
+  /* QUIZ TITLE */
+  const quizHeader = document.createElement("div");
+  quizHeader.className = "quiz-title";
+  quizHeader.innerHTML = `${quizTitle}`;
+
+  const quizContent = document.createElement("div");
+  quizContent.className = "quiz-content";
+
+  /* HEADER */
+  const header = document.createElement("div");
+  header.className = "results-header";
+
+  header.innerHTML = `
 <span>Name</span>
 <span>Marks</span>
 <span>Date Submitted</span>
 `;
 
-        courseContent.appendChild(header);
+  quizContent.appendChild(header);
 
-        courses[course].forEach(r => {
+  quizzes[quizTitle].forEach(r => {
 
-          const div = document.createElement("div");
-          div.className = "result-item";
+    const div = document.createElement("div");
+    div.className = "result-item";
 
-          div.innerHTML = `
+    div.innerHTML = `
 <span>${r.studentName}</span>
 <span class="result-score">${r.score}%</span>
 <span>${r.submitTime}</span>
 `;
 
-          courseContent.appendChild(div);
+    quizContent.appendChild(div);
 
-        });
+  });
+
+  quizDiv.appendChild(quizHeader);
+  quizDiv.appendChild(quizContent);
+
+  courseContent.appendChild(quizDiv);
+}
 
         courseDiv.appendChild(courseHeader);
         courseDiv.appendChild(courseContent);

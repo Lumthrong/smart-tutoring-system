@@ -997,55 +997,67 @@ app.post("/generate-transcript", async (req, res) => {
 
   const { videoURL } = req.body;
 
-  console.log("VIDEO URL:", videoURL);
-
   if (!videoURL) {
     return res.status(400).json({ error: "Video URL missing" });
   }
 
   try {
 
+    const tempVideo = path.join(__dirname, "temp_video.mp4");
+    const tempAudio = path.join(__dirname, "temp_audio.mp3");
+
     /* ===== DOWNLOAD VIDEO ===== */
     const videoRes = await fetch(videoURL);
     const buffer = Buffer.from(await videoRes.arrayBuffer());
+    fs.writeFileSync(tempVideo, buffer);
 
-    /* ===== SAVE TEMP FILE ===== */
-    const tempPath = path.join(__dirname, "temp_video.mp4");
-    fs.writeFileSync(tempPath, buffer);
+    /* ===== CONVERT TO AUDIO ===== */
+    await execAsync(
+      `ffmpeg -i "${tempVideo}" -vn -acodec libmp3lame -ab 128k -ac 1 -ar 16000 "${tempAudio}"`
+    );
 
-    /* ===== SEND TO WHISPER ===== */
+    /* ===== SPLIT INTO CHUNKS ===== */
+    const chunkPattern = path.join(__dirname, "chunk_%03d.mp3");
+
+    await execAsync(
+      `ffmpeg -i "${tempAudio}" -f segment -segment_time 120 -c copy "${chunkPattern}"`
+    );
+
+    /* ===== GET CHUNKS ===== */
+    const chunkFiles = fs.readdirSync(__dirname)
+      .filter(f => f.startsWith("chunk_"));
+
+    console.log("CHUNKS:", chunkFiles);
+
+    /* ===== TEST ONLY FIRST CHUNK ===== */
+    const firstChunk = chunkFiles[0];
+
     const formData = new FormData();
-const audioPath = path.join(__dirname, "temp_audio.mp3");
+    formData.append(
+      "file",
+      fs.createReadStream(path.join(__dirname, firstChunk)),
+      {
+        filename: firstChunk,
+        contentType: "audio/mpeg"
+      }
+    );
 
-/* CONVERT VIDEO → AUDIO */
-await execAsync(
-  `ffmpeg -i "${tempPath}" -vn -acodec libmp3lame -ab 128k -ac 1 -ar 16000 "${audioPath}"`
-);
+    const whisperRes = await axios.post(
+      "https://whisper-api-nkv2.onrender.com/transcribe",
+      formData,
+      { headers: formData.getHeaders() }
+    );
 
-/* SEND AUDIO INSTEAD */
-formData.append("file", fs.createReadStream(audioPath), {
-  filename: "audio.mp3",
-  contentType: "audio/mpeg"
-});
+    /* ===== CLEANUP SAFE ===== */
+    if (fs.existsSync(tempVideo)) fs.unlinkSync(tempVideo);
+    if (fs.existsSync(tempAudio)) fs.unlinkSync(tempAudio);
 
-const whisperRes = await axios.post(
-  "https://whisper-api-nkv2.onrender.com/transcribe",
-  formData,
-  {
-    headers: formData.getHeaders()
-  }
-);
+    chunkFiles.forEach(f => {
+      const filePath = path.join(__dirname, f);
+      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    });
 
-fs.unlinkSync(tempPath);
-fs.unlinkSync(audioPath);
-    /* ===== HANDLE ERROR ===== */
-if (whisperRes.status !== 200) {
-  console.error("WHISPER ERROR:", whisperRes.data);
-  return res.status(500).json({ error: "Whisper failed" });
-}
-const data = whisperRes.data;
-
-    res.json({ jobId: data.jobId });
+    res.json({ jobId: whisperRes.data.jobId });
 
   } catch (err) {
 

@@ -282,96 +282,15 @@ color:white;
 }
 /* ================= QUIZ RESULTS FOLDER VIEW ================= */
 
+/* ===== DEPARTMENT ===== */
+
 .dept-folder {
   margin-bottom: 25px;
 }
 
 .dept-title {
-  background: #4f46e5;
-  color: white;
-  padding: 10px 14px;
-  border-radius: 8px;
-  font-size: 18px;
-}
-
-.course-folder {
-  margin-left: 20px;
-  margin-top: 10px;
-}
-
-.course-title {
-  background: #eef2ff;
-  padding: 8px 12px;
-  border-radius: 6px;
-  font-size: 15px;
-}
-
-.result-list {
-  margin-left: 20px;
-  margin-top: 8px;
-}
-
-.result-item {
-  background: white;
-  padding: 10px 12px;
-  border-radius: 8px;
-  margin-bottom: 6px;
-
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-}
-
-.result-item span {
-  font-weight: 600;
-  color: #4f46e5;
-}
-
-.result-item small {
-  color: #777;
-}
-.results-header,
-.result-item {
-
-  display: grid;
-  grid-template-columns: 2fr 1fr 2fr;
-  align-items: center;
-
-  padding: 10px 16px;
-}
-
-.results-header {
-
-  font-weight: 600;
-  color: #444;
-  border-bottom: 2px solid #eee;
-  margin-bottom: 8px;
-}
-
-.result-item {
-
-  background: white;
-  border-radius: 8px;
-  margin-bottom: 6px;
-
-  box-shadow: 0 3px 10px rgba(0,0,0,0.06);
-}
-
-.result-score {
-  font-weight: 600;
-  color: #4f46e5;
-}
-.hidden {
-  display: none;
-}
-
-/* Department */
-
-.dept-title {
-background: rgba(0, 0, 0, 0.45);
-backdrop-filter: blur(12px);
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
   color: white;
   padding: 12px 16px;
   border-radius: 10px;
@@ -380,7 +299,7 @@ backdrop-filter: blur(12px);
   margin-top: 15px;
 }
 
-/* Course */
+/* ===== COURSE ===== */
 
 .course-title {
   background: #eef2ff;
@@ -392,27 +311,45 @@ backdrop-filter: blur(12px);
   font-weight: 500;
 }
 
-/* Course content */
-
 .course-content {
   margin-left: 25px;
   margin-top: 10px;
 }
 
-/* Header */
+/* ===== QUIZ TITLE ===== */
+
+.quiz-title {
+  background: #ddd6fe;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-top: 10px;
+  margin-left: 30px;
+  font-weight: 600;
+}
+
+.quiz-content {
+  margin-left: 40px;
+  margin-top: 6px;
+}
+
+/* ===== HEADER ===== */
 
 .results-header {
   display: grid;
-  grid-template-columns: 2fr 1fr 2fr;
+  grid-template-columns: minmax(0,2fr) 1fr minmax(0,2fr);
   font-weight: 600;
+  color: #444;
+  border-bottom: 2px solid #eee;
+  margin-bottom: 8px;
   padding: 8px 12px;
 }
 
-/* Result */
+/* ===== RESULT ITEM ===== */
 
 .result-item {
   display: grid;
-  grid-template-columns: 2fr 1fr 2fr;
+  grid-template-columns: minmax(0,2fr) 1fr minmax(0,2fr);
+  align-items: center;
 
   background: white;
   padding: 10px 12px;
@@ -420,11 +357,35 @@ backdrop-filter: blur(12px);
   margin-bottom: 6px;
 
   box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  gap: 10px;
 }
 
-.result-score {
+/* prevent overflow */
+.result-item span {
   font-weight: 600;
   color: #4f46e5;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* allow email to wrap */
+.result-item span:first-child {
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* score styling */
+.result-score {
+  color: #4f46e5;
+  text-align: center;
+}
+
+/* ===== UTIL ===== */
+
+.hidden {
+  display: none;
 }
 /* ================= FORM ================= */
 
@@ -696,6 +657,23 @@ backdrop-filter: blur(12px);
   font-size: 12px;
   color: #777;
   margin-top: 3px;
+}
+
+.clickable {
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.clickable:hover {
+  transform: scale(1.02);
+  background: #f3f4f6;
+}
+
+.student-card {
+  padding: 12px;
+  margin: 8px 0;
+  background: #fff;
+  border-radius: 8px;
 }
 /* ================= PERFORMANCE SECTION ================= */
 

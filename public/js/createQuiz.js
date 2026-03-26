@@ -158,7 +158,7 @@ window.saveQuiz=async function(){
     showMessage("Quiz created successfully","success");
 
     setTimeout(()=>{
-      window.location.href="teacherDashboard.html";
+      window.location.href="teacher.html";
     },1500);
 
   }

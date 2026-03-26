@@ -11,10 +11,13 @@ const require = createRequire(import.meta.url);
 const pdfParse = require("pdf-parse");
 import admin from "firebase-admin";
 dotenv.config();
-
-import { exec } from "child_process";
-import { promisify } from "util";
 import { setGlobalDispatcher, Agent } from "undici";
+import FormData from "form-data";
+import axios from "axios";
+import { exec } from "child_process";
+import util from "util";
+
+const execAsync = util.promisify(exec);
 
 setGlobalDispatcher(
   new Agent({
@@ -990,59 +993,100 @@ ${text}
 
 });
 
-const execAsync = promisify(exec);
-
 app.post("/generate-transcript", async (req, res) => {
 
   const { videoURL } = req.body;
 
-  if (!videoURL)
-    return res.status(400).json({ error: "Video required" });
+  console.log("VIDEO URL:", videoURL);
+
+  if (!videoURL) {
+    return res.status(400).json({ error: "Video URL missing" });
+  }
 
   try {
 
-    const audioPath = "temp_audio.mp3";
+    /* ===== DOWNLOAD VIDEO ===== */
+    const videoRes = await fetch(videoURL);
+    const buffer = Buffer.from(await videoRes.arrayBuffer());
 
-    /* ===== DOWNLOAD AUDIO FILE (FROM CLOUDINARY) ===== */
-    const response = await fetch(videoURL, {
-      signal: AbortSignal.timeout(120000) // 2 min timeout
-    });
+    /* ===== SAVE TEMP FILE ===== */
+    const tempPath = path.join(__dirname, "temp_video.mp4");
+    fs.writeFileSync(tempPath, buffer);
 
-    if (!response.ok) {
-      throw new Error("Failed to download audio");
-    }
+    /* ===== SEND TO WHISPER ===== */
+    const formData = new FormData();
+const audioPath = path.join(__dirname, "temp_audio.mp3");
 
-    const buffer = Buffer.from(await response.arrayBuffer());
+/* CONVERT VIDEO → AUDIO */
+await execAsync(
+  `ffmpeg -i "${tempPath}" -vn -acodec libmp3lame -ab 128k -ac 1 -ar 16000 "${audioPath}"`
+);
 
-    fs.writeFileSync(audioPath, buffer);
+/* SEND AUDIO INSTEAD */
+formData.append("file", fs.createReadStream(audioPath), {
+  filename: "audio.mp3",
+  contentType: "audio/mpeg"
+});
 
-    /* ===== RUN WHISPER ===== */
-    const { stdout } = await execAsync(`python transcribe.py ${audioPath}`);
+const whisperRes = await axios.post(
+  "https://whisper-api-nkv2.onrender.com/transcribe",
+  formData,
+  {
+    headers: formData.getHeaders()
+  }
+);
 
-    let segments;
+fs.unlinkSync(tempPath);
+fs.unlinkSync(audioPath);
+    /* ===== HANDLE ERROR ===== */
+if (whisperRes.status !== 200) {
+  console.error("WHISPER ERROR:", whisperRes.data);
+  return res.status(500).json({ error: "Whisper failed" });
+}
+const data = whisperRes.data;
 
-    try {
-      segments = JSON.parse(stdout);
-    } catch (e) {
-      console.error("JSON parse error:", stdout);
-      throw new Error("Transcript parsing failed");
-    }
-
-    /* ===== CLEANUP ===== */
-    fs.unlinkSync(audioPath);
-
-    /* ===== RESPONSE ===== */
-    res.json({ segments });
+    res.json({ jobId: data.jobId });
 
   } catch (err) {
 
     console.error("TRANSCRIPT ERROR:", err);
-
     res.status(500).json({ error: "Transcript failed" });
 
   }
 
 });
+app.get("/transcript-status/:jobId", async (req, res) => {
+
+  const { jobId } = req.params;
+
+  try {
+
+const response = await fetch(
+  `https://whisper-api-nkv2.onrender.com/status/${jobId}`
+);
+
+const text = await response.text();
+
+let data;
+
+try {
+  data = JSON.parse(text);
+} catch (err) {
+  console.error("INVALID JSON FROM WHISPER:", text);
+  return res.json({ error: "Invalid response from Whisper API" });
+}
+
+    res.json(data);
+
+  } catch (err) {
+
+    console.error("STATUS ERROR:", err);
+    res.status(500).json({ error: "Status check failed" });
+
+  }
+
+});
+
 /* ================= FALLBACK ================= */
 
 app.use((req, res) => {

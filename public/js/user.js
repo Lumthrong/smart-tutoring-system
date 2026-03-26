@@ -63,6 +63,21 @@ document.getElementById("aiChartSelect").addEventListener("change", () => {
   loadLearningHistory(user.uid);
   loadStats(user.uid);
   generateRecommendations(user.uid);
+  loadAvailableQuizzes(user.uid);
+
+const quizBtn = document.getElementById("globalQuizBtn");
+const panel = document.getElementById("quizListPanel");
+
+quizBtn.onclick = async () => {
+
+  panel.classList.toggle("hidden");
+
+  if (!panel.dataset.loaded) {
+    await loadAvailableQuizzes(user.uid);
+    panel.dataset.loaded = "true";
+  }
+
+};
 
 });
 });
@@ -121,11 +136,6 @@ aiChartSelect.appendChild(option3);      // AI Chart
 
       const quizSnap = await getDocs(quizQuery);
 
-      let quizButton = "";
-      if (!quizSnap.empty) {
-        quizButton = `<button class="quizBtn">Take Quiz</button>`;
-      }
-
       /* ===== course card ===== */
 
       const div = document.createElement("div");
@@ -173,7 +183,6 @@ chat_bubble
 neurology
 </span> AI Summary</button>
 
-${quizButton}
 
       <hr>
       `;
@@ -530,21 +539,7 @@ for(const rawLine of lines){
 }
 
 }
-      /* ===== quiz button ===== */
 
-      if (!quizSnap.empty) {
-
-        const quizBtn = div.querySelector(".quizBtn");
-
-        if (quizBtn) {
-
-          quizBtn.onclick = () => {
-            startTeacherQuiz(courseId);
-          };
-
-        }
-
-      }
 
 let deptSection = document.querySelector(`[data-dept="${data.department}"]`);
 
@@ -1213,7 +1208,110 @@ function startTimer(minutes) {
 
 }
 
+function loadAvailableQuizzes(uid) {
 
+  const panel = document.getElementById("quizListPanel");
+  const countEl = document.getElementById("quizAvailableCount");
+
+  let enrolledCourses = new Set();
+
+  /* 🔹 LISTEN TO ENROLLMENTS */
+  onSnapshot(
+    query(collection(db, "enrollments"),
+    where("userId", "==", uid)),
+
+    (enrollSnap) => {
+
+      enrolledCourses.clear();
+
+      enrollSnap.forEach(doc => {
+        enrolledCourses.add(doc.data().courseId);
+      });
+
+    }
+  );
+
+  /* 🔹 LISTEN TO QUIZZES (MAIN REAL-TIME) */
+  onSnapshot(collection(db, "quizzes"), async (quizSnap) => {
+
+    let total = 0;
+    const structure = {};
+
+    for (const q of quizSnap.docs) {
+
+      const quiz = q.data();
+      const quizId = q.id;
+      const courseId = quiz.courseId;
+
+      /* ✅ skip if not enrolled */
+      if (!enrolledCourses.has(courseId)) continue;
+
+      const courseDoc = await getDoc(doc(db, "courses", courseId));
+      if (!courseDoc.exists()) continue;
+
+      const course = courseDoc.data();
+
+      /* ✅ prevent reattempt */
+      const resultId = uid + "_" + quizId;
+      const resultDoc = await getDoc(doc(db, "course_quiz_results", resultId));
+
+      if (resultDoc.exists()) continue;
+
+      total++;
+
+      if (!structure[course.department]) {
+        structure[course.department] = {};
+      }
+
+      if (!structure[course.department][course.course]) {
+        structure[course.department][course.course] = [];
+      }
+
+      structure[course.department][course.course].push({
+        quizId,
+        title: quiz.title,
+        courseId
+      });
+
+    }
+
+    /* 🔥 UPDATE UI (ALWAYS FRESH) */
+    countEl.innerText = total;
+    panel.innerHTML = "";
+
+    for (const dept in structure) {
+
+      const deptDiv = document.createElement("div");
+      deptDiv.innerHTML = `<h4>${dept}</h4>`;
+
+      for (const course in structure[dept]) {
+
+        const courseDiv = document.createElement("div");
+        courseDiv.innerHTML = `<strong>${course}</strong>`;
+
+        structure[dept][course].forEach(q => {
+
+          const btn = document.createElement("button");
+          btn.innerText = q.title;
+
+          btn.onclick = () => {
+            startTeacherQuiz(q.courseId);
+          };
+
+          courseDiv.appendChild(btn);
+
+        });
+
+        deptDiv.appendChild(courseDiv);
+      }
+
+      panel.appendChild(deptDiv);
+    }
+
+  });
+
+}
+  
 /* ================= DISCUSSION ================= */
 
 async function loadComments(courseId) {

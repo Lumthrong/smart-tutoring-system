@@ -1100,13 +1100,24 @@ const response = await fetch(
 
 const text = await response.text();
 
+/* ===== DEBUG RESPONSE ===== */
+if (!text || text.trim() === "") {
+  console.warn("EMPTY RESPONSE FROM WHISPER");
+  return res.json({ status: "processing" }); // 🔥 important
+}
+
+if (text.startsWith("<")) {
+  console.error("HTML RESPONSE FROM WHISPER:", text);
+  return res.json({ status: "processing" }); // 🔥 important
+}
+
 let data;
 
 try {
   data = JSON.parse(text);
 } catch (err) {
   console.error("INVALID JSON FROM WHISPER:", text);
-  return res.json({ error: "Invalid response from Whisper API" });
+  return res.json({ status: "processing" }); // 🔥 important
 }
 
     res.json(data);

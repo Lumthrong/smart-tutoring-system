@@ -1020,18 +1020,19 @@ app.post("/generate-transcript", async (req, res) => {
     const chunkPattern = path.join(__dirname, "chunk_%03d.mp3");
 
     await execAsync(
-      `ffmpeg -i "${tempAudio}" -f segment -segment_time 120 -c copy "${chunkPattern}"`
+      `ffmpeg -i "${tempAudio}" -f segment -segment_time 60 -c copy "${chunkPattern}"`
     );
 
     /* ===== GET CHUNKS ===== */
     const chunkFiles = fs.readdirSync(__dirname)
-      .filter(f => f.startsWith("chunk_"));
+  .filter(f => f.startsWith("chunk_"))
+  .sort();
 
     console.log("CHUNKS:", chunkFiles);
 
 /* ===== CONTROLLED PARALLEL (NO CRASH) ===== */
 
-const CONCURRENT_LIMIT = 2; // 🔥 IMPORTANT
+const CONCURRENT_LIMIT = 1; // 🔥 IMPORTANT
 
 const jobIds = [];
 
@@ -1041,30 +1042,51 @@ for (let i = 0; i < chunkFiles.length; i += CONCURRENT_LIMIT) {
 
   const batchPromises = batch.map(file => {
 
-    const formData = new FormData();
-    formData.append(
-      "file",
-      fs.createReadStream(path.join(__dirname, file)),
-      {
-        filename: file,
-        contentType: "audio/mpeg"
-      }
-    );
+  const formData = new FormData();
+  formData.append(
+    "file",
+    fs.createReadStream(path.join(__dirname, file)),
+    {
+      filename: file,
+      contentType: "audio/mpeg"
+    }
+  );
 
-    return axios.post(
-      "https://whisper-api-nkv2.onrender.com/transcribe",
-      formData,
-      {
-        headers: formData.getHeaders(),
-        timeout: 300000 // 5 min safety
-      }
-    );
+  async function uploadWithRetry(formData) {
 
-  });
+    for (let i = 0; i < 3; i++) {
+      try {
+        return await axios.post(
+          "https://whisper-api-nkv2.onrender.com/transcribe",
+          formData,
+          {
+            headers: formData.getHeaders(),
+            timeout: 300000
+          }
+        );
+      } catch (err) {
+        console.warn("Retrying chunk...", i + 1);
+        await new Promise(r => setTimeout(r, 2000));
+      }
+    }
+
+    throw new Error("Chunk upload failed");
+  }
+
+  // ✅ THIS LINE WAS MISSING
+  return uploadWithRetry(formData);
+
+});
 
   const results = await Promise.all(batchPromises);
 
-  results.forEach(r => jobIds.push(r.data.jobId));
+  results.forEach(r => {
+  if (r && r.data && r.data.jobId) {
+    jobIds.push(r.data.jobId);
+  } else {
+    console.error("Invalid chunk response:", r);
+  }
+});
 
 }
 console.log("JOB IDS:", jobIds);
@@ -1078,7 +1100,13 @@ console.log("JOB IDS:", jobIds);
       if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
     });
 
-    res.json({ jobIds });
+    if (!jobIds.length) {
+  return res.status(500).json({
+    error: "All chunks failed"
+  });
+}
+
+res.json({ jobIds });
 
   } catch (err) {
 

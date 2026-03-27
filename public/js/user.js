@@ -450,8 +450,17 @@ function formatTime(sec) {
 
 const video = div.querySelector("video");
 
-const allSegments = await Promise.all(   jobIds.map(id => waitForTranscript(id)) );
-const CHUNK_DURATION = 120;
+const allSegments = await Promise.all(
+  jobIds.map(async (id) => {
+    try {
+      return await waitForTranscript(id);
+    } catch (err) {
+      console.error("Chunk failed:", id);
+      return [];
+    }
+  })
+);
+const CHUNK_DURATION = 60;
 
 const mergedSegments = allSegments
   .map((segments, index) => {
@@ -466,7 +475,7 @@ const mergedSegments = allSegments
   })
   .flat();
 
-if (!segments || !Array.isArray(segments)) {
+if (!mergedSegments || !Array.isArray(mergedSegments)) {
   throw new Error("Invalid transcript data");
 }
 

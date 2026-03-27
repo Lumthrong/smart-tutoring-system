@@ -1048,7 +1048,7 @@ app.post("/generate-transcript", async (req, res) => {
     const chunkPattern = path.join(__dirname, "chunk_%03d.mp3");
 
     await execAsync(
-      `ffmpeg -i "${tempAudio}" -f segment -segment_time 20 -c copy "${chunkPattern}"`
+      `ffmpeg -i "${tempAudio}" -f segment -segment_time 8 -c copy "${chunkPattern}"`
     );
 
     /* ===== GET CHUNKS ===== */

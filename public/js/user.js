@@ -422,34 +422,21 @@ async function waitForTranscript(jobId) {
 
   while (true) {
 
-const res = await fetch(
-  `/transcript-status/${jobId}`
-);
-
+    const res = await fetch(`/transcript-status/${jobId}`);
     const data = await res.json();
 
     console.log("STATUS:", data);
 
-if (data.status === "done") {
-
-  const segments =
-    data.segments ||
-    data.result?.segments ||
-    [];
-
-  if (!Array.isArray(segments)) {
-    console.error("Bad transcript format:", data);
-    return [];
-  }
-
-  return segments;
-}
-
-    if (data.status === "error") {
-      throw new Error(data.error || "Transcript failed");
+    if (data.status === "completed") {
+      return data.segments;
     }
 
-    await new Promise(r => setTimeout(r, 3000));
+    if (data.status === "failed") {
+      throw new Error("Transcription failed");
+    }
+
+    // 🔥 faster polling
+    await new Promise(r => setTimeout(r, 1000)); // 1 sec instead of 3–5
   }
 }
 

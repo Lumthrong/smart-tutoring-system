@@ -993,14 +993,27 @@ ${text}
 
 });
 async function waitForWhisperReady() {
-  for (let i = 0; i < 10; i++) {
+  for (let i = 0; i < 25; i++) {
     try {
-      const res = await fetch("https://whisper-api-nkv2.onrender.com/");
-      if (res.status === 200 || res.status === 405) {
+      const res = await fetch("https://whisper-api-nkv2.onrender.com/health");
+
+      console.log("STATUS:", res.status);
+
+      if (!res.ok) {
+        throw new Error("Bad response");
+      }
+
+      const data = await res.json();
+      console.log("HEALTH DATA:", data);
+
+      if (data && data.model_loaded === true) {
         console.log("Whisper ready");
         return;
       }
-    } catch { }
+
+    } catch (err) {
+      console.log("Health check failed:", err.message);
+    }
 
     console.log("Waiting for Whisper...");
     await new Promise(r => setTimeout(r, 3000));
@@ -1045,6 +1058,7 @@ app.post("/generate-transcript", async (req, res) => {
 
     console.log("CHUNKS:", chunkFiles);
     await waitForWhisperReady();
+await new Promise(r => setTimeout(r, 5000));
 
     /* ===== CONTROLLED PARALLEL (NO CRASH) ===== */
 

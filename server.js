@@ -992,7 +992,22 @@ ${text}
   }
 
 });
+async function waitForWhisperReady() {
+  for (let i = 0; i < 10; i++) {
+    try {
+      const res = await fetch("https://whisper-api-nkv2.onrender.com/");
+      if (res.status === 200 || res.status === 405) {
+        console.log("Whisper ready");
+        return;
+      }
+    } catch { }
 
+    console.log("Waiting for Whisper...");
+    await new Promise(r => setTimeout(r, 3000));
+  }
+
+  throw new Error("Whisper not ready");
+}
 app.post("/generate-transcript", async (req, res) => {
 
   const { videoURL } = req.body;
@@ -1020,76 +1035,82 @@ app.post("/generate-transcript", async (req, res) => {
     const chunkPattern = path.join(__dirname, "chunk_%03d.mp3");
 
     await execAsync(
-      `ffmpeg -i "${tempAudio}" -f segment -segment_time 60 -c copy "${chunkPattern}"`
+      `ffmpeg -i "${tempAudio}" -f segment -segment_time 20 -c copy "${chunkPattern}"`
     );
 
     /* ===== GET CHUNKS ===== */
     const chunkFiles = fs.readdirSync(__dirname)
-  .filter(f => f.startsWith("chunk_"))
-  .sort();
+      .filter(f => f.startsWith("chunk_"))
+      .sort();
 
     console.log("CHUNKS:", chunkFiles);
+    await waitForWhisperReady();
 
-/* ===== CONTROLLED PARALLEL (NO CRASH) ===== */
+    /* ===== CONTROLLED PARALLEL (NO CRASH) ===== */
 
-const CONCURRENT_LIMIT = 1; // 🔥 IMPORTANT
+    const CONCURRENT_LIMIT = 2; // 🔥 IMPORTANT
 
-const jobIds = [];
+    const jobIds = [];
 
-for (let i = 0; i < chunkFiles.length; i += CONCURRENT_LIMIT) {
+    for (let i = 0; i < chunkFiles.length; i += CONCURRENT_LIMIT) {
 
-  const batch = chunkFiles.slice(i, i + CONCURRENT_LIMIT);
+      const batch = chunkFiles.slice(i, i + CONCURRENT_LIMIT);
 
-  const batchPromises = batch.map(file => {
+      const batchPromises = batch.map(file => {
 
-  const formData = new FormData();
-  formData.append(
-    "file",
-    fs.createReadStream(path.join(__dirname, file)),
-    {
-      filename: file,
-      contentType: "audio/mpeg"
-    }
-  );
-
-  async function uploadWithRetry(formData) {
-
-    for (let i = 0; i < 3; i++) {
-      try {
-        return await axios.post(
-          "https://whisper-api-nkv2.onrender.com/transcribe",
-          formData,
+        const formData = new FormData();
+        formData.append(
+          "file",
+          fs.createReadStream(path.join(__dirname, file)),
           {
-            headers: formData.getHeaders(),
-            timeout: 300000
+            filename: file,
+            contentType: "audio/mpeg"
           }
         );
-      } catch (err) {
-        console.warn("Retrying chunk...", i + 1);
-        await new Promise(r => setTimeout(r, 2000));
-      }
+
+        async function uploadWithRetry(formData) {
+
+          for (let i = 0; i < 5; i++) {
+            try {
+              return await axios.post(
+                "http://localhost:8000/transcribe",
+                formData,
+                {
+                  headers: {
+                    ...formData.getHeaders()
+                  },
+                  maxBodyLength: Infinity,
+                  maxContentLength: Infinity,
+                  timeout: 300000
+                }
+              );
+            } catch (err) {
+              console.error("UPLOAD ERROR:", err.response?.data || err.message);
+              console.warn("Retrying chunk...", i + 1);
+              await new Promise(r => setTimeout(r, 2000));
+            }
+          }
+
+          throw new Error("Chunk upload failed");
+        }
+
+        // ✅ THIS LINE WAS MISSING
+        return uploadWithRetry(formData);
+
+      });
+
+      const results = await Promise.all(batchPromises);
+
+      results.forEach(r => {
+        if (r && r.data && r.data.jobId) {
+          jobIds.push(r.data.jobId);
+        } else {
+          console.error("Invalid chunk response:", r);
+        }
+      });
+
     }
-
-    throw new Error("Chunk upload failed");
-  }
-
-  // ✅ THIS LINE WAS MISSING
-  return uploadWithRetry(formData);
-
-});
-
-  const results = await Promise.all(batchPromises);
-
-  results.forEach(r => {
-  if (r && r.data && r.data.jobId) {
-    jobIds.push(r.data.jobId);
-  } else {
-    console.error("Invalid chunk response:", r);
-  }
-});
-
-}
-console.log("JOB IDS:", jobIds);
+    console.log("JOB IDS:", jobIds);
 
     /* ===== CLEANUP SAFE ===== */
     if (fs.existsSync(tempVideo)) fs.unlinkSync(tempVideo);
@@ -1101,12 +1122,12 @@ console.log("JOB IDS:", jobIds);
     });
 
     if (!jobIds.length) {
-  return res.status(500).json({
-    error: "All chunks failed"
-  });
-}
+      return res.status(500).json({
+        error: "All chunks failed"
+      });
+    }
 
-res.json({ jobIds });
+    res.json({ jobIds });
 
   } catch (err) {
 
@@ -1122,31 +1143,31 @@ app.get("/transcript-status/:jobId", async (req, res) => {
 
   try {
 
-const response = await fetch(
-  `https://whisper-api-nkv2.onrender.com/status/${jobId}`
-);
+    const response = await fetch(
+      `http://localhost:8000/status/${jobId}`
+    );
 
-const text = await response.text();
+    const text = await response.text();
 
-/* ===== DEBUG RESPONSE ===== */
-if (!text || text.trim() === "") {
-  console.warn("EMPTY RESPONSE FROM WHISPER");
-  return res.json({ status: "processing" }); // 🔥 important
-}
+    /* ===== DEBUG RESPONSE ===== */
+    if (!text || text.trim() === "") {
+      console.warn("EMPTY RESPONSE FROM WHISPER");
+      return res.json({ status: "processing" }); // 🔥 important
+    }
 
-if (text.startsWith("<")) {
-  console.error("HTML RESPONSE FROM WHISPER:", text);
-  return res.json({ status: "processing" }); // 🔥 important
-}
+    if (text.startsWith("<")) {
+      console.error("HTML RESPONSE FROM WHISPER:", text);
+      return res.json({ status: "processing" }); // 🔥 important
+    }
 
-let data;
+    let data;
 
-try {
-  data = JSON.parse(text);
-} catch (err) {
-  console.error("INVALID JSON FROM WHISPER:", text);
-  return res.json({ status: "processing" }); // 🔥 important
-}
+    try {
+      data = JSON.parse(text);
+    } catch (err) {
+      console.error("INVALID JSON FROM WHISPER:", text);
+      return res.json({ status: "processing" }); // 🔥 important
+    }
 
     res.json(data);
 

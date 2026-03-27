@@ -1028,34 +1028,45 @@ app.post("/generate-transcript", async (req, res) => {
       .filter(f => f.startsWith("chunk_"));
 
     console.log("CHUNKS:", chunkFiles);
-    
-    /* ===== PARALLEL UPLOAD ===== */
 
-const uploadPromises = chunkFiles.map(file => {
+/* ===== CONTROLLED PARALLEL (NO CRASH) ===== */
 
-  const formData = new FormData();
-  formData.append(
-    "file",
-    fs.createReadStream(path.join(__dirname, file)),
-    {
-      filename: file,
-      contentType: "audio/mpeg"
-    }
-  );
+const CONCURRENT_LIMIT = 2; // 🔥 IMPORTANT
 
-  return axios.post(
-    "https://whisper-api-nkv2.onrender.com/transcribe",
-    formData,
-    { headers: formData.getHeaders() }
-  );
+const jobIds = [];
 
-});
+for (let i = 0; i < chunkFiles.length; i += CONCURRENT_LIMIT) {
 
-const uploadResults = await Promise.all(uploadPromises);
+  const batch = chunkFiles.slice(i, i + CONCURRENT_LIMIT);
 
-/* ===== COLLECT JOB IDS ===== */
-const jobIds = uploadResults.map(r => r.data.jobId);
+  const batchPromises = batch.map(file => {
 
+    const formData = new FormData();
+    formData.append(
+      "file",
+      fs.createReadStream(path.join(__dirname, file)),
+      {
+        filename: file,
+        contentType: "audio/mpeg"
+      }
+    );
+
+    return axios.post(
+      "https://whisper-api-nkv2.onrender.com/transcribe",
+      formData,
+      {
+        headers: formData.getHeaders(),
+        timeout: 300000 // 5 min safety
+      }
+    );
+
+  });
+
+  const results = await Promise.all(batchPromises);
+
+  results.forEach(r => jobIds.push(r.data.jobId));
+
+}
 console.log("JOB IDS:", jobIds);
 
     /* ===== CLEANUP SAFE ===== */

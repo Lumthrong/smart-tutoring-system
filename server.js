@@ -1048,7 +1048,7 @@ app.post("/generate-transcript", async (req, res) => {
 
     /* ===== CONTROLLED PARALLEL (NO CRASH) ===== */
 
-    const CONCURRENT_LIMIT = 2; // 🔥 IMPORTANT
+    const CONCURRENT_LIMIT = 1; // 🔥 IMPORTANT
 
     const jobIds = [];
 
@@ -1073,7 +1073,7 @@ app.post("/generate-transcript", async (req, res) => {
           for (let i = 0; i < 5; i++) {
             try {
               return await axios.post(
-                "http://localhost:8000/transcribe",
+                "https://whisper-api-nkv2.onrender.com/transcribe",
                 formData,
                 {
                   headers: {
@@ -1144,7 +1144,7 @@ app.get("/transcript-status/:jobId", async (req, res) => {
   try {
 
     const response = await fetch(
-      `http://localhost:8000/status/${jobId}`
+      `https://whisper-api-nkv2.onrender.com/status/${jobId}`
     );
 
     const text = await response.text();

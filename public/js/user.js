@@ -370,14 +370,19 @@ const transcriptBtn = div.querySelector(".transcriptBtn");
 
 if(transcriptBtn){
 
+let transcriptRunning = false;
+transcriptBtn.onclick = null;
 transcriptBtn.onclick = async () => {
 
-const originalText = transcriptBtn.innerHTML;
+  if (transcriptRunning) return; // 🔥 STOP DUPLICATES
+  transcriptRunning = true;
 
-transcriptBtn.disabled = true;
-transcriptBtn.innerHTML = `<span class="summarySpinner"></span> Generating...`;
+  const originalText = transcriptBtn.innerHTML;
 
-try{
+  transcriptBtn.disabled = true;
+  transcriptBtn.innerHTML = `<span class="summarySpinner"></span> Generating...`;
+
+  try {
 
 /* ===== ALWAYS GENERATE (NO CACHE) ===== */
 
@@ -420,14 +425,16 @@ const result = await res.json();
 const jobIds = result.jobIds;
 async function waitForTranscript(jobId) {
 
+  const start = Date.now();
+
   while (true) {
 
     const res = await fetch(`/transcript-status/${jobId}`);
     const data = await res.json();
 
-    console.log("STATUS:", data);
+    console.log("STATUS:", jobId, data);
 
-    if (data.status === "completed") {
+    if (data.status === "completed" && data.segments) {
       return data.segments;
     }
 
@@ -435,8 +442,12 @@ async function waitForTranscript(jobId) {
       throw new Error("Transcription failed");
     }
 
-    // 🔥 faster polling
-    await new Promise(r => setTimeout(r, 1000)); // 1 sec instead of 3–5
+    // 🔥 timeout (fix silent failures)
+    if (Date.now() - start > 300000) {
+      throw new Error("Timeout for " + jobId);
+    }
+
+    await new Promise(r => setTimeout(r, 1000));
   }
 }
 
@@ -455,14 +466,23 @@ const allSegments = await Promise.all(
     try {
       return await waitForTranscript(id);
     } catch (err) {
-      console.error("Chunk failed:", id);
-      return [];
+
+      console.warn("Retrying chunk:", id);
+
+      try {
+        return await waitForTranscript(id);
+      } catch (err2) {
+        console.error("Chunk failed:", id, err2);
+        return [];
+      }
+
     }
   })
 );
-const CHUNK_DURATION = 60;
+const CHUNK_DURATION = 20;
 
 const mergedSegments = allSegments
+  .filter(seg => seg && seg.length > 0) 
   .map((segments, index) => {
 
     const offset = index * CHUNK_DURATION;
@@ -527,6 +547,7 @@ alert("Transcript failed");
 
 }
 
+transcriptRunning = false;
 transcriptBtn.disabled = false;
 transcriptBtn.innerHTML = originalText;
 

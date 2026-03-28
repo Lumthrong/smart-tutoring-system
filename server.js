@@ -995,7 +995,7 @@ ${text}
 async function waitForWhisperReady() {
   for (let i = 0; i < 25; i++) {
     try {
-      const res = await fetch("https://marcell-uncaused-nonproblematically.ngrok-free.dev/health");
+      const res = await fetch("https://whisper-api-nkv2.onrender.com/health");
 
       console.log("STATUS:", res.status);
 
@@ -1098,7 +1098,7 @@ app.post("/generate-transcript", async (req, res) => {
           for (let i = 0; i < 5; i++) {
             try {
               return await axios.post(
-                "https://marcell-uncaused-nonproblematically.ngrok-free.dev/transcribe",
+                "https://whisper-api-nkv2.onrender.com/transcribe",
                 formData,
                 {
                   headers: {
@@ -1164,7 +1164,7 @@ app.get("/transcript-status/:jobId", async (req, res) => {
   try {
 
     const response = await fetch(
-      `https://marcell-uncaused-nonproblematically.ngrok-free.dev/status/${jobId}`
+      `https://whisper-api-nkv2.onrender.com/status/${jobId}`
     );
 
     const text = await response.text();

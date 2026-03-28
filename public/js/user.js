@@ -479,7 +479,7 @@ const allSegments = await Promise.all(
     }
   })
 );
-const CHUNK_DURATION = 8;
+const CHUNK_DURATION = 12;
 
 const mergedSegments = allSegments
   .filter(seg => seg && seg.length > 0) 

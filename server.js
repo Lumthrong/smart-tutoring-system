@@ -1048,8 +1048,12 @@ app.post("/generate-transcript", async (req, res) => {
     const chunkPattern = path.join(__dirname, "chunk_%03d.mp3");
 
     await execAsync(
-      `ffmpeg -i "${tempAudio}" -f segment -segment_time 8 -c copy "${chunkPattern}"`
-    );
+  `ffmpeg -i "${tempAudio}" \
+  -af "silenceremove=stop_periods=-1:stop_duration=0.5:stop_threshold=-40dB,volume=2.0" \
+  -ac 1 -ar 16000 \
+  -f segment -segment_time 12 \
+  "${chunkPattern}"`
+);
 
     /* ===== GET CHUNKS ===== */
     const chunkFiles = fs.readdirSync(__dirname)
@@ -1058,7 +1062,6 @@ app.post("/generate-transcript", async (req, res) => {
 
     console.log("CHUNKS:", chunkFiles);
     await waitForWhisperReady();
-await new Promise(r => setTimeout(r, 5000));
 
     /* ===== CONTROLLED PARALLEL (NO CRASH) ===== */
 
@@ -1070,18 +1073,33 @@ await new Promise(r => setTimeout(r, 5000));
 
       const batch = chunkFiles.slice(i, i + CONCURRENT_LIMIT);
 
-      const batchPromises = batch.map(file => {
+      const batchPromises = batch
+  .map(file => {
+    const filePath = path.join(__dirname, file);
+    const stats = fs.statSync(filePath);
 
-        const formData = new FormData();
-        formData.append(
-          "file",
-          fs.createReadStream(path.join(__dirname, file)),
-          {
-            filename: file,
-            contentType: "audio/mpeg"
-          }
-        );
+    if (stats.size < 5000) {
+      console.log("Skipping weak chunk:", file);
+      return null;
+    }
 
+    const formData = new FormData();
+    formData.append("file", fs.createReadStream(filePath), {
+      filename: file,
+      contentType: "audio/mpeg"
+    });
+
+    return uploadWithRetry(formData);
+  })
+  .filter(Boolean);
+        
+const filePath = path.join(__dirname, file);
+const stats = fs.statSync(filePath);
+
+if (stats.size < 5000) {
+  console.log("Skipping weak chunk:", file);
+  return null;
+}
         async function uploadWithRetry(formData) {
 
           for (let i = 0; i < 5; i++) {

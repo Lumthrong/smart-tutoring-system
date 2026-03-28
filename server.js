@@ -1093,13 +1093,6 @@ app.post("/generate-transcript", async (req, res) => {
   })
   .filter(Boolean);
         
-const filePath = path.join(__dirname, file);
-const stats = fs.statSync(filePath);
-
-if (stats.size < 5000) {
-  console.log("Skipping weak chunk:", file);
-  return null;
-}
         async function uploadWithRetry(formData) {
 
           for (let i = 0; i < 5; i++) {
@@ -1125,11 +1118,6 @@ if (stats.size < 5000) {
 
           throw new Error("Chunk upload failed");
         }
-
-        // ✅ THIS LINE WAS MISSING
-        return uploadWithRetry(formData);
-
-      });
 
       const results = await Promise.all(batchPromises);
 

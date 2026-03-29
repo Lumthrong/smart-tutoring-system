@@ -1051,7 +1051,7 @@ app.post("/generate-transcript", async (req, res) => {
   `ffmpeg -i "${tempAudio}" \
   -af "silenceremove=stop_periods=-1:stop_duration=0.5:stop_threshold=-40dB,volume=2.0" \
   -ac 1 -ar 16000 \
-  -f segment -segment_time 12 \
+  -f segment -segment_time 30 \
   "${chunkPattern}"`
 );
 

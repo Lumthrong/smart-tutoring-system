@@ -225,7 +225,14 @@ button:disabled{
   background:#999;
   cursor:not-allowed;
 }
-
+.transcriptBtn{
+      background: rgba(0, 0, 1, 0.35);
+  backdrop-filter: blur(12px);
+}
+.openNotesBtn{
+      background: rgba(0, 0, 1, 0.35);
+  backdrop-filter: blur(12px);
+}
 /* ================= COURSE LIST ================= */
 
 #enrolledCourses div{
@@ -526,12 +533,6 @@ margin-right:6px;
 0%{transform:rotate(0deg);}
 100%{transform:rotate(360deg);}
 }
-.transcriptBtn{
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(12px);
-  margin-top:10px;
-}
-
 /* ===== WRAPPER ===== */
 .videoWrapper {
   display: flex;

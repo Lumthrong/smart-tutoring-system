@@ -1212,7 +1212,57 @@ app.get("/transcript-status/:jobId", async (req, res) => {
   }
 
 });
+app.post("/generate-notes", verifyToken, async (req, res) => {
 
+const { transcript, courseId } = req.body;
+
+  if (!transcript) {
+    return res.status(400).json({ error: "Transcript required" });
+  }
+
+  try {
+
+    const ai = await askGroq(
+      "llama-3.1-8b-instant",
+      `
+Convert this transcript into structured study notes.
+
+Rules:
+- Use bullet points
+- DO NOT use markdown symbols like ** or *
+- Use clean plain text only
+- Highlight key concepts using simple headings
+- Keep it easy to revise
+
+Transcript:
+${transcript}
+`
+    );
+
+    // 🔥 SAVE TO FIRESTORE
+const docId = req.user.uid + "_" + req.body.courseId;
+
+const docRef = await db.collection("notes").doc(docId).set({
+  userId: req.user.uid,
+  courseId: courseId, // ✅ ADD THIS
+  transcript: transcript.substring(0, 5000),
+  notes: ai,
+  createdAt: new Date()
+});
+
+    res.json({
+      notes: ai,
+      id: docRef.id
+    });
+
+  } catch (err) {
+
+    console.error(err);
+    res.status(500).json({ error: "Notes generation failed" });
+
+  }
+
+});
 /* ================= FALLBACK ================= */
 
 app.use((req, res) => {

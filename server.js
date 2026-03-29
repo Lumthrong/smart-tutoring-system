@@ -133,6 +133,8 @@ console.log("EMAIL_USER:", process.env.EMAIL_USER);
 console.log("GROQ_API_KEY exists:", !!process.env.GROQ_API_KEY);
 
 const app = express();
+let activeTranscriptions = 0;
+const MAX_TRANSCRIPTIONS = 2;
 app.use(cors());
 app.use(express.json());
 
@@ -1023,6 +1025,14 @@ async function waitForWhisperReady() {
 }
 app.post("/generate-transcript", async (req, res) => {
 
+  if (activeTranscriptions >= MAX_TRANSCRIPTIONS) {
+  return res.status(429).json({
+    error: "Server busy, try again later"
+  });
+}
+
+activeTranscriptions++;
+
   const { videoURL } = req.body;
 
   if (!videoURL) {
@@ -1147,14 +1157,17 @@ app.post("/generate-transcript", async (req, res) => {
       });
     }
 
-    res.json({ jobIds });
+res.json({ jobIds });
+activeTranscriptions = Math.max(0, activeTranscriptions - 1);
 
-  } catch (err) {
+} catch (err) {
 
-    console.error("TRANSCRIPT ERROR:", err);
-    res.status(500).json({ error: "Transcript failed" });
+  activeTranscriptions = Math.max(0, activeTranscriptions - 1);
 
-  }
+  console.error("TRANSCRIPT ERROR:", err);
+  res.status(500).json({ error: "Transcript failed" });
+
+}
 
 });
 app.get("/transcript-status/:jobId", async (req, res) => {

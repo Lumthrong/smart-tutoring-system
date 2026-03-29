@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/notes.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+</head>
+
+<body data-role="student">
+
+  <div class="sidebar" id="sidebar">
+
+    <!-- USER MINI HEADER -->
+    <div class="profile-mini">
+      <div class="avatar-circle">
+        <img id="miniProfileImg" src="" alt="Avatar">
+        <span id="avatarCircle">U</span>
+      </div>
+      <div class="profile-info">
+        <p id="profileName">Guest</p>
+        <small id="profileEmail"></small>
+      </div>
+    </div>
+
+    <a href="index.html"><span class="material-symbols-outlined">home
+      </span> Home</a>
+
+    <!-- PROFILE DROPDOWN -->
+    <div class="profile-wrapper">
+      <div class="profile-toggle" id="profileToggle"><span class="material-symbols-outlined">
+          account_circle
+        </span>
+        Profile ▾
+      </div>
+      <div class="profile-dropdown" id="profileDropdown">
+        <a href="dashboard.html" id="dashboardLink"><span class="material-symbols-outlined">
+            dashboard
+          </span> Dashboard</a>
+        <a href="accsettings.html"><span class="material-symbols-outlined">
+            settings
+          </span> Profile Settings</a>
+        <a href="#" id="logoutLink"><span class="material-symbols-outlined">
+            logout
+          </span> Logout</a>
+      </div>
+    </div>
+    <div class="book-wrapper">
+      <div class="book-toggle" id="bookToggle"> <span class="material-symbols-outlined">
+          newsstand
+        </span>
+        Books ▾
+      </div>
+      <div class="book-dropdown" id="bookDropdown">
+        <a href="/department.html?dept=COMPUTER SCIENCE">
+          Computer Science
+        </a>
+        <a href="/department.html?dept=MECHANICAL">
+          Mechanical Engineering
+        </a>
+        <a href="/department.html?dept=CIVIL">
+          Civil Engineering
+        </a>
+        <a href="/department.html?dept=ELECTRICAL">
+          Electrical Engineering
+        </a>
+        <a href="/department.html?dept=GENERAL KNOWLEDGE">
+          General Knowledge
+        </a>
+        <a href="/department.html?dept=OTHERS">
+          Others
+        </a>
+      </div>
+    </div>
+    <div class="footer">
+      <a href="about.html"><span class="material-symbols-outlined">
+          info
+        </span> About</a>
+          <a href="teacher_request.html"><span class="material-symbols-outlined">
+contract_edit
+</span> Request Access</a>
+    </div>
+  </div>
+  <div class="overlay" id="overlay"></div>
+
+  <header>
+    <button class="menu-btn" id="menuBtn"><span class="material-symbols-outlined">
+        menu
+      </span></button>
+    <h1>Dashboard</h1>
+
+    <div class="notify" id="notifyBell">
+      <span class="material-symbols-outlined">
+        notifications
+      </span>
+      <span id="notifyCount">0</span>
+      <div id="notificationPanel" class="notify-panel">
+        <div class="notify-header">
+          Notifications
+        </div>
+
+        <div id="notificationList"></div>
+      </div>
+    </div>
+  </header>
+<section class ="notes">
+<div class="card">
+  <h3>Course Notes</h3>
+
+  <textarea id="notesEditor" style="width:100%;height:300px;"></textarea>
+
+  <br><br>
+
+  <button id="saveNotesBtn">Save Notes</button>
+</div>
+</section>
+<script type="module" src="js/notes.js"></script>
+  <script type="module" src="js/script.js"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/notification.js"></script>
+
+</body>
+
+</html>

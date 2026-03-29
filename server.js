@@ -1075,7 +1075,7 @@ activeTranscriptions++;
 
     /* ===== CONTROLLED PARALLEL (NO CRASH) ===== */
 
-    const CONCURRENT_LIMIT = 1; // 🔥 IMPORTANT
+    const CONCURRENT_LIMIT = 3; 
 
     const jobIds = [];
 

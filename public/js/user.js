@@ -10,7 +10,8 @@ import {
   getDocs,
   getDoc,
   orderBy,
-  setDoc
+  setDoc,
+  deleteDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 import {
@@ -171,6 +172,10 @@ file_open
 <span class="material-symbols-outlined">subtitles</span>
 Transcript
 </button>
+<button class="openNotesBtn">
+<span class="material-symbols-outlined">note</span>
+Notes
+</button>
 
 ` : ""}
 
@@ -196,6 +201,13 @@ if (playBtn) {
     video.setAttribute("controls", true);
     video.play();
     playBtn.style.display = "none";
+  };
+}
+const notesBtn = div.querySelector(".openNotesBtn");
+
+if (notesBtn) {
+  notesBtn.onclick = () => {
+    window.location.href = `notes.html?courseId=${courseId}`;
   };
 }
       /* ===== TRACK PDF OPEN ===== */
@@ -371,10 +383,23 @@ const transcriptBtn = div.querySelector(".transcriptBtn");
 if(transcriptBtn){
 
 let transcriptRunning = false;
+let transcriptLoaded = false; // 🔥 ADD THIS
 transcriptBtn.onclick = null;
 transcriptBtn.onclick = async () => {
+  const lockRef = doc(
+  db,
+  "transcripts",
+  courseId + "_" + auth.currentUser.uid + "_lock"
+);
 
-  if (transcriptRunning) return; // 🔥 STOP DUPLICATES
+const lockSnap = await getDoc(lockRef);
+
+if (lockSnap.exists()) {
+  console.log("Already generating / generated");
+  return;
+}
+
+if (transcriptRunning || transcriptLoaded) return;
   transcriptRunning = true;
 
   const originalText = transcriptBtn.innerHTML;
@@ -384,45 +409,44 @@ transcriptBtn.onclick = async () => {
 
   try {
 
-/* ===== ALWAYS GENERATE (NO CACHE) ===== */
 
-function generateVTT(segments) {
+// ✅ USE COURSE ID (FINAL FIX)
+const transcriptRef = doc(
+  db,
+  "transcripts",
+  courseId + "_" + auth.currentUser.uid
+);
 
-  if (!segments || !Array.isArray(segments)) {
-    console.error("Segments undefined:", segments);
-    return "WEBVTT\n\n";
-  }
+let mergedSegments;
+let fullTranscript;
 
-  let vtt = "WEBVTT\n\n";
+const transcriptSnap = await getDoc(transcriptRef);
+if (transcriptSnap.exists()) {
+  transcriptLoaded = true;
 
-  for (let i = 0; i < segments.length; i++) {
+  console.log("Using cached transcript");
 
-    const seg = segments[i];
+const saved = transcriptSnap.data();
+  mergedSegments = saved.segments;
+  fullTranscript = saved.text;
 
-    if (!seg || seg.start === undefined) continue;
-
-    const start = formatTime(seg.start);
-    const end = formatTime(
-      segments[i + 1]?.start ?? (seg.start + 3)
-    );
-
-    vtt += `${start} --> ${end}\n`;
-    vtt += `${(seg.text || "").trim()}\n\n`;
-
-  }
-
-  return vtt;
-}
-const res = await fetch("/generate-transcript", {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    videoURL: data.videoURL
-  })
+} else {
+await setDoc(lockRef, {
+  status: "processing",
+  createdAt: new Date()
 });
-const result = await res.json();
+  console.log("Generating new transcript");
 
-const jobIds = result.jobIds;
+  const res = await fetch("/generate-transcript", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      videoURL: data.videoURL
+    })
+  });
+
+  const result = await res.json();
+  const jobIds = result.jobIds;
 async function waitForTranscript(jobId) {
 
   const start = Date.now();
@@ -481,7 +505,7 @@ const allSegments = await Promise.all(
 );
 const CHUNK_DURATION = 30;
 
-const mergedSegments = allSegments
+mergedSegments = allSegments
   .filter(seg => seg && seg.length > 0) 
   .map((segments, index) => {
 
@@ -494,11 +518,28 @@ const mergedSegments = allSegments
 
   })
   .flat();
-
+// 🔥 Convert segments → full transcript text
+fullTranscript = mergedSegments
+  .map(s => s.text)
+  .join(" ");
 if (!mergedSegments || !Array.isArray(mergedSegments)) {
   throw new Error("Invalid transcript data");
 }
 
+// 🔥 SAVE TO FIRESTORE
+await setDoc(transcriptRef, {
+  userId: auth.currentUser.uid,
+  courseId: courseId, // 🔥 ADD THIS LINE
+  segments: mergedSegments,
+  text: fullTranscript,
+  createdAt: new Date()
+});
+await setDoc(lockRef, {
+  status: "done",
+  createdAt: new Date()
+});
+} // ✅ CLOSE ELSE BLOCK
+transcriptLoaded = true;
 const vttText = generateVTT(mergedSegments);
 const blob = new Blob([vttText], { type: "text/vtt" });
 const url = URL.createObjectURL(blob);
@@ -517,7 +558,27 @@ track.src = url;
 track.default = true;
 track.mode = "showing";
 
+function generateVTT(segments) {
+  let vtt = "WEBVTT\n\n";
 
+  function formatTime(sec) {
+    const h = String(Math.floor(sec / 3600)).padStart(2, "0");
+    const m = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
+    const s = String((sec % 60).toFixed(3)).padStart(6, "0");
+    return `${h}:${m}:${s}`;
+  }
+
+  segments.forEach((seg, i) => {
+    const start = formatTime(seg.start);
+    const end = formatTime(seg.end || seg.start + 3);
+
+    vtt += `${i + 1}\n`;
+    vtt += `${start} --> ${end}\n`;
+    vtt += `${seg.text}\n\n`;
+  });
+
+  return vtt;
+}
 /* ===== UI ===== */
 
 let box = div.querySelector(".videoTranscript");
@@ -526,12 +587,104 @@ box.classList.remove("hidden");
 
 box.innerHTML = `
 <div class="aiSummaryHeader">
-<span> Video Transcript</span>
+<span> AI Study Notes</span>
 <button class="closeSummary">✖</button>
 </div>
 
 <div class="aiSummaryContent"></div>
 `;
+
+const content = box.querySelector(".aiSummaryContent");
+
+try {
+
+  const token = await auth.currentUser.getIdToken();
+
+const notesRef = doc(db, "notes", courseId + "_" + auth.currentUser.uid);
+const notesSnap = await getDoc(notesRef);
+
+let notesText;
+
+if (notesSnap.exists()) {
+
+  console.log("Using cached notes");
+  notesText = notesSnap.data().notes;
+
+} else {
+
+  console.log("Generating new notes");
+
+  const res = await fetch("/generate-notes", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": "Bearer " + token
+    },
+body: JSON.stringify({
+  transcript: fullTranscript,
+  courseId: courseId // ✅ ADD THIS
+})
+  });
+
+  const data = await res.json();
+
+if (!data.notes) {
+  throw new Error("No notes generated");
+}
+
+  notesText = data.notes;
+
+  await setDoc(notesRef, {
+    userId: auth.currentUser.uid,
+    courseId,
+    notes: notesText,
+    createdAt: new Date()
+  });
+
+}
+  // 🔥 Format nicely
+const cleanText = notesText
+  .replace(/\*\*/g, "")   // ❌ remove **
+  .replace(/\*/g, "")     // ❌ remove single *
+  .trim();
+
+const lines = cleanText.split("\n");
+
+let html = "";
+let listOpen = false;
+
+lines.forEach(line => {
+
+  line = line.trim();
+  if (!line) return;
+
+  // bullet points
+  if (line.startsWith("-")) {
+    if (!listOpen) {
+      html += "<ul>";
+      listOpen = true;
+    }
+    html += `<li>${line.replace(/^-/, "").trim()}</li>`;
+  } else {
+    if (listOpen) {
+      html += "</ul>";
+      listOpen = false;
+    }
+    html += `<p>${line}</p>`;
+  }
+
+});
+
+if (listOpen) html += "</ul>";
+
+content.innerHTML = html;
+
+} catch (err) {
+
+  console.error(err);
+  content.innerHTML = "<p>Failed to generate notes</p>";
+
+}
 
 const closeBtn = box.querySelector(".closeSummary");
 
@@ -544,6 +697,7 @@ closeBtn.onclick = () => {
 
 console.error(err);
 alert("Transcript failed");
+await deleteDoc(lockRef);
 
 }
 

@@ -265,21 +265,27 @@ const tags = tagsInput
 
 /* ===== SAVE COURSE ===== */
 
-await addDoc(collection(db, "courses"), {
+const courseId = data.course.trim().toLowerCase();
 
+const courseRef = doc(db, "courses", courseId);
+
+/* ===== CREATE COURSE (ONLY ONCE) ===== */
+await setDoc(courseRef, {
   department: data.department,
   semester: data.semester,
   course: data.course,
-
-  tags: tags,   // ⭐ IMPORTANT
-
+  tags: tags,
   coverURL: data.coverURL,
-  pdfURL: data.pdfURL,
-  videoURL: data.videoURL,
-
   uploadedBy: auth.currentUser.uid,
   createdAt: new Date()
+}, { merge: true });
 
+/* ===== ADD UNIT ===== */
+await addDoc(collection(db, "courses", courseId, "units"), {
+  title: data.unitTitle || "Unit",
+  pdfURL: data.pdfURL,
+  videoURL: data.videoURL,
+  createdAt: new Date()
 });
 
       btn.classList.remove("loading");

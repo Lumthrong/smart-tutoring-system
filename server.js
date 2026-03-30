@@ -63,6 +63,11 @@ async function verifyToken(req, res, next) {
     console.log("USER ROLE:", decoded.role);
 
     req.user = decoded;
+    const userDoc = await db.collection("users").doc(decoded.uid).get();
+
+if (userDoc.exists) {
+  req.user.role = userDoc.data().role;
+}
 
     next();
 
@@ -417,7 +422,7 @@ app.post("/upload", multiUpload, async (req, res) => {
 
   try {
 
-    const { department, semester, course } = req.body;
+const { department, semester, course, unitTitle } = req.body;
 
     if (!req.files || !req.files.pdf)
       return res.status(400).json({ error: "PDF required" });
@@ -473,6 +478,25 @@ app.post("/upload", multiUpload, async (req, res) => {
     fs.unlinkSync(pdfFile.path);
     if (videoFile) fs.unlinkSync(videoFile.path);
     if (coverFile) fs.unlinkSync(coverFile.path);
+
+    // SAVE UNIT INTO FIRESTORE (NEW)
+
+const courseRef = db.collection("courses").doc(course);
+
+// ensure course exists
+await courseRef.set({
+  course,
+  department,
+  semester
+}, { merge: true });
+
+// add unit
+await courseRef.collection("units").add({
+  title: unitTitle || "Untitled Unit",
+  videoURL: videoUpload ? videoUpload.secure_url : null,
+  pdfURL: pdfUpload.secure_url,
+  createdAt: new Date()
+});
 
     res.json({
       success: true,

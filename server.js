@@ -1143,21 +1143,54 @@ activeTranscriptions++;
     console.log("JOB IDS:", jobIds);
 
     /* ===== CLEANUP SAFE ===== */
+  try {
+
+  if (fs.existsSync(tempVideo)) fs.unlinkSync(tempVideo);
+  if (fs.existsSync(tempAudio)) fs.unlinkSync(tempAudio);
+
+  chunkFiles.forEach(f => {
+    const filePath = path.join(__dirname, f);
+    if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+  });
+
+  console.log("🧹 Cleanup after success done");
+
+} catch (cleanupErr) {
+  console.error("Cleanup failed:", cleanupErr);
+}
+
+   if (!jobIds.length) {
+
+  console.error("All chunks failed — cleaning up");
+
+  try {
+
+    const tempVideo = path.join(__dirname, "temp_video.mp4");
+    const tempAudio = path.join(__dirname, "temp_audio.mp3");
+
     if (fs.existsSync(tempVideo)) fs.unlinkSync(tempVideo);
     if (fs.existsSync(tempAudio)) fs.unlinkSync(tempAudio);
 
-    chunkFiles.forEach(f => {
-      const filePath = path.join(__dirname, f);
-      if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+    const files = fs.readdirSync(__dirname);
+
+    files.forEach(f => {
+      if (f.startsWith("chunk_")) {
+        const filePath = path.join(__dirname, f);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      }
     });
 
-    if (!jobIds.length) {
-      return res.status(500).json({
-        error: "All chunks failed"
-      });
-    }
+  } catch (cleanupErr) {
+    console.error("Cleanup failed:", cleanupErr);
+  }
+
+  return res.status(500).json({
+    error: "All chunks failed"
+  });
+}
 
 res.json({ jobIds });
+
 activeTranscriptions = Math.max(0, activeTranscriptions - 1);
 
 } catch (err) {
@@ -1165,6 +1198,32 @@ activeTranscriptions = Math.max(0, activeTranscriptions - 1);
   activeTranscriptions = Math.max(0, activeTranscriptions - 1);
 
   console.error("TRANSCRIPT ERROR:", err);
+
+  // 🔥 ===== FORCE CLEANUP (CRITICAL) =====
+  try {
+
+    const tempVideo = path.join(__dirname, "temp_video.mp4");
+    const tempAudio = path.join(__dirname, "temp_audio.mp3");
+
+    if (fs.existsSync(tempVideo)) fs.unlinkSync(tempVideo);
+    if (fs.existsSync(tempAudio)) fs.unlinkSync(tempAudio);
+
+    const files = fs.readdirSync(__dirname);
+
+    files.forEach(f => {
+      if (f.startsWith("chunk_")) {
+        const filePath = path.join(__dirname, f);
+        if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+      }
+    });
+
+    console.log("🧹 Cleanup after failure done");
+
+  } catch (cleanupErr) {
+    console.error("Cleanup failed:", cleanupErr);
+  }
+  // 🔥 ===== END CLEANUP =====
+
   res.status(500).json({ error: "Transcript failed" });
 
 }

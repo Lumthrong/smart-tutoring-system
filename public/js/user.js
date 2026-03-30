@@ -47,12 +47,54 @@ let courseChartInstance = null;
 /* ================= INIT ================= */
 
 document.addEventListener("DOMContentLoaded", () => {
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
 
   if (!user) {
     window.location.href = "login.html";
     return;
   }
+  // ===== SET DASHBOARD USER NAME =====
+const userDoc = await getDoc(doc(db, "users", user.uid));
+const userData = userDoc.data();
+
+const dashName = document.getElementById("dashboardUserName");
+const avatarLetter = document.getElementById("dashAvatarLetter");
+const profileImg = document.getElementById("dashProfileImg");
+
+const name = userData?.firstName || user.displayName || user.email || "User";
+
+/* ===== NAME ===== */
+if (dashName) {
+  dashName.innerText = name;
+}
+
+/* ===== 🔥 USE FIREBASE AUTH photoURL ===== */
+/* ===== FETCH IMAGE FROM FIRESTORE (CLOUDINARY) ===== */
+
+const photoURL = userData?.photoURL;
+
+console.log("Cloudinary URL:", photoURL); // DEBUG
+
+if (photoURL && profileImg) {
+
+  profileImg.src = photoURL;
+
+  // 🔥 FORCE RELOAD (important for Cloudinary sometimes)
+  profileImg.src = photoURL + "?t=" + Date.now();
+
+  profileImg.style.display = "block";
+
+  if (avatarLetter) avatarLetter.style.display = "none";
+
+} else {
+
+  if (profileImg) profileImg.style.display = "none";
+
+  if (avatarLetter) {
+    avatarLetter.style.display = "flex";
+    avatarLetter.innerText = name.charAt(0).toUpperCase();
+  }
+}
 document.getElementById("courseChartSelect").addEventListener("change", () => {
   loadCourseChart(auth.currentUser.uid);
 });
@@ -67,6 +109,13 @@ document.getElementById("aiChartSelect").addEventListener("change", () => {
   loadAvailableQuizzes(user.uid);
 
 const quizBtn = document.getElementById("globalQuizBtn");
+const notesGlobalBtn = document.getElementById("globalNotesBtn");
+
+if (notesGlobalBtn) {
+  notesGlobalBtn.onclick = () => {
+    window.location.href = "notes.html";
+  };
+}
 const panel = document.getElementById("quizListPanel");
 
 quizBtn.onclick = async () => {
@@ -83,7 +132,28 @@ quizBtn.onclick = async () => {
 });
 });
 
+/* ===== GLOBAL VTT FUNCTION ===== */
+function generateVTT(segments) {
+  let vtt = "WEBVTT\n\n";
 
+  function formatTime(sec) {
+    const h = String(Math.floor(sec / 3600)).padStart(2, "0");
+    const m = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
+    const s = String((sec % 60).toFixed(3)).padStart(6, "0");
+    return `${h}:${m}:${s}`;
+  }
+
+  segments.forEach((seg, i) => {
+    const start = formatTime(seg.start);
+    const end = formatTime(seg.end || seg.start + 3);
+
+    vtt += `${i + 1}\n`;
+    vtt += `${start} --> ${end}\n`;
+    vtt += `${seg.text}\n\n`;
+  });
+
+  return vtt;
+}
 /* ================= LOAD COURSES ================= */
 async function loadCourses(uid) {
 
@@ -168,30 +238,67 @@ file_open
 
 </div>
 
-<button class="transcriptBtn">
-<span class="material-symbols-outlined">subtitles</span>
-Transcript
-</button>
-<button class="openNotesBtn">
-<span class="material-symbols-outlined">note</span>
-Notes
-</button>
+<div class="videoActionRow">
+  <button class="transcriptBtn">
+    <span class="material-symbols-outlined">subtitles</span>
+    Transcript
+  </button>
+
+  <button class="openNotesBtn">
+    <span class="material-symbols-outlined">note</span>
+    Notes
+  </button>
+
+  <button class="discussionBtn">
+    <span class="material-symbols-outlined">chat_bubble</span>
+    Discussion
+  </button>
+
+  <button class="summaryBtn">
+    <span class="material-symbols-outlined">neurology</span>
+    Summary
+  </button>
+</div>
 
 ` : ""}
-
-      <br><br>
-
-<button class="discussionBtn"><span class="material-symbols-outlined">
-chat_bubble
-</span> Discussion</button>
-<button class="summaryBtn"><span class="material-symbols-outlined">
-neurology
-</span> AI Summary</button>
-
-
       <hr>
       `;
       const video = div.querySelector("video");
+
+      /* ===== AUTO APPLY TRANSCRIPT ===== */
+
+const transcriptRefAuto = doc(
+  db,
+  "transcripts",
+  courseId + "_" + auth.currentUser.uid
+);
+
+const transcriptSnapAuto = await getDoc(transcriptRefAuto);
+
+if (transcriptSnapAuto.exists()) {
+
+  const saved = transcriptSnapAuto.data();
+  const segments = saved.segments;
+
+  const vttText = generateVTT(segments);
+  const blob = new Blob([vttText], { type: "text/vtt" });
+  const url = URL.createObjectURL(blob);
+
+  let track = video.querySelector("track");
+
+  if (!track) {
+    track = document.createElement("track");
+    track.kind = "subtitles";
+    track.label = "English";
+    track.srclang = "en";
+    video.appendChild(track);
+  }
+
+  track.src = url;
+  track.default = true;
+  track.mode = "showing";
+}
+      
 const playBtn = div.querySelector(".playVideoBtn");
 const videoWrapper = div.querySelector(".videoWrapper");
 
@@ -206,8 +313,71 @@ if (playBtn) {
 const notesBtn = div.querySelector(".openNotesBtn");
 
 if (notesBtn) {
-  notesBtn.onclick = () => {
-    window.location.href = `notes.html?courseId=${courseId}`;
+  notesBtn.onclick = async () => {
+
+    const notesRef = doc(
+      db,
+      "notes",
+      courseId + "_" + auth.currentUser.uid
+    );
+
+    const notesSnap = await getDoc(notesRef);
+
+    /* ✅ IF NOTES EXIST → ONLY MESSAGE */
+    if (notesSnap.exists()) {
+      showMessage("Notes already exist");
+      return;
+    }
+
+    const transcriptRef = doc(
+      db,
+      "transcripts",
+      courseId + "_" + auth.currentUser.uid
+    );
+
+    const transcriptSnap = await getDoc(transcriptRef);
+
+    if (!transcriptSnap.exists()) {
+      showMessage("Generate transcript first");
+      return;
+    }
+
+    try {
+
+      const token = await auth.currentUser.getIdToken();
+
+      const res = await fetch("/generate-notes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          transcript: transcriptSnap.data().text,
+          courseId
+        })
+      });
+
+      const data = await res.json();
+
+      if (!data.notes) throw new Error("No notes");
+
+      await setDoc(notesRef, {
+        userId: auth.currentUser.uid,
+        courseId,
+        text: data.notes,
+        createdAt: new Date()
+      });
+
+      showMessage("Notes generated");
+
+    } catch (err) {
+
+      console.error(err);
+      showMessage("Failed to generate notes");
+
+    }
+
   };
 }
       /* ===== TRACK PDF OPEN ===== */
@@ -558,27 +728,7 @@ track.src = url;
 track.default = true;
 track.mode = "showing";
 
-function generateVTT(segments) {
-  let vtt = "WEBVTT\n\n";
 
-  function formatTime(sec) {
-    const h = String(Math.floor(sec / 3600)).padStart(2, "0");
-    const m = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
-    const s = String((sec % 60).toFixed(3)).padStart(6, "0");
-    return `${h}:${m}:${s}`;
-  }
-
-  segments.forEach((seg, i) => {
-    const start = formatTime(seg.start);
-    const end = formatTime(seg.end || seg.start + 3);
-
-    vtt += `${i + 1}\n`;
-    vtt += `${start} --> ${end}\n`;
-    vtt += `${seg.text}\n\n`;
-  });
-
-  return vtt;
-}
 /* ===== UI ===== */
 
 let box = div.querySelector(".videoTranscript");
@@ -587,7 +737,7 @@ box.classList.remove("hidden");
 
 box.innerHTML = `
 <div class="aiSummaryHeader">
-<span> AI Study Notes</span>
+<span> Transcript</span>
 <button class="closeSummary">✖</button>
 </div>
 
@@ -596,95 +746,9 @@ box.innerHTML = `
 
 const content = box.querySelector(".aiSummaryContent");
 
-try {
-
-  const token = await auth.currentUser.getIdToken();
-
-const notesRef = doc(db, "notes", courseId + "_" + auth.currentUser.uid);
-const notesSnap = await getDoc(notesRef);
-
-let notesText;
-
-if (notesSnap.exists()) {
-
-  console.log("Using cached notes");
-  notesText = notesSnap.data().notes;
-
-} else {
-
-  console.log("Generating new notes");
-
-  const res = await fetch("/generate-notes", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": "Bearer " + token
-    },
-body: JSON.stringify({
-  transcript: fullTranscript,
-  courseId: courseId // ✅ ADD THIS
-})
-  });
-
-  const data = await res.json();
-
-if (!data.notes) {
-  throw new Error("No notes generated");
-}
-
-  notesText = data.notes;
-
-  await setDoc(notesRef, {
-    userId: auth.currentUser.uid,
-    courseId,
-    notes: notesText,
-    createdAt: new Date()
-  });
-
-}
-  // 🔥 Format nicely
-const cleanText = notesText
-  .replace(/\*\*/g, "")   // ❌ remove **
-  .replace(/\*/g, "")     // ❌ remove single *
-  .trim();
-
-const lines = cleanText.split("\n");
-
-let html = "";
-let listOpen = false;
-
-lines.forEach(line => {
-
-  line = line.trim();
-  if (!line) return;
-
-  // bullet points
-  if (line.startsWith("-")) {
-    if (!listOpen) {
-      html += "<ul>";
-      listOpen = true;
-    }
-    html += `<li>${line.replace(/^-/, "").trim()}</li>`;
-  } else {
-    if (listOpen) {
-      html += "</ul>";
-      listOpen = false;
-    }
-    html += `<p>${line}</p>`;
-  }
-
-});
-
-if (listOpen) html += "</ul>";
-
-content.innerHTML = html;
-
-} catch (err) {
-
-  console.error(err);
-  content.innerHTML = "<p>Failed to generate notes</p>";
-
-}
+content.innerHTML = mergedSegments
+  .map(s => `<p>${s.text}</p>`)
+  .join("");
 
 const closeBtn = box.querySelector(".closeSummary");
 
@@ -693,14 +757,12 @@ closeBtn.onclick = () => {
   box.innerHTML = "";
 };
 
-}catch(err){
+} catch (err) {
 
-console.error(err);
-alert("Transcript failed");
-await deleteDoc(lockRef);
+  console.error(err);
+  alert("Transcript failed");
 
 }
-
 transcriptRunning = false;
 transcriptBtn.disabled = false;
 transcriptBtn.innerHTML = originalText;

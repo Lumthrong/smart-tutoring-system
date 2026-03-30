@@ -77,10 +77,7 @@ console.log("Cloudinary URL:", photoURL); // DEBUG
 
 if (photoURL && profileImg) {
 
-  profileImg.src = photoURL;
-
-  // 🔥 FORCE RELOAD (important for Cloudinary sometimes)
-  profileImg.src = photoURL + "?t=" + Date.now();
+profileImg.src = photoURL;
 
   profileImg.style.display = "block";
 
@@ -217,14 +214,13 @@ aiChartSelect.appendChild(option3);      // AI Chart
       (${data.department} - Sem ${data.semester})
       </p>
 
+      <div class="unitContainer"></div>
+
       ${data.pdfURL ? `<a class="pdfLink"><span class="material-symbols-outlined">
 file_open
 </span>Open</a>` : ""}
 
       <br><br>
-
-     ${data.videoURL ? `
-<button class="playVideoBtn">▶ Play Video</button>
 
 <div class="videoWrapper hidden">
 
@@ -239,15 +235,6 @@ file_open
 </div>
 
 <div class="videoActionRow">
-  <button class="transcriptBtn">
-    <span class="material-symbols-outlined">subtitles</span>
-    Transcript
-  </button>
-
-  <button class="openNotesBtn">
-    <span class="material-symbols-outlined">note</span>
-    Notes
-  </button>
 
   <button class="discussionBtn">
     <span class="material-symbols-outlined">chat_bubble</span>
@@ -260,9 +247,86 @@ file_open
   </button>
 </div>
 
-` : ""}
+
       <hr>
       `;
+      /* ===== LOAD UNITS ===== */
+const unitContainer = div.querySelector(".unitContainer");
+
+const unitsSnap = await getDocs(
+  collection(db, "courses", courseId, "units")
+);
+
+const units = unitsSnap.docs.map(doc => ({
+  id: doc.id,
+  ...doc.data()
+}));
+
+units.forEach((unit, index) => {
+
+  const unitDiv = document.createElement("div");
+  unitDiv.className = "unit-card";
+
+  unitDiv.innerHTML = `
+  <p><b>Unit ${index + 1}: ${unit.title}</b></p>
+
+  ${unit.pdfURL ? `
+  <a class="pdfLink">
+    <span class="material-symbols-outlined">file_open</span>
+    Open
+  </a>
+  ` : ""}
+
+  ${unit.videoURL ? `
+  <button class="playVideoBtn"><span class="material-symbols-outlined">
+movie
+</span></button>
+
+  <div class="videoWrapper hidden">
+    <video controls>
+      <source src="${unit.videoURL}">
+    </video>
+  </div>
+
+  <button class="transcriptBtn"><span class="material-symbols-outlined">subtitles</span>Transcript</button>
+  <button class="openNotesBtn"><span class="material-symbols-outlined">note</span>Notes</button>
+  ` : ""}
+
+  <hr>
+  `;
+
+  /* ===== VIDEO ===== */
+  const playBtn = unitDiv.querySelector(".playVideoBtn");
+  const videoWrapper = unitDiv.querySelector(".videoWrapper");
+  const video = unitDiv.querySelector("video");
+
+  if (playBtn) {
+    playBtn.onclick = () => {
+      videoWrapper.classList.remove("hidden");
+      video.play();
+      playBtn.style.display = "none";
+    };
+  }
+
+  /* ===== PDF ===== */
+  const pdfLink = unitDiv.querySelector(".pdfLink");
+
+  if (pdfLink) {
+    pdfLink.href = "/viewer.html?file=" + encodeURIComponent(unit.pdfURL);
+  }
+
+  /* ===== NOTES ===== */
+  const notesBtn = unitDiv.querySelector(".openNotesBtn");
+
+  if (notesBtn) {
+    notesBtn.onclick = () => {
+      window.location.href =
+        `notes.html?courseId=${courseId}&unitId=${unit.id}`;
+    };
+  }
+
+  unitContainer.appendChild(unitDiv);
+});
       const video = div.querySelector("video");
 
       /* ===== AUTO APPLY TRANSCRIPT ===== */
@@ -456,7 +520,7 @@ const res = await fetch("/summarize-course",{
 method:"POST",
 headers:{ "Content-Type":"application/json" },
 body:JSON.stringify({
-pdfURL:data.pdfURL
+pdfURL: units[0]?.pdfURL || ""
 })
 });
 
@@ -632,17 +696,29 @@ await setDoc(lockRef, {
   createdAt: new Date()
 });
   console.log("Generating new transcript");
+const videoURL = units.find(u => u.videoURL)?.videoURL;
 
+if (!videoURL) {
+  alert("No video found for transcript");
+  return;
+}
   const res = await fetch("/generate-transcript", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      videoURL: data.videoURL
-    })
+body: JSON.stringify({
+  videoURL: videoURL
+})
   });
-
+if (!res.ok) {
+  const text = await res.text();
+  console.error("Server error:", text);
+  throw new Error("Transcript API failed");
+}
   const result = await res.json();
   const jobIds = result.jobIds;
+  if (!jobIds || !Array.isArray(jobIds)) {
+  throw new Error("Invalid transcript response");
+}
 async function waitForTranscript(jobId) {
 
   const start = Date.now();
@@ -679,7 +755,7 @@ function formatTime(sec) {
   return `${h}:${m}:${s}`;
 }
 
-const video = div.querySelector("video");
+const video = div.querySelector("video") || div.querySelector(".unit-card video");
 
 const allSegments = await Promise.all(
   jobIds.map(async (id) => {
@@ -1062,6 +1138,7 @@ async function loadLearningHistory(uid) {
 <p>Department: ${data.department}</p>
 
 <p>Semester: ${data.semester}</p>
+
 
 <hr>
 

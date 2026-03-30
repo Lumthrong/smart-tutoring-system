@@ -264,7 +264,7 @@ canvas{
 /* ================= BUTTON ================= */
 
 button {
-  border-radius:8px;
+  border-radius:5px;
   border:none;
   cursor:pointer;
   color:#fff;
@@ -283,6 +283,7 @@ button:disabled{
 .transcriptBtn{
       background: rgba(0, 0, 1, 0.35);
   backdrop-filter: blur(12px);
+  padding: 5px;
 }
 .openNotesBtn{
       background: rgba(0, 0, 1, 0.35);
@@ -485,9 +486,9 @@ cursor:pointer;
   background: #7c7c7c;
 }
 .playVideoBtn{
-    background: rgba(0, 0, 1, 0.35);
-  backdrop-filter: blur(12px);
+    background: red;
   padding: 5px;
+  border-radius: 50%;
 }
 /* ===== VIDEO BUTTON ROW ===== */
 
@@ -531,7 +532,8 @@ cursor:pointer;
   bottom:25px;
   left:50%;
   transform:translateX(-50%);
-  background:#4f46e5;
+  background: rgba(0, 0, 1, 0.35);
+  backdrop-filter: blur(12px);
   color:#fff;
   padding:12px 20px;
   border-radius:8px;

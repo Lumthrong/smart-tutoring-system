@@ -565,8 +565,17 @@ transcriptBtn.onclick = async () => {
 const lockSnap = await getDoc(lockRef);
 
 if (lockSnap.exists()) {
-  console.log("Already generating / generated");
-  return;
+
+  const lockData = lockSnap.data();
+
+  // 🔥 allow retry after 5 min
+  if (Date.now() - lockData.createdAt.toMillis() < 300000) {
+    console.log("Still processing...");
+    return;
+  } else {
+    console.warn("Removing stuck lock");
+    await deleteDoc(lockRef);
+  }
 }
 
 if (transcriptRunning || transcriptLoaded) return;
@@ -592,14 +601,31 @@ let fullTranscript;
 
 const transcriptSnap = await getDoc(transcriptRef);
 if (transcriptSnap.exists()) {
-  transcriptLoaded = true;
 
-  console.log("Using cached transcript");
+  const saved = transcriptSnap.data();
 
-const saved = transcriptSnap.data();
-  mergedSegments = saved.segments;
-  fullTranscript = saved.text;
+  // 🔥 CORRUPT CHECK
+  if (!saved.text || !saved.segments || saved.segments.length === 0) {
 
+    console.warn("Corrupted transcript → deleting");
+    await deleteDoc(transcriptRef);
+
+  } else {
+
+    transcriptLoaded = true;
+
+    showMessage("Transcript already exists");
+
+    mergedSegments = saved.segments;
+    fullTranscript = saved.text;
+
+    // 🔥 STOP EXECUTION HERE
+    transcriptRunning = false;
+    transcriptBtn.disabled = false;
+    transcriptBtn.innerHTML = originalText;
+
+    return; // ✅ VERY IMPORTANT
+  }
 } else {
 await setDoc(lockRef, {
   status: "processing",
@@ -696,10 +722,13 @@ if (!mergedSegments || !Array.isArray(mergedSegments)) {
   throw new Error("Invalid transcript data");
 }
 
-// 🔥 SAVE TO FIRESTORE
+if (!mergedSegments || mergedSegments.length === 0 || !fullTranscript.trim()) {
+  throw new Error("Transcript empty - not saving");
+}
+
 await setDoc(transcriptRef, {
   userId: auth.currentUser.uid,
-  courseId: courseId, // 🔥 ADD THIS LINE
+  courseId: courseId,
   segments: mergedSegments,
   text: fullTranscript,
   createdAt: new Date()
@@ -708,6 +737,7 @@ await setDoc(lockRef, {
   status: "done",
   createdAt: new Date()
 });
+await deleteDoc(lockRef); // 🔥 unlock after success
 } // ✅ CLOSE ELSE BLOCK
 transcriptLoaded = true;
 const vttText = generateVTT(mergedSegments);
@@ -761,6 +791,7 @@ closeBtn.onclick = () => {
 
   console.error(err);
   alert("Transcript failed");
+  await deleteDoc(lockRef); // 🔥 unlock on failure
 
 }
 transcriptRunning = false;

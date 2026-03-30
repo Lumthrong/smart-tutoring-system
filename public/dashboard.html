@@ -82,9 +82,9 @@
       <a href="about.html"><span class="material-symbols-outlined">
           info
         </span> About</a>
-          <a href="teacher_request.html"><span class="material-symbols-outlined">
-contract_edit
-</span> Request Access</a>
+      <a href="teacher_request.html"><span class="material-symbols-outlined">
+          contract_edit
+        </span> Request Access</a>
     </div>
   </div>
   <div class="overlay" id="overlay"></div>
@@ -113,18 +113,40 @@ contract_edit
   <!-- ================= MAIN DASHBOARD ================= -->
 
   <section class="dashboard">
+      <!-- USER HEADER ABOVE TABS -->
+<div class="dashboard-user">
+  <div class="dash-user-card">
+    
+    <div class="dash-avatar">
+  <img id="dashProfileImg" src="" alt="avatar" style="display:none;">
+  <span id="dashAvatarLetter">U</span>
+</div>
 
+    <div class="dash-user-text">
+      <p class="greeting">Welcome back </p>
+      <h2 id="dashboardUserName">Guest</h2>
+    </div>
+
+  </div>
+</div>
+      <div class="Tabs">
+        <button id="globalQuizBtn" class="dashbtn">
+          <span class="material-symbols-outlined">quiz</span>
+          Take Quiz (<span id="quizAvailableCount">0</span>)
+        </button>
+
+        <button id="globalNotesBtn" class="dashbtn">
+          <span class="material-symbols-outlined">
+            book_5
+          </span> Notes
+        </button>
+
+        <div id="quizListPanel" class="hidden"></div>
+
+      </div>
     <!-- ===== STATS ===== -->
 
     <div class="stats-grid">
-      <div class="card">
-  <button id="globalQuizBtn" class="dashbtn">
-    <span class="material-symbols-outlined">quiz</span>
-    Take Quiz (<span id="quizAvailableCount">0</span>)
-  </button>
-
-  <div id="quizListPanel" class="hidden"></div>
-</div>
 
       <div class="stat-card">
         <h4>Courses</h4>
@@ -179,9 +201,9 @@ contract_edit
       <select id="courseSelect"></select>
 
       <button onclick="startTest()" class="dashbtn">
-      <span class="material-symbols-outlined">
-network_intel_node
-</span>  Generate
+        <span class="material-symbols-outlined">
+          network_intel_node
+        </span> Generate
       </button>
 
     </div>
@@ -234,7 +256,7 @@ network_intel_node
       </div>
 
     </div>
-        <div class="card">
+    <div class="card">
       <h3>Recommended Books</h3>
 
       <div class="dept-slider" id="recommendedBooks"></div>

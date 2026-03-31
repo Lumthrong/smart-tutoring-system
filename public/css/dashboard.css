@@ -260,7 +260,12 @@ canvas{
   border:1px solid #ddd;
   margin-bottom:12px;
 }
-
+#unitSelect{
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ddd;
+  margin-bottom:12px;
+}
 /* ================= BUTTON ================= */
 
 button {
@@ -270,10 +275,6 @@ button {
   color:#fff;
   font-weight:500;
   transition:.25s;
-}
-
-button:hover{
-  transform:translateY(-2px);
 }
 
 button:disabled{
@@ -411,20 +412,71 @@ transform:translateY(-1px);
 .chatMsg{
   max-width:70%;
   padding:10px 12px;
-  border-radius:10px;
   font-size:14px;
+  border-radius: 10px 10px 0px 10px;
+}
+.chatMsg {
+  display: flex;
+  max-width: 75%;
 }
 
-.chatMsg.student{
-  background:#eef2ff;
-  align-self:flex-start;
+/* RIGHT = YOU */
+.chatMsg.me {
+  align-self: flex-end;
 }
 
-.chatMsg.teacher{
-  background:#e8ffe9;
-  align-self:flex-end;
+/* LEFT = OTHERS */
+.chatMsg.other {
+  align-self: flex-start;
 }
 
+.msgContent {
+  padding: 10px 14px;
+  border-radius: 14px;
+  font-size: 14px;
+}
+
+/* YOU */
+.chatMsg.me .msgContent {
+  background: #e8ffe9;
+  border-radius: 14px 14px 4px 14px;
+}
+
+/* OTHERS */
+.chatMsg.other .msgContent {
+  background: #eef2ff;
+  border-radius: 14px 14px 14px 4px;
+}
+
+.msgMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.msgActions {
+  display: flex;
+  gap: 6px;
+}
+
+.msgActions button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+}
+.chatActions {
+  display: flex;
+  margin-left: 50%;
+  gap: 10px;
+}
+#chatEditBtn,
+#chatDeleteBtn{
+  background: none;
+}
+.chatMsg.selected {
+  outline: 2px solid #6366f1;
+}
 .chatMsg strong{
   font-size:12px;
   color:#555;

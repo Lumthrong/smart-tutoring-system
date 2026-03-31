@@ -199,6 +199,7 @@
       <p>Generate a quiz automatically from the course.</p>
 
       <select id="courseSelect"></select>
+      <select id="unitSelect"></select>
 
       <button onclick="startTest()" class="dashbtn">
         <span class="material-symbols-outlined">
@@ -222,12 +223,16 @@
       <div class="chatBox hidden" id="chatBox">
 
         <div class="chatHeader">
+  <span>Course Discussion</span>
+  <div id="chatActions" class="chatActions hidden">
+  <button id="chatEditBtn">Edit</button>
+  <button id="chatDeleteBtn">Delete</button>
+</div>
 
-          <span>Course Discussion</span>
-
-          <button class="chatClose" id="chatClose">✕</button>
-
-        </div>
+  <div style="display:flex; gap:10px;">
+    <button class="chatClose" id="chatClose">✕</button>
+  </div>
+</div>
 
         <div class="chatMessages commentList"></div>
 

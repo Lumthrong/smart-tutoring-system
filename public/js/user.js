@@ -40,93 +40,96 @@ function showMessage(message, type = "info") {
 
 }
 let activeCourseId = null;
+let selectedMessage = null; // { id, data }
 let quizTimer = null;
 let aiQuizUsed = false;
 let aiChartInstance = null;
 let courseChartInstance = null;
+
+
 /* ================= INIT ================= */
 
 document.addEventListener("DOMContentLoaded", () => {
-onAuthStateChanged(auth, async (user) => {
+  onAuthStateChanged(auth, async (user) => {
 
-  if (!user) {
-    window.location.href = "login.html";
-    return;
-  }
-  // ===== SET DASHBOARD USER NAME =====
-const userDoc = await getDoc(doc(db, "users", user.uid));
-const userData = userDoc.data();
+    if (!user) {
+      window.location.href = "login.html";
+      return;
+    }
+    // ===== SET DASHBOARD USER NAME =====
+    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const userData = userDoc.data();
 
-const dashName = document.getElementById("dashboardUserName");
-const avatarLetter = document.getElementById("dashAvatarLetter");
-const profileImg = document.getElementById("dashProfileImg");
+    const dashName = document.getElementById("dashboardUserName");
+    const avatarLetter = document.getElementById("dashAvatarLetter");
+    const profileImg = document.getElementById("dashProfileImg");
 
-const name = userData?.firstName || user.displayName || user.email || "User";
+    const name = userData?.firstName || user.displayName || user.email || "User";
 
-/* ===== NAME ===== */
-if (dashName) {
-  dashName.innerText = name;
-}
+    /* ===== NAME ===== */
+    if (dashName) {
+      dashName.innerText = name;
+    }
 
-/* ===== 🔥 USE FIREBASE AUTH photoURL ===== */
-/* ===== FETCH IMAGE FROM FIRESTORE (CLOUDINARY) ===== */
+    /* ===== 🔥 USE FIREBASE AUTH photoURL ===== */
+    /* ===== FETCH IMAGE FROM FIRESTORE (CLOUDINARY) ===== */
 
-const photoURL = userData?.photoURL;
+    const photoURL = userData?.photoURL;
 
-console.log("Cloudinary URL:", photoURL); // DEBUG
+    console.log("Cloudinary URL:", photoURL); // DEBUG
 
-if (photoURL && profileImg) {
+    if (photoURL && profileImg) {
 
-profileImg.src = photoURL;
+      profileImg.src = photoURL;
 
-  profileImg.style.display = "block";
+      profileImg.style.display = "block";
 
-  if (avatarLetter) avatarLetter.style.display = "none";
+      if (avatarLetter) avatarLetter.style.display = "none";
 
-} else {
+    } else {
 
-  if (profileImg) profileImg.style.display = "none";
+      if (profileImg) profileImg.style.display = "none";
 
-  if (avatarLetter) {
-    avatarLetter.style.display = "flex";
-    avatarLetter.innerText = name.charAt(0).toUpperCase();
-  }
-}
-document.getElementById("courseChartSelect").addEventListener("change", () => {
-  loadCourseChart(auth.currentUser.uid);
-});
+      if (avatarLetter) {
+        avatarLetter.style.display = "flex";
+        avatarLetter.innerText = name.charAt(0).toUpperCase();
+      }
+    }
+    document.getElementById("courseChartSelect").addEventListener("change", () => {
+      loadCourseChart(auth.currentUser.uid);
+    });
 
-document.getElementById("aiChartSelect").addEventListener("change", () => {
-  loadAIChart(auth.currentUser.uid);
-});
-  loadCourses(user.uid);
-  loadLearningHistory(user.uid);
-  loadStats(user.uid);
-  generateRecommendations(user.uid);
-  loadAvailableQuizzes(user.uid);
+    document.getElementById("aiChartSelect").addEventListener("change", () => {
+      loadAIChart(auth.currentUser.uid);
+    });
+    loadCourses(user.uid);
+    loadLearningHistory(user.uid);
+    loadStats(user.uid);
+    generateRecommendations(user.uid);
+    loadAvailableQuizzes(user.uid);
 
-const quizBtn = document.getElementById("globalQuizBtn");
-const notesGlobalBtn = document.getElementById("globalNotesBtn");
+    const quizBtn = document.getElementById("globalQuizBtn");
+    const notesGlobalBtn = document.getElementById("globalNotesBtn");
 
-if (notesGlobalBtn) {
-  notesGlobalBtn.onclick = () => {
-    window.location.href = "notes.html";
-  };
-}
-const panel = document.getElementById("quizListPanel");
+    if (notesGlobalBtn) {
+      notesGlobalBtn.onclick = () => {
+        window.location.href = "notes.html";
+      };
+    }
+    const panel = document.getElementById("quizListPanel");
 
-quizBtn.onclick = async () => {
+    quizBtn.onclick = async () => {
 
-  panel.classList.toggle("hidden");
+      panel.classList.toggle("hidden");
 
-  if (!panel.dataset.loaded) {
-    await loadAvailableQuizzes(user.uid);
-    panel.dataset.loaded = "true";
-  }
+      if (!panel.dataset.loaded) {
+        await loadAvailableQuizzes(user.uid);
+        panel.dataset.loaded = "true";
+      }
 
-};
+    };
 
-});
+  });
 });
 
 /* ===== GLOBAL VTT FUNCTION ===== */
@@ -153,23 +156,50 @@ function generateVTT(segments) {
 }
 /* ================= LOAD COURSES ================= */
 async function loadCourses(uid) {
-
   const enrollQuery = query(
     collection(db, "enrollments"),
     where("userId", "==", uid)
   );
 
   const enrolledDiv = document.getElementById("enrolledCourses");
-const courseSelect = document.getElementById("courseSelect");
-const courseChartSelect = document.getElementById("courseChartSelect");
-const aiChartSelect = document.getElementById("aiChartSelect");
+  const courseSelect = document.getElementById("courseSelect");
+  const courseChartSelect = document.getElementById("courseChartSelect");
+  const aiChartSelect = document.getElementById("aiChartSelect");
+  const unitSelect = document.getElementById("unitSelect");
+
+courseSelect.addEventListener("change", async () => {
+
+  const selectedCourseId = courseSelect.value;
+
+  unitSelect.innerHTML = "";
+
+  if (!selectedCourseId) return;
+
+  const unitsSnap = await getDocs(
+    collection(db, "courses", selectedCourseId, "units")
+  );
+
+unitsSnap.forEach(doc => {
+
+  const unit = doc.data();
+
+  if (!unit.pdfURL) return; // 🚨 skip broken units
+
+  const opt = document.createElement("option");
+  opt.value = unit.pdfURL;
+  opt.textContent = unit.title || "Unit";
+
+  unitSelect.appendChild(opt);
+});
+
+});
 
   onSnapshot(enrollQuery, async (snapshot) => {
 
     enrolledDiv.innerHTML = "";
-courseSelect.innerHTML = "";
-courseChartSelect.innerHTML = "";
-aiChartSelect.innerHTML = "";
+    courseSelect.innerHTML = "";
+    courseChartSelect.innerHTML = "";
+    aiChartSelect.innerHTML = "";
 
     document.getElementById("courseCount").innerText = snapshot.size;
 
@@ -184,16 +214,16 @@ aiChartSelect.innerHTML = "";
 
       /* ===== dropdown select ===== */
 
-const option1 = document.createElement("option");
-option1.value = courseId;
-option1.textContent = data.course;
+      const option1 = document.createElement("option");
+      option1.value = courseId;
+      option1.textContent = data.course;
 
-const option2 = option1.cloneNode(true);
-const option3 = option1.cloneNode(true);
+      const option2 = option1.cloneNode(true);
+      const option3 = option1.cloneNode(true);
 
-courseSelect.appendChild(option1);        // Quick Quiz
-courseChartSelect.appendChild(option2);  // Course Chart
-aiChartSelect.appendChild(option3);      // AI Chart
+      courseSelect.appendChild(option1);        // Quick Quiz
+      courseChartSelect.appendChild(option2);  // Course Chart
+      aiChartSelect.appendChild(option3);      // AI Chart
 
       /* ===== check quiz ===== */
 
@@ -216,7 +246,7 @@ aiChartSelect.appendChild(option3);      // AI Chart
 
       <div class="unitContainer"></div>
 
-      ${data.pdfURL ? `<a class="pdfLink"><span class="material-symbols-outlined">
+      ${data.pdfURL ? `<a class="pdfLink coursePdfLink"><span class="material-symbols-outlined">
 file_open
 </span>Open</a>` : ""}
 
@@ -251,31 +281,31 @@ file_open
       <hr>
       `;
       /* ===== LOAD UNITS ===== */
-const unitContainer = div.querySelector(".unitContainer");
+      const unitContainer = div.querySelector(".unitContainer");
 
-const unitsSnap = await getDocs(
-  collection(db, "courses", courseId, "units")
-);
+      const unitsSnap = await getDocs(
+        collection(db, "courses", courseId, "units")
+      );
 
-const units = unitsSnap.docs.map(doc => ({
-  id: doc.id,
-  ...doc.data()
-}));
+      const units = unitsSnap.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
 
-units.forEach((unit, index) => {
+      units.forEach((unit, index) => {
 
-  const unitDiv = document.createElement("div");
-  unitDiv.className = "unit-card";
+        const unitDiv = document.createElement("div");
+        unitDiv.className = "unit-card";
 
-  unitDiv.innerHTML = `
+        unitDiv.innerHTML = `
   <p><b>Unit ${index + 1}: ${unit.title}</b></p>
 
-  ${unit.pdfURL ? `
-  <a class="pdfLink">
-    <span class="material-symbols-outlined">file_open</span>
-    Open
-  </a>
-  ` : ""}
+${unit.pdfURL && unit.pdfURL !== "undefined" ? `
+<a class="pdfLink">
+  <span class="material-symbols-outlined">file_open</span>
+  Open
+</a>
+` : ""}
 
   ${unit.videoURL ? `
   <button class="playVideoBtn"><span class="material-symbols-outlined">
@@ -289,190 +319,200 @@ movie
   </div>
 
   <button class="transcriptBtn"><span class="material-symbols-outlined">subtitles</span>Transcript</button>
-  <button class="openNotesBtn"><span class="material-symbols-outlined">note</span>Notes</button>
+  <button class="openNotesBtn"><span class="material-symbols-outlined">note</span>Create Notes</button>
   ` : ""}
 
   <hr>
   `;
 
-  /* ===== VIDEO ===== */
-  const playBtn = unitDiv.querySelector(".playVideoBtn");
-  const videoWrapper = unitDiv.querySelector(".videoWrapper");
-  const video = unitDiv.querySelector("video");
+        /* ===== VIDEO ===== */
+        const playBtn = unitDiv.querySelector(".playVideoBtn");
+        const videoWrapper = unitDiv.querySelector(".videoWrapper");
+        const video = unitDiv.querySelector("video");
 
-  if (playBtn) {
-    playBtn.onclick = () => {
-      videoWrapper.classList.remove("hidden");
-      video.play();
-      playBtn.style.display = "none";
-    };
+        if (playBtn) {
+          playBtn.onclick = () => {
+            videoWrapper.classList.remove("hidden");
+            video.play();
+            playBtn.style.display = "none";
+          };
+        }
+
+        /* ===== PDF ===== */
+        const pdfLink = unitDiv.querySelector(".pdfLink");
+
+if (pdfLink) {
+
+  if (!unit.pdfURL || unit.pdfURL === "undefined") {
+    console.error("❌ Missing PDF URL for unit:", unit.title, unit);
+    pdfLink.style.display = "none";
+    return; // 🚨 STOP THIS UNIT FROM BREAKING
   }
 
-  /* ===== PDF ===== */
-  const pdfLink = unitDiv.querySelector(".pdfLink");
+  pdfLink.href = "/viewer.html?file=" + encodeURIComponent(unit.pdfURL);
 
-  if (pdfLink) {
-    pdfLink.href = "/viewer.html?file=" + encodeURIComponent(unit.pdfURL);
-  }
+}
 
-  /* ===== NOTES ===== */
-  const notesBtn = unitDiv.querySelector(".openNotesBtn");
+        /* ===== NOTES ===== */
+        const notesBtn = unitDiv.querySelector(".openNotesBtn");
 
-  if (notesBtn) {
-    notesBtn.onclick = () => {
-      window.location.href =
-        `notes.html?courseId=${courseId}&unitId=${unit.id}`;
-    };
-  }
+        if (notesBtn) {
+          notesBtn.onclick = () => {
+            window.location.href =
+              `notes.html?courseId=${courseId}&unitId=${unit.id}`;
+          };
+        }
 
-  unitContainer.appendChild(unitDiv);
-});
+        unitContainer.appendChild(unitDiv);
+      });
       const video = div.querySelector("video");
 
       /* ===== AUTO APPLY TRANSCRIPT ===== */
 
-const transcriptRefAuto = doc(
-  db,
-  "transcripts",
-  courseId + "_" + auth.currentUser.uid
-);
+      const transcriptRefAuto = doc(
+        db,
+        "transcripts",
+        courseId + "_" + auth.currentUser.uid
+      );
 
-const transcriptSnapAuto = await getDoc(transcriptRefAuto);
+      const transcriptSnapAuto = await getDoc(transcriptRefAuto);
 
-if (transcriptSnapAuto.exists()) {
+      if (transcriptSnapAuto.exists()) {
 
-  const saved = transcriptSnapAuto.data();
-  const segments = saved.segments;
+        const saved = transcriptSnapAuto.data();
+        const segments = saved.segments;
 
-  const vttText = generateVTT(segments);
-  const blob = new Blob([vttText], { type: "text/vtt" });
-  const url = URL.createObjectURL(blob);
+        const vttText = generateVTT(segments);
+        const blob = new Blob([vttText], { type: "text/vtt" });
+        const url = URL.createObjectURL(blob);
 
-  let track = video.querySelector("track");
+        let track = video.querySelector("track");
 
-  if (!track) {
-    track = document.createElement("track");
-    track.kind = "subtitles";
-    track.label = "English";
-    track.srclang = "en";
-    video.appendChild(track);
-  }
+        if (!track) {
+          track = document.createElement("track");
+          track.kind = "subtitles";
+          track.label = "English";
+          track.srclang = "en";
+          video.appendChild(track);
+        }
 
-  track.src = url;
-  track.default = true;
-  track.mode = "showing";
-}
-      
-const playBtn = div.querySelector(".playVideoBtn");
-const videoWrapper = div.querySelector(".videoWrapper");
+        track.src = url;
+        track.default = true;
+        track.mode = "showing";
+      }
 
-if (playBtn) {
-  playBtn.onclick = () => {
-    videoWrapper.classList.remove("hidden");
-    video.setAttribute("controls", true);
-    video.play();
-    playBtn.style.display = "none";
-  };
-}
-const notesBtn = div.querySelector(".openNotesBtn");
+      const playBtn = div.querySelector(".playVideoBtn");
+      const videoWrapper = div.querySelector(".videoWrapper");
 
-if (notesBtn) {
-  notesBtn.onclick = async () => {
+      if (playBtn) {
+        playBtn.onclick = () => {
+          videoWrapper.classList.remove("hidden");
+          video.setAttribute("controls", true);
+          video.play();
+          playBtn.style.display = "none";
+        };
+      }
+      const notesBtn = div.querySelector(".openNotesBtn");
 
-    const notesRef = doc(
-      db,
-      "notes",
-      courseId + "_" + auth.currentUser.uid
-    );
+      if (notesBtn) {
+        notesBtn.onclick = async () => {
 
-    const notesSnap = await getDoc(notesRef);
+          const notesRef = doc(
+            db,
+            "notes",
+            courseId + "_" + auth.currentUser.uid
+          );
 
-    /* ✅ IF NOTES EXIST → ONLY MESSAGE */
-    if (notesSnap.exists()) {
-      showMessage("Notes already exist");
-      return;
-    }
+          const notesSnap = await getDoc(notesRef);
 
-    const transcriptRef = doc(
-      db,
-      "transcripts",
-      courseId + "_" + auth.currentUser.uid
-    );
+          /* ✅ IF NOTES EXIST → ONLY MESSAGE */
+          if (notesSnap.exists()) {
+            showMessage("Notes already exist");
+            return;
+          }
 
-    const transcriptSnap = await getDoc(transcriptRef);
+          const transcriptRef = doc(
+            db,
+            "transcripts",
+            courseId + "_" + auth.currentUser.uid
+          );
 
-    if (!transcriptSnap.exists()) {
-      showMessage("Generate transcript first");
-      return;
-    }
+          const transcriptSnap = await getDoc(transcriptRef);
 
-    try {
-
-      const token = await auth.currentUser.getIdToken();
-
-      const res = await fetch("/generate-notes", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + token
-        },
-        body: JSON.stringify({
-          transcript: transcriptSnap.data().text,
-          courseId
-        })
-      });
-
-      const data = await res.json();
-
-      if (!data.notes) throw new Error("No notes");
-
-      await setDoc(notesRef, {
-        userId: auth.currentUser.uid,
-        courseId,
-        text: data.notes,
-        createdAt: new Date()
-      });
-
-      showMessage("Notes generated");
-
-    } catch (err) {
-
-      console.error(err);
-      showMessage("Failed to generate notes");
-
-    }
-
-  };
-}
-      /* ===== TRACK PDF OPEN ===== */
-
-      const pdfLink = div.querySelector(".pdfLink");
-
-      if (pdfLink) {
-
-        pdfLink.href = "/viewer.html?file=" + encodeURIComponent(data.pdfURL);
-pdfLink.target = "_self";
-
-        pdfLink.addEventListener("click", async () => {
+          if (!transcriptSnap.exists()) {
+            showMessage("Generate transcript first");
+            return;
+          }
 
           try {
 
-            await addDoc(collection(db, "learning_activity"), {
-              userId: auth.currentUser.uid,
-              courseId: courseId,
-              department: data.department,
-              openedAt: new Date()
+            const token = await auth.currentUser.getIdToken();
+
+            const res = await fetch("/generate-notes", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": "Bearer " + token
+              },
+              body: JSON.stringify({
+                transcript: transcriptSnap.data().text,
+                courseId
+              })
             });
+
+            const data = await res.json();
+
+            if (!res.ok || !data.questions || !Array.isArray(data.questions)) {
+              console.error("AI ERROR:", data);
+              showMessage(data.error || "AI quiz generation failed");
+              return;
+            }
+
+            if (!data.notes) throw new Error("No notes");
+
+            await setDoc(notesRef, {
+              userId: auth.currentUser.uid,
+              courseId,
+              text: data.notes,
+              createdAt: new Date()
+            });
+
+            showMessage("Notes generated");
 
           } catch (err) {
 
-            console.error("Activity tracking failed:", err);
+            console.error(err);
+            showMessage("Failed to generate notes");
 
           }
 
-        });
-
+        };
       }
+      /* ===== TRACK PDF OPEN ===== */
+
+const coursePdfLink = div.querySelector(".coursePdfLink");
+
+if (coursePdfLink && data.pdfURL) {
+
+  coursePdfLink.href = "/viewer.html?file=" + encodeURIComponent(data.pdfURL);
+  coursePdfLink.target = "_self";
+
+  coursePdfLink.addEventListener("click", async () => {
+
+    try {
+      await addDoc(collection(db, "learning_activity"), {
+        userId: auth.currentUser.uid,
+        courseId: courseId,
+        department: data.department,
+        openedAt: new Date()
+      });
+    } catch (err) {
+      console.error("Activity tracking failed:", err);
+    }
+
+  });
+
+}
 
       /* ===== discussion button ===== */
 
@@ -480,105 +520,105 @@ pdfLink.target = "_self";
 
       if (discussionBtn) {
 
-       discussionBtn.onclick = () => {
+        discussionBtn.onclick = () => {
 
-  activeCourseId = courseId;
+          activeCourseId = courseId;
 
-  loadComments(courseId);
+          loadComments(courseId);
 
-  let chatBox = document.getElementById("chatBox");
+          let chatBox = document.getElementById("chatBox");
 
-  chatBox.classList.remove("hidden");
+          chatBox.classList.remove("hidden");
 
-  /* MOVE CHAT BELOW THIS COURSE */
-  div.appendChild(chatBox);
+          /* MOVE CHAT BELOW THIS COURSE */
+          div.appendChild(chatBox);
 
-  /* SCROLL TO CHAT */
-  chatBox.scrollIntoView({ behavior: "smooth", block: "start" });
+          /* SCROLL TO CHAT */
+          chatBox.scrollIntoView({ behavior: "smooth", block: "start" });
 
-};
+        };
 
       }
       /* ===== AI SUMMARY BUTTON ===== */
 
-const summaryBtn = div.querySelector(".summaryBtn");
+      const summaryBtn = div.querySelector(".summaryBtn");
 
-if(summaryBtn){
+      if (summaryBtn) {
 
-summaryBtn.onclick = async () => {
+        summaryBtn.onclick = async () => {
 
-const originalText = summaryBtn.innerHTML;
+          const originalText = summaryBtn.innerHTML;
 
-/* ===== SHOW LOADING ===== */
+          /* ===== SHOW LOADING ===== */
 
-summaryBtn.disabled = true;
-summaryBtn.innerHTML = `<span class="summarySpinner"></span> Generating...`;
+          summaryBtn.disabled = true;
+          summaryBtn.innerHTML = `<span class="summarySpinner"></span> Generating...`;
 
-try{
+          try {
 
-const res = await fetch("/summarize-course",{
-method:"POST",
-headers:{ "Content-Type":"application/json" },
-body:JSON.stringify({
-pdfURL: units[0]?.pdfURL || ""
-})
-});
+            const res = await fetch("/summarize-course", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                pdfURL: units[0]?.pdfURL || ""
+              })
+            });
 
-const result = await res.json();
+            const result = await res.json();
 
-let summaryBox = div.querySelector(".aiSummary");
+            let summaryBox = div.querySelector(".aiSummary");
 
-if(!summaryBox){
-summaryBox = document.createElement("div");
-summaryBox.className = "aiSummary";
-div.appendChild(summaryBox);
-}
-const raw = result.summary || "Summary failed";
+            if (!summaryBox) {
+              summaryBox = document.createElement("div");
+              summaryBox.className = "aiSummary";
+              div.appendChild(summaryBox);
+            }
+            const raw = result.summary || "Summary failed";
 
-const lines = raw.split("\n");
+            const lines = raw.split("\n");
 
-let html = "";
-let listOpen = false;
+            let html = "";
+            let listOpen = false;
 
-lines.forEach(line => {
+            lines.forEach(line => {
 
-  line = line.trim();
+              line = line.trim();
 
-  if(line.startsWith("**") && line.endsWith("**")){
-    if(listOpen){
-      html += "</ul>";
-      listOpen = false;
-    }
+              if (line.startsWith("**") && line.endsWith("**")) {
+                if (listOpen) {
+                  html += "</ul>";
+                  listOpen = false;
+                }
 
-    const title = line.replace(/\*\*/g,"");
-    html += `<h4>${title}</h4>`;
-  }
+                const title = line.replace(/\*\*/g, "");
+                html += `<h4>${title}</h4>`;
+              }
 
-else if(line.startsWith("*") || line.startsWith("-")){
-    if(!listOpen){
-      html += "<ul>";
-      listOpen = true;
-    }
+              else if (line.startsWith("*") || line.startsWith("-")) {
+                if (!listOpen) {
+                  html += "<ul>";
+                  listOpen = true;
+                }
 
-   html += `<li>${line.replace(/^[-*]/,"").trim()}</li>`;
-  }
+                html += `<li>${line.replace(/^[-*]/, "").trim()}</li>`;
+              }
 
-  else{
-    if(listOpen){
-      html += "</ul>";
-      listOpen = false;
-    }
+              else {
+                if (listOpen) {
+                  html += "</ul>";
+                  listOpen = false;
+                }
 
-    html += `<p>${line}</p>`;
-  }
+                html += `<p>${line}</p>`;
+              }
 
-});
+            });
 
-if(listOpen){
-  html += "</ul>";
-}
+            if (listOpen) {
+              html += "</ul>";
+            }
 
-summaryBox.innerHTML = `
+            summaryBox.innerHTML = `
 <div class="aiSummaryHeader">
 <span> AI Summary</span>
 <button class="closeSummary">✖</button>
@@ -586,262 +626,262 @@ summaryBox.innerHTML = `
 
 <div class="aiSummaryContent"></div>
 `;
-const closeBtn = summaryBox.querySelector(".closeSummary");
+            const closeBtn = summaryBox.querySelector(".closeSummary");
 
-closeBtn.onclick = () => {
-  summaryBox.remove();
-};
+            closeBtn.onclick = () => {
+              summaryBox.remove();
+            };
 
-const content = summaryBox.querySelector(".aiSummaryContent");
+            const content = summaryBox.querySelector(".aiSummaryContent");
 
-typeSummary(lines, content);
-summaryBtn.disabled = false;
-summaryBtn.innerHTML = originalText;
-}catch(err){
+            typeSummary(lines, content);
+            summaryBtn.disabled = false;
+            summaryBtn.innerHTML = originalText;
+          } catch (err) {
 
-console.error(err);
-alert("AI summary failed");
+            console.error(err);
+            alert("AI summary failed");
 
-summaryBtn.disabled = false;
-summaryBtn.innerHTML = originalText;
+            summaryBtn.disabled = false;
+            summaryBtn.innerHTML = originalText;
 
-}
+          }
 
-};
+        };
 
-}
-/* ===== VIDEO TRANSCRIPT BUTTON ===== */
-
-const transcriptBtn = div.querySelector(".transcriptBtn");
-
-if(transcriptBtn){
-
-let transcriptRunning = false;
-let transcriptLoaded = false; // 🔥 ADD THIS
-transcriptBtn.onclick = null;
-transcriptBtn.onclick = async () => {
-  const lockRef = doc(
-  db,
-  "transcripts",
-  courseId + "_" + auth.currentUser.uid + "_lock"
-);
-
-const lockSnap = await getDoc(lockRef);
-
-if (lockSnap.exists()) {
-
-  const lockData = lockSnap.data();
-
-  // 🔥 allow retry after 5 min
-  if (Date.now() - lockData.createdAt.toMillis() < 300000) {
-    console.log("Still processing...");
-    return;
-  } else {
-    console.warn("Removing stuck lock");
-    await deleteDoc(lockRef);
-  }
-}
-
-if (transcriptRunning || transcriptLoaded) return;
-  transcriptRunning = true;
-
-  const originalText = transcriptBtn.innerHTML;
-
-  transcriptBtn.disabled = true;
-  transcriptBtn.innerHTML = `<span class="summarySpinner"></span> Generating...`;
-
-  try {
-
-
-// ✅ USE COURSE ID (FINAL FIX)
-const transcriptRef = doc(
-  db,
-  "transcripts",
-  courseId + "_" + auth.currentUser.uid
-);
-
-let mergedSegments;
-let fullTranscript;
-
-const transcriptSnap = await getDoc(transcriptRef);
-if (transcriptSnap.exists()) {
-
-  const saved = transcriptSnap.data();
-
-  // 🔥 CORRUPT CHECK
-  if (!saved.text || !saved.segments || saved.segments.length === 0) {
-
-    console.warn("Corrupted transcript → deleting");
-    await deleteDoc(transcriptRef);
-
-  } else {
-
-    transcriptLoaded = true;
-
-    showMessage("Transcript already exists");
-
-    mergedSegments = saved.segments;
-    fullTranscript = saved.text;
-
-    // 🔥 STOP EXECUTION HERE
-    transcriptRunning = false;
-    transcriptBtn.disabled = false;
-    transcriptBtn.innerHTML = originalText;
-
-    return; // ✅ VERY IMPORTANT
-  }
-} else {
-await setDoc(lockRef, {
-  status: "processing",
-  createdAt: new Date()
-});
-  console.log("Generating new transcript");
-const videoURL = units.find(u => u.videoURL)?.videoURL;
-
-if (!videoURL) {
-  alert("No video found for transcript");
-  return;
-}
-  const res = await fetch("/generate-transcript", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-body: JSON.stringify({
-  videoURL: videoURL
-})
-  });
-if (!res.ok) {
-  const text = await res.text();
-  console.error("Server error:", text);
-  throw new Error("Transcript API failed");
-}
-  const result = await res.json();
-  const jobIds = result.jobIds;
-  if (!jobIds || !Array.isArray(jobIds)) {
-  throw new Error("Invalid transcript response");
-}
-async function waitForTranscript(jobId) {
-
-  const start = Date.now();
-
-  while (true) {
-
-    const res = await fetch(`/transcript-status/${jobId}`);
-    const data = await res.json();
-
-    console.log("STATUS:", jobId, data);
-
-    if (data.status === "completed" && data.segments) {
-      return data.segments;
-    }
-
-    if (data.status === "failed") {
-      throw new Error("Transcription failed");
-    }
-
-    // 🔥 timeout (fix silent failures)
-    if (Date.now() - start > 300000) {
-      throw new Error("Timeout for " + jobId);
-    }
-
-    await new Promise(r => setTimeout(r, 1000));
-  }
-}
-
-function formatTime(sec) {
-  const h = String(Math.floor(sec / 3600)).padStart(2, "0");
-  const m = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
-  const s = String((sec % 60).toFixed(3)).padStart(6, "0");
-
-  return `${h}:${m}:${s}`;
-}
-
-const video = div.querySelector("video") || div.querySelector(".unit-card video");
-
-const allSegments = await Promise.all(
-  jobIds.map(async (id) => {
-    try {
-      return await waitForTranscript(id);
-    } catch (err) {
-
-      console.warn("Retrying chunk:", id);
-
-      try {
-        return await waitForTranscript(id);
-      } catch (err2) {
-        console.error("Chunk failed:", id, err2);
-        return [];
       }
+      /* ===== VIDEO TRANSCRIPT BUTTON ===== */
 
-    }
-  })
-);
-const CHUNK_DURATION = 30;
+      const transcriptBtn = div.querySelector(".transcriptBtn");
 
-mergedSegments = allSegments
-  .filter(seg => seg && seg.length > 0) 
-  .map((segments, index) => {
+      if (transcriptBtn) {
 
-    const offset = index * CHUNK_DURATION;
+        let transcriptRunning = false;
+        let transcriptLoaded = false; // 🔥 ADD THIS
+        transcriptBtn.onclick = null;
+        transcriptBtn.onclick = async () => {
+          const lockRef = doc(
+            db,
+            "transcripts",
+            courseId + "_" + auth.currentUser.uid + "_lock"
+          );
 
-    return segments.map(seg => ({
-      ...seg,
-      start: seg.start + offset
-    }));
+          const lockSnap = await getDoc(lockRef);
 
-  })
-  .flat();
-// 🔥 Convert segments → full transcript text
-fullTranscript = mergedSegments
-  .map(s => s.text)
-  .join(" ");
-if (!mergedSegments || !Array.isArray(mergedSegments)) {
-  throw new Error("Invalid transcript data");
-}
+          if (lockSnap.exists()) {
 
-if (!mergedSegments || mergedSegments.length === 0 || !fullTranscript.trim()) {
-  throw new Error("Transcript empty - not saving");
-}
+            const lockData = lockSnap.data();
 
-await setDoc(transcriptRef, {
-  userId: auth.currentUser.uid,
-  courseId: courseId,
-  segments: mergedSegments,
-  text: fullTranscript,
-  createdAt: new Date()
-});
-await setDoc(lockRef, {
-  status: "done",
-  createdAt: new Date()
-});
-await deleteDoc(lockRef); // 🔥 unlock after success
-} // ✅ CLOSE ELSE BLOCK
-transcriptLoaded = true;
-const vttText = generateVTT(mergedSegments);
-const blob = new Blob([vttText], { type: "text/vtt" });
-const url = URL.createObjectURL(blob);
+            // 🔥 allow retry after 5 min
+            if (Date.now() - lockData.createdAt.toMillis() < 300000) {
+              console.log("Still processing...");
+              return;
+            } else {
+              console.warn("Removing stuck lock");
+              await deleteDoc(lockRef);
+            }
+          }
 
-let track = video.querySelector("track");
+          if (transcriptRunning || transcriptLoaded) return;
+          transcriptRunning = true;
 
-if (!track) {
-  track = document.createElement("track");
-  track.kind = "subtitles";
-  track.label = "English";
-  track.srclang = "en";
-  video.appendChild(track);
-}
+          const originalText = transcriptBtn.innerHTML;
 
-track.src = url;
-track.default = true;
-track.mode = "showing";
+          transcriptBtn.disabled = true;
+          transcriptBtn.innerHTML = `<span class="summarySpinner"></span> Generating...`;
+
+          try {
 
 
-/* ===== UI ===== */
+            // ✅ USE COURSE ID (FINAL FIX)
+            const transcriptRef = doc(
+              db,
+              "transcripts",
+              courseId + "_" + auth.currentUser.uid
+            );
 
-let box = div.querySelector(".videoTranscript");
+            let mergedSegments;
+            let fullTranscript;
 
-box.classList.remove("hidden");
+            const transcriptSnap = await getDoc(transcriptRef);
+            if (transcriptSnap.exists()) {
 
-box.innerHTML = `
+              const saved = transcriptSnap.data();
+
+              // 🔥 CORRUPT CHECK
+              if (!saved.text || !saved.segments || saved.segments.length === 0) {
+
+                console.warn("Corrupted transcript → deleting");
+                await deleteDoc(transcriptRef);
+
+              } else {
+
+                transcriptLoaded = true;
+
+                showMessage("Transcript already exists");
+
+                mergedSegments = saved.segments;
+                fullTranscript = saved.text;
+
+                // 🔥 STOP EXECUTION HERE
+                transcriptRunning = false;
+                transcriptBtn.disabled = false;
+                transcriptBtn.innerHTML = originalText;
+
+                return; // ✅ VERY IMPORTANT
+              }
+            } else {
+              await setDoc(lockRef, {
+                status: "processing",
+                createdAt: new Date()
+              });
+              console.log("Generating new transcript");
+              const videoURL = units.find(u => u.videoURL)?.videoURL;
+
+              if (!videoURL) {
+                alert("No video found for transcript");
+                return;
+              }
+              const res = await fetch("/generate-transcript", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  videoURL: videoURL
+                })
+              });
+              if (!res.ok) {
+                const text = await res.text();
+                console.error("Server error:", text);
+                throw new Error("Transcript API failed");
+              }
+              const result = await res.json();
+              const jobIds = result.jobIds;
+              if (!jobIds || !Array.isArray(jobIds)) {
+                throw new Error("Invalid transcript response");
+              }
+              async function waitForTranscript(jobId) {
+
+                const start = Date.now();
+
+                while (true) {
+
+                  const res = await fetch(`/transcript-status/${jobId}`);
+                  const data = await res.json();
+
+                  console.log("STATUS:", jobId, data);
+
+                  if (data.status === "completed" && data.segments) {
+                    return data.segments;
+                  }
+
+                  if (data.status === "failed") {
+                    throw new Error("Transcription failed");
+                  }
+
+                  // 🔥 timeout (fix silent failures)
+                  if (Date.now() - start > 300000) {
+                    throw new Error("Timeout for " + jobId);
+                  }
+
+                  await new Promise(r => setTimeout(r, 1000));
+                }
+              }
+
+              function formatTime(sec) {
+                const h = String(Math.floor(sec / 3600)).padStart(2, "0");
+                const m = String(Math.floor((sec % 3600) / 60)).padStart(2, "0");
+                const s = String((sec % 60).toFixed(3)).padStart(6, "0");
+
+                return `${h}:${m}:${s}`;
+              }
+
+              const video = div.querySelector("video") || div.querySelector(".unit-card video");
+
+              const allSegments = await Promise.all(
+                jobIds.map(async (id) => {
+                  try {
+                    return await waitForTranscript(id);
+                  } catch (err) {
+
+                    console.warn("Retrying chunk:", id);
+
+                    try {
+                      return await waitForTranscript(id);
+                    } catch (err2) {
+                      console.error("Chunk failed:", id, err2);
+                      return [];
+                    }
+
+                  }
+                })
+              );
+              const CHUNK_DURATION = 30;
+
+              mergedSegments = allSegments
+                .filter(seg => seg && seg.length > 0)
+                .map((segments, index) => {
+
+                  const offset = index * CHUNK_DURATION;
+
+                  return segments.map(seg => ({
+                    ...seg,
+                    start: seg.start + offset
+                  }));
+
+                })
+                .flat();
+              // 🔥 Convert segments → full transcript text
+              fullTranscript = mergedSegments
+                .map(s => s.text)
+                .join(" ");
+              if (!mergedSegments || !Array.isArray(mergedSegments)) {
+                throw new Error("Invalid transcript data");
+              }
+
+              if (!mergedSegments || mergedSegments.length === 0 || !fullTranscript.trim()) {
+                throw new Error("Transcript empty - not saving");
+              }
+
+              await setDoc(transcriptRef, {
+                userId: auth.currentUser.uid,
+                courseId: courseId,
+                segments: mergedSegments,
+                text: fullTranscript,
+                createdAt: new Date()
+              });
+              await setDoc(lockRef, {
+                status: "done",
+                createdAt: new Date()
+              });
+              await deleteDoc(lockRef); // 🔥 unlock after success
+            } // ✅ CLOSE ELSE BLOCK
+            transcriptLoaded = true;
+            const vttText = generateVTT(mergedSegments);
+            const blob = new Blob([vttText], { type: "text/vtt" });
+            const url = URL.createObjectURL(blob);
+
+            let track = video.querySelector("track");
+
+            if (!track) {
+              track = document.createElement("track");
+              track.kind = "subtitles";
+              track.label = "English";
+              track.srclang = "en";
+              video.appendChild(track);
+            }
+
+            track.src = url;
+            track.default = true;
+            track.mode = "showing";
+
+
+            /* ===== UI ===== */
+
+            let box = div.querySelector(".videoTranscript");
+
+            box.classList.remove("hidden");
+
+            box.innerHTML = `
 <div class="aiSummaryHeader">
 <span> Transcript</span>
 <button class="closeSummary">✖</button>
@@ -850,151 +890,179 @@ box.innerHTML = `
 <div class="aiSummaryContent"></div>
 `;
 
-const content = box.querySelector(".aiSummaryContent");
+            const content = box.querySelector(".aiSummaryContent");
 
-content.innerHTML = mergedSegments
-  .map(s => `<p>${s.text}</p>`)
-  .join("");
+            content.innerHTML = mergedSegments
+              .map(s => `<p>${s.text}</p>`)
+              .join("");
 
-const closeBtn = box.querySelector(".closeSummary");
+            const closeBtn = box.querySelector(".closeSummary");
 
-closeBtn.onclick = () => {
-  box.classList.add("hidden");
-  box.innerHTML = "";
-};
+            closeBtn.onclick = () => {
+              box.classList.add("hidden");
+              box.innerHTML = "";
+            };
 
-} catch (err) {
+          } catch (err) {
 
-  console.error(err);
-  alert("Transcript failed");
-  await deleteDoc(lockRef); // 🔥 unlock on failure
+            console.error(err);
+            alert("Transcript failed");
+            await deleteDoc(lockRef); // 🔥 unlock on failure
+
+          }
+          transcriptRunning = false;
+          transcriptBtn.disabled = false;
+          transcriptBtn.innerHTML = originalText;
+
+        };
+
+      }
+      async function typeSummary(lines, container) {
+
+        let list;
+        let listOpen = false;
+
+        for (const rawLine of lines) {
+
+          const line = rawLine.trim();
+
+          if (!line) continue;
+
+          await new Promise(r => setTimeout(r, 250)); // typing delay
+
+          /* ===== TITLE ===== */
+
+          if (line.startsWith("**") && line.endsWith("**")) {
+
+            if (listOpen) {
+              list = null;
+              listOpen = false;
+            }
+
+            const title = line.replace(/\*\*/g, "");
+
+            const h = document.createElement("h4");
+            h.textContent = title;
+
+            container.appendChild(h);
+          }
+
+          /* ===== BULLETS ===== */
+
+          else if (line.startsWith("*") || line.startsWith("-")) {
+
+            if (!listOpen) {
+              list = document.createElement("ul");
+              container.appendChild(list);
+              listOpen = true;
+            }
+
+            const li = document.createElement("li");
+            li.textContent = line.replace(/^[-*]/, "").trim();
+
+            list.appendChild(li);
+          }
+
+          /* ===== PARAGRAPH ===== */
+
+          else {
+
+            listOpen = false;
+
+            const p = document.createElement("p");
+            p.textContent = line;
+
+            container.appendChild(p);
+          }
+
+        }
+
+      }
+
+
+      let deptSection = document.querySelector(`[data-dept="${data.department}"]`);
+
+      if (!deptSection) {
+
+        const folder = document.createElement("div");
+        folder.className = "dept-folder";
+
+        const title = document.createElement("h4");
+        title.className = "dept-title";
+        title.textContent = data.department;
+
+        deptSection = document.createElement("div");
+        deptSection.className = "dept-courses hidden";
+        deptSection.setAttribute("data-dept", data.department);
+
+        title.onclick = () => {
+          deptSection.classList.toggle("hidden");
+        };
+
+        folder.appendChild(title);
+        folder.appendChild(deptSection);
+
+        enrolledDiv.appendChild(folder);
+
+      }
+
+      deptSection.appendChild(div);
+
+    }
+    // ✅ AUTO LOAD FIRST COURSE UNITS
+if (courseSelect.options.length > 0) {
+
+  courseSelect.selectedIndex = 0;
+
+  const selectedCourseId = courseSelect.value;
+
+  unitSelect.innerHTML = "";
+
+  const unitsSnap = await getDocs(
+    collection(db, "courses", selectedCourseId, "units")
+  );
+
+unitsSnap.forEach(doc => {
+
+  const unit = doc.data();
+
+  if (!unit.pdfURL) return; // 🚨 ADD THIS LINE
+
+  const opt = document.createElement("option");
+  opt.value = unit.pdfURL;
+  opt.textContent = unit.title || "Unit";
+
+  unitSelect.appendChild(opt);
+
+});
 
 }
-transcriptRunning = false;
-transcriptBtn.disabled = false;
-transcriptBtn.innerHTML = originalText;
-
-};
-
-}
-async function typeSummary(lines, container){
-
-let list;
-let listOpen = false;
-
-for(const rawLine of lines){
-
-  const line = rawLine.trim();
-
-  if(!line) continue;
-
-  await new Promise(r => setTimeout(r, 250)); // typing delay
-
-  /* ===== TITLE ===== */
-
-  if(line.startsWith("**") && line.endsWith("**")){
-
-    if(listOpen){
-      list = null;
-      listOpen = false;
+    if (courseChartSelect.options.length > 0) {
+      courseChartSelect.selectedIndex = 0;
+      loadCourseChart(uid);
     }
 
-    const title = line.replace(/\*\*/g,"");
-
-    const h = document.createElement("h4");
-    h.textContent = title;
-
-    container.appendChild(h);
-  }
-
-  /* ===== BULLETS ===== */
-
-  else if(line.startsWith("*") || line.startsWith("-")){
-
-    if(!listOpen){
-      list = document.createElement("ul");
-      container.appendChild(list);
-      listOpen = true;
+    if (aiChartSelect.options.length > 0) {
+      aiChartSelect.selectedIndex = 0;
+      loadAIChart(uid);
     }
-
-    const li = document.createElement("li");
-    li.textContent = line.replace(/^[-*]/,"").trim();
-
-    list.appendChild(li);
-  }
-
-  /* ===== PARAGRAPH ===== */
-
-  else{
-
-    listOpen = false;
-
-    const p = document.createElement("p");
-    p.textContent = line;
-
-    container.appendChild(p);
-  }
-
-}
-
-}
-
-
-let deptSection = document.querySelector(`[data-dept="${data.department}"]`);
-
-if(!deptSection){
-
-const folder = document.createElement("div");
-folder.className = "dept-folder";
-
-const title = document.createElement("h4");
-title.className = "dept-title";
-title.textContent = data.department;
-
-deptSection = document.createElement("div");
-deptSection.className = "dept-courses hidden";
-deptSection.setAttribute("data-dept", data.department);
-
-title.onclick = () => {
-  deptSection.classList.toggle("hidden");
-};
-
-folder.appendChild(title);
-folder.appendChild(deptSection);
-
-enrolledDiv.appendChild(folder);
-
-}
-
-deptSection.appendChild(div);
-
-    }
-if (courseChartSelect.options.length > 0) {
-  courseChartSelect.selectedIndex = 0;
-  loadCourseChart(uid);
-}
-
-if (aiChartSelect.options.length > 0) {
-  aiChartSelect.selectedIndex = 0;
-  loadAIChart(uid);
-}
   });
 
 }
-async function generateRecommendations(uid){
+async function generateRecommendations(uid) {
 
   const container = document.getElementById("recommendedBooks");
-  if(!container) return;
+  if (!container) return;
 
   /* ===== USER ACTIVITY ===== */
 
   const activitySnap = await getDocs(
-    query(collection(db,"learning_activity"),
-    where("userId","==",uid))
+    query(collection(db, "learning_activity"),
+      where("userId", "==", uid))
   );
 
-  if(activitySnap.empty){
-    container.innerHTML="No recommendations yet.";
+  if (activitySnap.empty) {
+    container.innerHTML = "No recommendations yet.";
     return;
   }
 
@@ -1003,20 +1071,20 @@ async function generateRecommendations(uid){
 
   /* ===== GET TAGS FROM READ BOOKS ===== */
 
-  for(const activity of activitySnap.docs){
+  for (const activity of activitySnap.docs) {
 
     const courseId = activity.data().courseId;
     readCourses.add(courseId);
 
-    const courseDoc = await getDoc(doc(db,"courses",courseId));
-    if(!courseDoc.exists()) continue;
+    const courseDoc = await getDoc(doc(db, "courses", courseId));
+    if (!courseDoc.exists()) continue;
 
     const tags = courseDoc.data().tags || [];
 
-    tags.forEach(tag=>{
+    tags.forEach(tag => {
       const t = tag.toLowerCase();
 
-      if(!tagScore[t]) tagScore[t]=0;
+      if (!tagScore[t]) tagScore[t] = 0;
       tagScore[t]++;
     });
 
@@ -1024,31 +1092,31 @@ async function generateRecommendations(uid){
 
   /* ===== LOAD ALL COURSES ===== */
 
-  const courseSnap = await getDocs(collection(db,"courses"));
+  const courseSnap = await getDocs(collection(db, "courses"));
 
   const recommendations = [];
 
-  courseSnap.forEach(docSnap=>{
+  courseSnap.forEach(docSnap => {
 
     const data = docSnap.data();
     const courseId = docSnap.id;
 
     /* skip already read books */
 
-    if(readCourses.has(courseId)) return;
+    if (readCourses.has(courseId)) return;
 
-    const tags = (data.tags || []).map(t=>t.toLowerCase());
+    const tags = (data.tags || []).map(t => t.toLowerCase());
 
     let score = 0;
 
-    tags.forEach(tag=>{
-      if(tagScore[tag]) score += tagScore[tag];
+    tags.forEach(tag => {
+      if (tagScore[tag]) score += tagScore[tag];
     });
 
-    if(score > 0){
+    if (score > 0) {
 
       recommendations.push({
-        id:courseId,
+        id: courseId,
         ...data,
         score
       });
@@ -1059,48 +1127,48 @@ async function generateRecommendations(uid){
 
   /* ===== SORT BY RELEVANCE ===== */
 
-  recommendations.sort((a,b)=>b.score-a.score);
+  recommendations.sort((a, b) => b.score - a.score);
 
-  const topBooks = recommendations.slice(0,6);
+  const topBooks = recommendations.slice(0, 6);
 
-  container.innerHTML="";
+  container.innerHTML = "";
 
-const template = document.getElementById("courseCardTemplate");
+  const template = document.getElementById("courseCardTemplate");
 
-topBooks.forEach(book=>{
+  topBooks.forEach(book => {
 
-const card = template.content.cloneNode(true);
+    const card = template.content.cloneNode(true);
 
-const cover = card.querySelector(".book-cover");
-const title = card.querySelector(".course-title");
-const semester = card.querySelector(".course-semester");
-const pdfBtn = card.querySelector(".pdf-btn");
-const joinBtn = card.querySelector(".join-btn");
-const locked = card.querySelector(".locked");
+    const cover = card.querySelector(".book-cover");
+    const title = card.querySelector(".course-title");
+    const semester = card.querySelector(".course-semester");
+    const pdfBtn = card.querySelector(".pdf-btn");
+    const joinBtn = card.querySelector(".join-btn");
+    const locked = card.querySelector(".locked");
 
-title.textContent = book.course;
-semester.textContent = "Semester " + book.semester;
+    title.textContent = book.course;
+    semester.textContent = "Semester " + book.semester;
 
-if(book.coverURL){
-cover.src = book.coverURL;
-}else{
-cover.style.display = "none";
-}
+    if (book.coverURL) {
+      cover.src = book.coverURL;
+    } else {
+      cover.style.display = "none";
+    }
 
-pdfBtn.href = book.pdfURL;
+    pdfBtn.href = book.pdfURL;
 
-/* dashboard recommendations don't require join */
-/* Hide all action elements for recommendation cards */
+    /* dashboard recommendations don't require join */
+    /* Hide all action elements for recommendation cards */
 
-pdfBtn.style.display = "none";
-joinBtn.style.display = "none";
-locked.style.display = "none";
-joinBtn.style.display = "none";
-locked.style.display = "none";
+    pdfBtn.style.display = "none";
+    joinBtn.style.display = "none";
+    locked.style.display = "none";
+    joinBtn.style.display = "none";
+    locked.style.display = "none";
 
-container.appendChild(card);
+    container.appendChild(card);
 
-});
+  });
 
 }
 
@@ -1284,10 +1352,10 @@ async function startTeacherQuiz(courseId) {
 
   const questions = questionSnap.docs.map(d => d.data());
 
-renderQuiz(questions, quizId, {
-  ...quizData,
-  courseId
-});
+  renderQuiz(questions, quizId, {
+    ...quizData,
+    courseId
+  });
 
 }
 
@@ -1323,41 +1391,51 @@ window.startTest = async function () {
       return;
     }
 
-    const courseId = courseSelect.value;
+    const unitSelect = document.getElementById("unitSelect");
 
-    const courseDoc = await getDoc(doc(db, "courses", courseId));
-    const courseData = courseDoc.data();
+    if (!unitSelect.value) {
+      showMessage("Select a unit first");
+      loading.remove();
+      return;
+    }
 
+    const selectedPdf = unitSelect.value;
     const res = await fetch("/generate-test", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        pdfURL: courseData.pdfURL
+        pdfURL: selectedPdf
       })
     });
 
     const data = await res.json();
+
+    if (!res.ok || !data.questions || !Array.isArray(data.questions)) {
+      console.error("AI ERROR:", data);
+      showMessage(data.error || "AI quiz generation failed");
+      return;
+    }
     /* ================= STORE AI QUIZ ================= */
+const courseId = document.getElementById("courseSelect").value;
+    const aiQuizRef = await addDoc(collection(db, "ai_generated_quizzes"), {
+      userId: auth.currentUser.uid,
+      courseId,
+      createdAt: new Date()
+    });
 
-const aiQuizRef = await addDoc(collection(db,"ai_generated_quizzes"),{
-  userId: auth.currentUser.uid,
-  courseId,
-  createdAt: new Date()
-});
+    const quizId = aiQuizRef.id;
 
-const quizId = aiQuizRef.id;
+    for (const q of data.questions) {
 
-for(const q of data.questions){
+      await addDoc(collection(db, "ai_quiz_questions"), {
+        quizId,
+        question: q.question,
+        options: q.options,
+        answer: q.answer,
+        explanation: q.explanation
+      });
 
-  await addDoc(collection(db,"ai_quiz_questions"),{
-    quizId,
-    question: q.question,
-    options: q.options,
-    answer: q.answer,
-    explanation: q.explanation
-  });
-
-}
+    }
 
     loading.remove();
 
@@ -1369,12 +1447,12 @@ for(const q of data.questions){
     /* create unique attempt id */
     const attemptId = auth.currentUser.uid + "_ai_" + Date.now();
 
-renderQuiz(data.questions, quizId, {
-  title: "AI Quick Quiz",
-  attemptId,
-  ai: true,
-  courseId
-});
+    renderQuiz(data.questions, quizId, {
+      title: "AI Quick Quiz",
+      attemptId,
+      ai: true,
+      courseId
+    });
 
   }
   catch (err) {
@@ -1408,7 +1486,7 @@ ${!quizData.ai && quizData.timeLimit ? `<div id="timer"></div>` : ""}
 
   dashboard.prepend(container);
 
-if (!quizData.ai && quizData.timeLimit) {
+  if (!quizData.ai && quizData.timeLimit) {
     startTimer(quizData.timeLimit);
   }
 
@@ -1433,14 +1511,14 @@ ${opt}
 
   });
 
-/* ================= QUIZ BUTTON CONTAINER ================= */
+  /* ================= QUIZ BUTTON CONTAINER ================= */
 
-const buttonBox = document.createElement("div");
-buttonBox.className = "quiz-action-buttons";
+  const buttonBox = document.createElement("div");
+  buttonBox.className = "quiz-action-buttons";
   const submit = document.createElement("button");
 
   submit.className = "quiz-submit-btn";
-submit.innerText = "Submit Quiz";
+  submit.innerText = "Submit Quiz";
 
   submit.onclick = async () => {
 
@@ -1467,62 +1545,62 @@ submit.innerText = "Submit Quiz";
 
       const options = document.querySelectorAll(`input[name="q${i}"]`);
 
-options.forEach(opt => {
+      options.forEach(opt => {
 
-  const label = opt.parentElement;
+        const label = opt.parentElement;
 
-  if(Number(opt.value) === correctIndex){
-    label.style.background = "#dcfce7";   // green
-    label.style.border = "2px solid #22c55e";
-  }
+        if (Number(opt.value) === correctIndex) {
+          label.style.background = "#dcfce7";   // green
+          label.style.border = "2px solid #22c55e";
+        }
 
-  if(opt.checked && Number(opt.value) !== correctIndex){
-    label.style.background = "#fee2e2";   // red
-    label.style.border = "2px solid #ef4444";
-  }
+        if (opt.checked && Number(opt.value) !== correctIndex) {
+          label.style.background = "#fee2e2";   // red
+          label.style.border = "2px solid #ef4444";
+        }
 
-});
+      });
 
-if(selected && Number(selected.value) === correctIndex){
-score++;
-}
+      if (selected && Number(selected.value) === correctIndex) {
+        score++;
+      }
 
-     /* show explanation */
-if (quizData.ai) {
+      /* show explanation */
+      if (quizData.ai) {
 
-  const explain = document.getElementById(`explain${i}`);
+        const explain = document.getElementById(`explain${i}`);
 
-  explain.style.display = "block";
+        explain.style.display = "block";
 
-  explain.innerHTML = `
+        explain.innerHTML = `
 <p><b>Correct Answer:</b> ${q.answer}</p>
 <p><b>Explanation:</b> ${q.explanation || "No explanation available."}</p>
 `;
 
-}
+      }
 
     });
 
     const percent = (score / questions.length) * 100;
 
-   if (!quizData.ai) {
+    if (!quizData.ai) {
 
       const resultId = auth.currentUser.uid + "_" + quizId;
 
-await setDoc(doc(db, "course_quiz_results", resultId), {
-  userId: auth.currentUser.uid,
-  courseId: quizData.courseId,
-  quizId,
-  score: percent,
-  submittedAt: new Date()
-});
+      await setDoc(doc(db, "course_quiz_results", resultId), {
+        userId: auth.currentUser.uid,
+        courseId: quizData.courseId,
+        quizId,
+        score: percent,
+        submittedAt: new Date()
+      });
 
       showMessage("Quiz submitted successfully.");
 
       container.remove();
       loadStats(auth.currentUser.uid);
       loadCourseChart(auth.currentUser.uid);
-loadAIChart(auth.currentUser.uid);
+      loadAIChart(auth.currentUser.uid);
     } else {
 
       /* save AI quiz result */
@@ -1536,13 +1614,13 @@ loadAIChart(auth.currentUser.uid);
         return;
       }
 
-await setDoc(doc(db, "ai_quiz_results", resultId), {
-  userId: auth.currentUser.uid,
-  courseId: quizData.courseId,
-  quizId,
-  score: percent,
-  submittedAt: new Date()
-});
+      await setDoc(doc(db, "ai_quiz_results", resultId), {
+        userId: auth.currentUser.uid,
+        courseId: quizData.courseId,
+        quizId,
+        score: percent,
+        submittedAt: new Date()
+      });
 
       aiQuizUsed = true;
 
@@ -1553,10 +1631,10 @@ await setDoc(doc(db, "ai_quiz_results", resultId), {
   };
   /* ================= REGENERATE BUTTON ================= */
 
-if (quizData.ai) {
+  if (quizData.ai) {
 
     const regen = document.createElement("button");
-regen.className = "quiz-regenerate-btn";
+    regen.className = "quiz-regenerate-btn";
 
     regen.innerText = "Regenerate Quiz";
 
@@ -1618,7 +1696,7 @@ function loadAvailableQuizzes(uid) {
   /* 🔹 LISTEN TO ENROLLMENTS */
   onSnapshot(
     query(collection(db, "enrollments"),
-    where("userId", "==", uid)),
+      where("userId", "==", uid)),
 
     (enrollSnap) => {
 
@@ -1681,43 +1759,43 @@ function loadAvailableQuizzes(uid) {
 
     for (const dept in structure) {
 
-const deptDiv = document.createElement("div");
-deptDiv.className = "quiz-dept";
+      const deptDiv = document.createElement("div");
+      deptDiv.className = "quiz-dept";
 
-const deptTitle = document.createElement("h4");
-deptTitle.innerText = "📁 " + dept;
+      const deptTitle = document.createElement("h4");
+      deptTitle.innerText = "📁 " + dept;
 
-deptDiv.appendChild(deptTitle);
+      deptDiv.appendChild(deptTitle);
 
       for (const course in structure[dept]) {
 
-const courseWrapper = document.createElement("div");
-courseWrapper.className = "quiz-course";
+        const courseWrapper = document.createElement("div");
+        courseWrapper.className = "quiz-course";
 
-const courseTitle = document.createElement("div");
-courseTitle.className = "quiz-course-title";
-courseTitle.innerText = course;
+        const courseTitle = document.createElement("div");
+        courseTitle.className = "quiz-course-title";
+        courseTitle.innerText = course;
 
-const quizRow = document.createElement("div");
-quizRow.className = "quiz-row";
+        const quizRow = document.createElement("div");
+        quizRow.className = "quiz-row";
 
-structure[dept][course].forEach(q => {
+        structure[dept][course].forEach(q => {
 
-  const btn = document.createElement("button");
-  btn.className = "quiz-btn";
-  btn.innerText = q.title;
+          const btn = document.createElement("button");
+          btn.className = "quiz-btn";
+          btn.innerText = q.title;
 
-  btn.onclick = () => {
-    startTeacherQuiz(q.courseId);
-  };
+          btn.onclick = () => {
+            startTeacherQuiz(q.courseId);
+          };
 
-  quizRow.appendChild(btn);
-});
+          quizRow.appendChild(btn);
+        });
 
-courseWrapper.appendChild(courseTitle);
-courseWrapper.appendChild(quizRow);
+        courseWrapper.appendChild(courseTitle);
+        courseWrapper.appendChild(quizRow);
 
-deptDiv.appendChild(courseWrapper);
+        deptDiv.appendChild(courseWrapper);
       }
 
       panel.appendChild(deptDiv);
@@ -1726,9 +1804,22 @@ deptDiv.appendChild(courseWrapper);
   });
 
 }
-  
-/* ================= DISCUSSION ================= */
 
+/* ================= DISCUSSION ================= */
+function showChatActions(data) {
+
+  const actionBar = document.getElementById("chatActions");
+  const editBtn = document.getElementById("chatEditBtn");
+  const deleteBtn = document.getElementById("chatDeleteBtn");
+
+  actionBar.classList.remove("hidden");
+
+  const isOwner = data.userId === auth.currentUser.uid;
+
+  // ✅ show/hide edit
+  editBtn.style.display = isOwner ? "inline-block" : "none";
+
+}
 async function loadComments(courseId) {
 
   const q = query(
@@ -1743,24 +1834,75 @@ async function loadComments(courseId) {
 
     list.innerHTML = "";
 
-    snap.forEach(docSnap => {
+snap.forEach(docSnap => {
 
-      const data = docSnap.data();
+  const data = docSnap.data();
 
-      const div = document.createElement("div");
+  const div = document.createElement("div");
 
-      const role = data.userId === auth.currentUser.uid ? "teacher" : "student";
+  const isOwner = data.userId === auth.currentUser.uid;
 
-      div.className = "chatMsg " + role;
+  // ✅ FIX ALIGNMENT (RIGHT = ME, LEFT = OTHERS)
+  div.className = "chatMsg " + (isOwner ? "me" : "other");
 
-      div.innerHTML = `
-<strong>${data.userName}</strong>
-<p>${data.message}</p>
-`;
+  div.innerHTML = `
+  <div class="msgContent">
 
-      list.appendChild(div);
+    <div class="msgText">
+      ${data.message}
+      ${data.edited ? '<span class="edited">(edited)</span>' : ''}
+    </div>
 
-    });
+    <div class="msgMeta">
+
+      <span class="msgTime">
+        ${data.createdAt?.toDate().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}
+      </span>
+
+    </div>
+
+  </div>
+  `;
+let pressTimer;
+
+div.addEventListener("mousedown", () => {
+
+  pressTimer = setTimeout(() => {
+
+    selectedMessage = {
+      id: docSnap.id,
+      data: data
+    };
+
+    document.querySelectorAll(".chatMsg").forEach(m => m.classList.remove("selected"));
+    div.classList.add("selected");
+
+    showChatActions(data);
+
+  }, 500);
+
+});
+
+div.addEventListener("mouseup", () => clearTimeout(pressTimer));
+div.addEventListener("mouseleave", () => clearTimeout(pressTimer));
+
+div.addEventListener("mouseup", () => {
+
+  if (!longPressTriggered) {
+    clearTimeout(pressTimer);
+  }
+
+});
+
+div.addEventListener("mouseleave", () => clearTimeout(pressTimer));
+
+// cancel if released early
+div.addEventListener("mouseup", () => clearTimeout(pressTimer));
+div.addEventListener("mouseleave", () => clearTimeout(pressTimer));
+
+  list.appendChild(div);
+
+});
 
     list.scrollTop = list.scrollHeight;
 
@@ -1795,7 +1937,54 @@ document.querySelector(".sendComment").onclick = async () => {
 
 };
 
+const editBtn = document.getElementById("chatEditBtn");
+const deleteBtn = document.getElementById("chatDeleteBtn");
 
+if (deleteBtn) {
+
+  deleteBtn.onclick = async () => {
+
+    if (!selectedMessage) return;
+
+    await deleteDoc(doc(db, "course_comments", selectedMessage.id));
+
+    clearSelection();
+
+  };
+
+}
+
+if (editBtn) {
+
+  editBtn.onclick = async () => {
+
+    if (!selectedMessage) return;
+
+    // 🔥 still using prompt (can upgrade later)
+    const newText = prompt("Edit message:", selectedMessage.data.message);
+
+    if (!newText || !newText.trim()) return;
+
+    await setDoc(doc(db, "course_comments", selectedMessage.id), {
+      message: newText,
+      edited: true
+    }, { merge: true });
+
+    clearSelection();
+
+  };
+
+}
+function clearSelection() {
+
+  selectedMessage = null;
+
+  document.querySelectorAll(".chatMsg").forEach(m => m.classList.remove("selected"));
+
+  const actionBar = document.getElementById("chatActions");
+  actionBar.classList.add("hidden");
+
+}
 /* ================= CHAT CLOSE ================= */
 
 const chatBox = document.getElementById("chatBox");

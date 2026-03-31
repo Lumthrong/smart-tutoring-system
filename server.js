@@ -529,11 +529,13 @@ await courseRef.collection("units").add({
 /* ================= SECURE PDF ================= */
 app.get("/secure-pdf", verifyToken, async (req, res) => {
 
-  const url = req.query.file;
+const url = req.query.file;
 
-  if (!url) {
-    return res.status(400).send("File missing");
-  }
+console.log("PDF REQUEST URL:", url); // 🔥 DEBUG
+
+if (!url || url === "undefined") {
+  return res.status(400).send("Invalid PDF URL");
+}
 
   try {
 
@@ -805,7 +807,7 @@ app.post("/generate-test", async (req, res) => {
       .replace(/\s+/g, " ")
       .split(" ");
 
-    if (words.length < 1000) {
+if (words.length < 300) {
       return res.status(400).json({ error: "PDF text too small for quiz generation" });
     }
 

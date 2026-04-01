@@ -40,7 +40,8 @@ function showMessage(message, type = "info") {
 
 }
 let activeCourseId = null;
-let selectedMessage = null; // { id, data }
+let selectedMessage = null; 
+let isEditing = false;
 let quizTimer = null;
 let aiQuizUsed = false;
 let aiChartInstance = null;
@@ -1897,20 +1898,6 @@ function startPress(e) {
 function cancelPress() {
   clearTimeout(pressTimer);
 }
-
-div.addEventListener("mouseup", () => clearTimeout(pressTimer));
-div.addEventListener("mouseleave", () => clearTimeout(pressTimer));
-
-div.addEventListener("mouseup", () => {
-
-  if (!longPressTriggered) {
-    clearTimeout(pressTimer);
-  }
-
-});
-
-div.addEventListener("mouseleave", () => clearTimeout(pressTimer));
-
 // cancel if released early
 div.addEventListener("mouseup", () => clearTimeout(pressTimer));
 div.addEventListener("mouseleave", () => clearTimeout(pressTimer));
@@ -1928,16 +1915,37 @@ div.addEventListener("mouseleave", () => clearTimeout(pressTimer));
 
 /* ================= SEND COMMENT ================= */
 
-document.querySelector(".sendComment").onclick = async () => {
+document.querySelector(".sendComment").onclick = async (e) => {
+
+  e.stopPropagation(); // ✅ ADD THIS (VERY IMPORTANT)
 
   const input = document.querySelector(".commentInput");
 
   if (!input.value.trim()) return;
 
   const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-
   const user = userDoc.data();
 
+  // 🔥 EDIT MODE
+if (isEditing && selectedMessage) {
+
+  const msgId = selectedMessage.id; // ✅ STORE BEFORE ANYTHING BREAKS
+
+  isEditing = false; // ✅ LOCK STATE FIRST
+
+  await setDoc(doc(db, "course_comments", msgId), {
+    message: input.value,
+    edited: true
+  }, { merge: true });
+
+  input.value = "";
+
+  clearSelection();
+
+  return;
+}
+
+  // 🔥 NORMAL MESSAGE
   await addDoc(collection(db, "course_comments"), {
 
     courseId: activeCourseId,
@@ -1971,21 +1979,16 @@ if (deleteBtn) {
 
 if (editBtn) {
 
-  editBtn.onclick = async () => {
+  editBtn.onclick = () => {
 
     if (!selectedMessage) return;
 
-    // 🔥 still using prompt (can upgrade later)
-    const newText = prompt("Edit message:", selectedMessage.data.message);
+    const input = document.querySelector(".commentInput");
 
-    if (!newText || !newText.trim()) return;
+    input.value = selectedMessage.data.message;
+    input.focus();
 
-    await setDoc(doc(db, "course_comments", selectedMessage.id), {
-      message: newText,
-      edited: true
-    }, { merge: true });
-
-    clearSelection();
+    isEditing = true;
 
   };
 
@@ -2000,6 +2003,29 @@ function clearSelection() {
   actionBar.classList.add("hidden");
 
 }
+document.addEventListener("click", (e) => {
+
+  const chatBox = document.getElementById("chatBox");
+
+if (
+!e.target.closest(".chatMsg") &&
+!e.target.closest(".commentInput") &&
+!e.target.closest(".sendComment") &&
+!e.target.closest("#chatActions")
+) {
+  
+  // ✅ CANCEL EDIT IF CLICK OUTSIDE
+  if (isEditing) {
+    isEditing = false;
+
+    const input = document.querySelector(".commentInput");
+    input.value = "";
+  }
+
+  clearSelection();
+}
+
+});
 /* ================= CHAT CLOSE ================= */
 
 const chatBox = document.getElementById("chatBox");

@@ -1865,7 +1865,18 @@ snap.forEach(docSnap => {
   `;
 let pressTimer;
 
-div.addEventListener("mousedown", () => {
+// ===== DESKTOP =====
+div.addEventListener("mousedown", startPress);
+div.addEventListener("mouseup", cancelPress);
+div.addEventListener("mouseleave", cancelPress);
+
+// ===== MOBILE =====
+div.addEventListener("touchstart", startPress);
+div.addEventListener("touchend", cancelPress);
+div.addEventListener("touchcancel", cancelPress);
+
+// ===== FUNCTIONS =====
+function startPress(e) {
 
   pressTimer = setTimeout(() => {
 
@@ -1881,7 +1892,11 @@ div.addEventListener("mousedown", () => {
 
   }, 500);
 
-});
+}
+
+function cancelPress() {
+  clearTimeout(pressTimer);
+}
 
 div.addEventListener("mouseup", () => clearTimeout(pressTimer));
 div.addEventListener("mouseleave", () => clearTimeout(pressTimer));

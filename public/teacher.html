@@ -132,47 +132,10 @@ school
 
           <form id="uploadLectureForm" enctype="multipart/form-data">
 
-            <select name="department" required>
-              <option value="">Select Category</option>
-              <option value="Information Technology">Information Technology</option>
-              <option value="Computer Science">Computer Science</option>
-              <option value="Science">Science</option>
-              <option value="Business">Business</option>
-              <option value="Humanities">Humanities</option>
-              <option value="History">History</option>
-              <option value="Languages">Languages</option>
-              <option value="Health">Health & Fitness</option>
-              <option value="Education">Education</option>
-              <option value="Personal Development">Personal Development</option>
-              <option value="General Knowledge">General Knowledge</option>
-              <option value="Others">Others</option>
-            </select>
-
-            <select name="semester" required>
-              <option value="">Select Semester</option>
-              <option value="general">General</option>
-              <option value="1">Semester 1</option>
-              <option value="2">Semester 2</option>
-              <option value="3">Semester 3</option>
-              <option value="4">Semester 4</option>
-              <option value="5">Semester 5</option>
-              <option value="6">Semester 6</option>
-              <option value="7">Semester 7</option>
-              <option value="8">Semester 8</option>
-            </select>
-
-            <input type="text" name="course" placeholder="Course Name" required>
+<select id="subjectSelect" required>
+  <option value="">Select Subject</option>
+</select>
             <input name="unitTitle" placeholder="Unit Title (e.g. Unit 1: Intro)">
-            <input type="text" name="tags" placeholder="Tags">
-
-            <label>Book Cover</label>
-            <div class="file-upload">
-              <input type="file" name="cover" id="coverInput" accept="image/*">
-              <div class="file-preview" id="coverPreview">
-                <span class="material-symbols-outlined">add_photo_alternate</span>
-                Select cover
-              </div>
-            </div>
 
             <label>Upload PDF</label>
             <div class="file-upload">
@@ -240,16 +203,6 @@ school
       <h3>My Quizzes</h3>
 
       <div id="teacherQuizzes"></div>
-
-    </div>
-
-    <!-- Courses enrolled -->
-
-    <div class="card">
-
-      <h3>Courses I Enrolled In</h3>
-
-      <div id="enrolledCourses"></div>
 
     </div>
 

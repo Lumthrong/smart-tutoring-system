@@ -16,6 +16,7 @@ import FormData from "form-data";
 import axios from "axios";
 import { exec } from "child_process";
 import util from "util";
+import csv from "csv-parser";
 
 const execAsync = util.promisify(exec);
 
@@ -1345,6 +1346,318 @@ const docRef = await db.collection("notes").doc(docId).set({
     console.error(err);
     res.status(500).json({ error: "Notes generation failed" });
 
+  }
+
+});
+
+/* ================= Admin Panel ================= */
+app.post(
+  "/admin/upload-teachers",
+  verifyToken,
+  requireRole("admin"),
+  upload.single("file"),
+  async (req, res) => {
+
+    try {
+
+      if (!req.file) {
+        return res.status(400).json({
+          error: "CSV file required"
+        });
+      }
+
+      if (!req.file.originalname.toLowerCase().endsWith(".csv")) {
+        return res.status(400).json({
+          error: "Only CSV allowed"
+        });
+      }
+
+      const teachers = [];
+
+      fs.createReadStream(req.file.path)
+        .pipe(csv())
+        .on("data", (row) => {
+
+          if (
+            !row.email &&
+            !row.Email &&
+            !row.EMAIL
+          ) {
+            return;
+          }
+
+          teachers.push(row);
+
+        })
+        .on("end", async () => {
+
+          const batch = db.batch();
+
+          // DELETE OLD TEACHERS
+          const existingTeachers =
+            await db.collection("teacher_master").get();
+
+          existingTeachers.forEach(docSnap => {
+            batch.delete(docSnap.ref);
+          });
+
+          // DELETE OLD SUBJECTS
+          const existingSubjects =
+            await db.collection("subjects").get();
+
+          existingSubjects.forEach(docSnap => {
+            batch.delete(docSnap.ref);
+          });
+
+          for (const teacher of teachers) {
+
+            const email =
+              teacher.email ||
+              teacher.Email ||
+              teacher.EMAIL;
+
+            if (!email) continue;
+
+            const teacherRef =
+              db.collection("teacher_master")
+                .doc(email.trim().toLowerCase());
+
+            batch.set(teacherRef, {
+              name:
+                teacher.name ||
+                teacher.Name ||
+                "",
+
+              email:
+                email.trim().toLowerCase(),
+
+              department:
+                teacher.department ||
+                teacher.Department ||
+                "",
+
+              semester:
+                teacher.semester ||
+                teacher.Semester ||
+                "",
+
+              subjects:
+                teacher.subjects ||
+                teacher.Subjects ||
+                "",
+
+              role: "teacher",
+
+              updatedAt: new Date()
+            });
+
+            const subjects =
+              (teacher.subjects ||
+               teacher.Subjects ||
+               "")
+              .split("|")
+              .filter(Boolean);
+
+            subjects.forEach(subject => {
+
+              const subjectId =
+                `${teacher.department}_${subject.trim()}`
+                  .replace(/[\/\\]/g, "_")
+                  .replace(/\s+/g, "_")
+                  .replace(/[^a-zA-Z0-9_]/g, "")
+                  .toLowerCase();
+
+              const subjectRef =
+                db.collection("subjects")
+                  .doc(subjectId);
+
+              batch.set(subjectRef, {
+                subjectName: subject.trim(),
+                department: teacher.department,
+                semester: teacher.semester,
+                teacherEmail: email.trim().toLowerCase(),
+                teacherName: teacher.name,
+                updatedAt: new Date()
+              });
+
+            });
+
+          }
+
+          await batch.commit();
+
+          fs.unlinkSync(req.file.path);
+
+          res.json({
+            success: true,
+            count: teachers.length
+          });
+
+        });
+
+    } catch (err) {
+
+      console.error(err);
+
+      res.status(500).json({
+        error: "Teacher upload failed"
+      });
+
+    }
+
+});
+app.post(
+  "/admin/upload-students",
+  verifyToken,
+  requireRole("admin"),
+  upload.single("file"),
+  async (req, res) => {
+
+    try {
+
+      if (!req.file) {
+        return res.status(400).json({
+          error: "CSV file required"
+        });
+      }
+
+      const students = [];
+
+      fs.createReadStream(req.file.path)
+        .pipe(csv())
+        .on("data", (row) => {
+
+          if (
+            !row.email &&
+            !row.Email &&
+            !row.EMAIL
+          ) {
+            return;
+          }
+
+          students.push(row);
+
+        })
+        .on("end", async () => {
+
+          const batch = db.batch();
+
+          // DELETE OLD STUDENTS
+          const existingStudents =
+            await db.collection("student_master").get();
+
+          existingStudents.forEach(docSnap => {
+            batch.delete(docSnap.ref);
+          });
+
+          students.forEach(student => {
+
+            const email =
+              student.email ||
+              student.Email ||
+              student.EMAIL;
+
+            if (!email) return;
+
+            const ref =
+              db.collection("student_master")
+                .doc(email.trim().toLowerCase());
+
+            batch.set(ref, {
+
+              name:
+                student.name ||
+                student.Name ||
+                "",
+
+              email:
+                email.trim().toLowerCase(),
+
+              rollNo:
+                student.rollNo ||
+                student.RollNo ||
+                student.rollno ||
+                "",
+
+              semester:
+                student.semester ||
+                student.Semester ||
+                "",
+
+              department:
+                student.department ||
+                student.Department ||
+                "",
+
+              role: "student",
+
+              updatedAt: new Date()
+
+            });
+
+          });
+
+          await batch.commit();
+
+          fs.unlinkSync(req.file.path);
+
+          res.json({
+            success: true,
+            count: students.length
+          });
+
+        });
+
+    } catch (err) {
+
+      console.error(err);
+
+      res.status(500).json({
+        error: "Student upload failed"
+      });
+
+    }
+
+});
+
+app.post("/validate-login", async (req, res) => {
+
+  const { role, email, rollNo } = req.body;
+
+  try {
+
+    if(role === "teacher"){
+
+      const doc = await db
+        .collection("teacher_master")
+        .doc(email.toLowerCase())
+        .get();
+
+      if(!doc.exists){
+        return res.json({ valid:false });
+      }
+
+      return res.json({ valid:true });
+    }
+
+    const doc = await db
+      .collection("student_master")
+      .doc(email.toLowerCase())
+      .get();
+
+    if(!doc.exists){
+      return res.json({ valid:false });
+    }
+
+    if(doc.data().rollNo !== rollNo){
+      return res.json({ valid:false });
+    }
+
+    return res.json({ valid:true });
+
+  } catch(err){
+    console.error(err);
+    res.status(500).json({ valid:false });
   }
 
 });

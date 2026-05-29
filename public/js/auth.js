@@ -224,26 +224,7 @@ if(password !== confirmPassword){
   return;
 }
 if(isTeacher){
-
-  const name = document.getElementById("name")?.value;
-  const qualification = document.getElementById("qualification")?.value;
-  const institution = document.getElementById("institution")?.value;
-  const experience = document.getElementById("experience")?.value;
-  const documentURL = document.getElementById("document")?.value;
-  const message = document.getElementById("message")?.value;
-
-  if(!name || !qualification || !institution || !experience || !documentURL){
-    showMessage("Fill all teacher fields");
-    return;
-  }
-
   teacherData = {
-    name,
-    qualification,
-    institution,
-    experience,
-    documentURL,
-    message,
     email
   };
 }
@@ -267,19 +248,29 @@ if(isTeacher){
       showMessage("Invalid OTP");
       return;
     }
+let rollNo = "";
 
-    const userCred = await createUserWithEmailAndPassword(auth, email, password);
+if(!isTeacher){
+  rollNo = document.getElementById("studentRollNo")?.value;
 
-    let role = "student";
+  if(!rollNo){
+    showMessage("Enter Roll Number");
+    return;
+  }
+}
+const userCred = await createUserWithEmailAndPassword(auth, email, password);
 
-    if (email === "admin@smart.com") role = "admin";
-if (teacherToggle) role = "pending_teacher";
+let role = isTeacher ? "teacher" : "student";
 
-    await setDoc(doc(db, "users", userCred.user.uid), {
-      email,
-      role,
-      requestedAt: new Date()
-    });
+if (email === "iamrein22@gmail.com")
+  role = "admin";
+
+   await setDoc(doc(db, "users", userCred.user.uid), {
+  email,
+  role,
+  rollNo: rollNo || null,
+  requestedAt: new Date()
+});
     if(teacherData){
   await setDoc(doc(db, "teacher_requests", userCred.user.uid), {
     ...teacherData,
@@ -303,18 +294,16 @@ if (teacherToggle) role = "pending_teacher";
     });
 
     /* FORCE TOKEN REFRESH AFTER CLAIM SET */
-    await auth.currentUser.getIdToken(true);
+  showMessage(
+  "Account created successfully. Please login.",
+  "success"
+);
 
-    const token = await auth.currentUser.getIdToken();
+await signOut(auth);
 
-    if (role === "admin")
-      window.location.href = `/admin.html?token=${token}`;
-
-    else if (role === "teacher" || role === "pending_teacher")
-      window.location.href = `/dashboard.html?token=${token}`;
-
-    else
-      window.location.href = `/dashboard.html?token=${token}`;
+setTimeout(() => {
+  window.location.href = "/login.html";
+}, 1500);
 
   } catch (err) {
 
@@ -342,6 +331,8 @@ if(err.code === "auth/email-already-in-use"){
 
 window.login = async function () {
 
+  const roleType = document.getElementById("loginRole").value;
+const rollNo = document.getElementById("rollNo")?.value;
   const email = document.getElementById("email")?.value;
   const password = document.getElementById("password")?.value;
   const loginBtn = document.getElementById("loginBtn");
@@ -350,7 +341,26 @@ window.login = async function () {
   loginBtn.innerHTML = `Logging in <span class="btn-spinner"></span>`;
 
   try {
+    const validation = await fetch("/validate-login", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    role: roleType,
+    email,
+    rollNo
+  })
+});
 
+const result = await validation.json();
+
+if(!result.valid){
+  showMessage("Not authorized");
+  loginBtn.disabled = false;
+  loginBtn.innerHTML = "Login";
+  return;
+}
     await signInWithEmailAndPassword(auth, email, password);
 
     /* refresh token to get latest role */

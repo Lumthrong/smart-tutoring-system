@@ -53,7 +53,266 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error loading stats:", error);
     }
   });
+  /* ================= Teacher/Teacher list ================= */
+  document
+.getElementById("uploadTeachersBtn")
+.onclick = async () => {
 
+  const file =
+    document.getElementById("teacherFile").files[0];
+
+  if (!file) {
+    alert("Please select a CSV file.");
+    return;
+  }
+
+  if (!file.name.toLowerCase().endsWith(".csv")) {
+    alert("Only CSV files are allowed.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  await fetch("/admin/upload-teachers", {
+    method: "POST",
+    body: formData,
+    headers: {
+      Authorization:
+        "Bearer " + await auth.currentUser.getIdToken()
+    }
+  });
+
+  alert("Teacher CSV uploaded successfully");
+};
+
+document
+.getElementById("uploadStudentsBtn")
+.onclick = async () => {
+
+  const file =
+    document.getElementById("studentFile").files[0];
+
+  if (!file) {
+    alert("Please select a CSV file.");
+    return;
+  }
+
+  if (!file.name.toLowerCase().endsWith(".csv")) {
+    alert("Only CSV files are allowed.");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", file);
+
+  await fetch("/admin/upload-students", {
+    method: "POST",
+    body: formData,
+    headers: {
+      Authorization:
+        "Bearer " + await auth.currentUser.getIdToken()
+    }
+  });
+
+  alert("Student CSV uploaded successfully");
+};
+const viewTeachersBtn =
+  document.getElementById("viewTeachersBtn");
+
+const teachersTableContainer =
+  document.getElementById("teachersTableContainer");
+
+if (viewTeachersBtn) {
+
+viewTeachersBtn.onclick = async () => {
+
+  const snap = await getDocs(
+    collection(db, "teacher_master")
+  );
+
+  const grouped = {};
+
+  snap.forEach(docSnap => {
+
+    const teacher = docSnap.data();
+
+    const dept =
+      teacher.department || "Unknown";
+
+    if (!grouped[dept]) {
+      grouped[dept] = [];
+    }
+
+    grouped[dept].push(teacher);
+
+  });
+
+  let html = "";
+
+  Object.keys(grouped)
+    .sort()
+    .forEach(dept => {
+
+      html += `
+<details class="dept-block">
+
+  <summary>
+    📁 ${dept} Department
+  </summary>
+
+  <table class="admin-table">
+
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Subjects</th>
+      </tr>
+    </thead>
+
+    <tbody>
+`;
+
+grouped[dept].forEach(t => {
+
+  const subjects =
+    (t.subjects || "")
+      .split("|")
+      .filter(Boolean)
+      .join(", ");
+
+  html += `
+    <tr>
+      <td>${t.name}</td>
+      <td>${t.email}</td>
+      <td>${subjects}</td>
+    </tr>
+  `;
+
+});
+
+html += `
+    </tbody>
+
+  </table>
+
+</details>
+`;
+
+    });
+
+  teachersTableContainer.innerHTML = html;
+
+};
+
+}
+const viewStudentsBtn =
+  document.getElementById("viewStudentsBtn");
+
+const studentsTableContainer =
+  document.getElementById("studentsTableContainer");
+
+if (viewStudentsBtn) {
+
+viewStudentsBtn.onclick = async () => {
+
+  const snap =
+    await getDocs(
+      collection(db, "student_master")
+    );
+
+  const grouped = {};
+
+  snap.forEach(docSnap => {
+
+    const s = docSnap.data();
+
+    const dept =
+      s.department || "Unknown";
+
+    const sem =
+      s.semester || "Unknown";
+
+    if (!grouped[dept])
+      grouped[dept] = {};
+
+    if (!grouped[dept][sem])
+      grouped[dept][sem] = [];
+
+    grouped[dept][sem].push(s);
+
+  });
+
+  let html = "";
+
+  Object.keys(grouped)
+    .sort()
+    .forEach(dept => {
+
+      html += `
+      <details class="dept-block">
+        <summary>
+          📁 ${dept} Department
+        </summary>
+      `;
+
+      Object.keys(grouped[dept])
+        .sort()
+        .forEach(sem => {
+
+          html += `
+          <details class="sem-block">
+            <summary>
+              Semester ${sem}
+            </summary>
+
+            <table class="admin-table">
+
+            <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+              <th>Roll No</th>
+            </tr>
+            </thead>
+
+            <tbody>
+          `;
+
+          grouped[dept][sem]
+            .forEach(s => {
+
+              html += `
+              <tr>
+                <td>${s.name}</td>
+                <td>${s.email}</td>
+                <td>${s.rollNo}</td>
+              </tr>
+              `;
+
+            });
+
+          html += `
+            </tbody>
+            </table>
+
+          </details>
+          `;
+
+        });
+
+      html += `
+      </details>
+      `;
+
+    });
+
+  studentsTableContainer.innerHTML = html;
+
+};
+
+}
   /* ================= ANNOUNCEMENT SYSTEM ================= */
   if (sendAnnounceBtn) {
     sendAnnounceBtn.onclick = async () => {

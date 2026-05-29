@@ -559,25 +559,24 @@ if (
 
     const container = document.getElementById("enrollmentStats");
 
-    const courseSnap = await getDocs(
-
-      getDocs(
-  collection(db,"courses")
-)
-
-    );
+  const courseSnap = await getDocs(
+  collection(db, "courses")
+);
 
     container.innerHTML = "";
 
     for (const c of courseSnap.docs) {
-      const courseName =
-  (c.data().course || "")
+const courseName =
+  String(c.data().course || "")
   .trim()
   .toLowerCase();
 
-if (
-  !assignedSubjects.includes(courseName)
-){
+const teacherOwnsCourse =
+  assignedSubjects.some(
+    s => s.trim().toLowerCase() === courseName
+  );
+
+if (!teacherOwnsCourse) {
   continue;
 }
 

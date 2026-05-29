@@ -45,13 +45,27 @@
   <section class="auth-section">
     <div class="auth-box">
       <h2>Login</h2>
-      <input type="email" id="email" placeholder="Email">
-      <input type="password" id="password" placeholder="Password">
+<select id="loginRole">
+  <option value="student">Student</option>
+  <option value="teacher">Teacher</option>
+</select>
+
+<input type="text" id="rollNo" placeholder="Roll Number">
+
+<input type="email" id="email" placeholder="Email">
+<input type="password" id="password" placeholder="Password">
       <div id="formMessage" class="form-message"></div>
       <button id="loginBtn" onclick="login()" class="btnlogin">Login</button>
       <p>Don't have an account? <a href="signup.html">Signup</a></p>
     </div>
   </section>
+  
+  <script>
+document.getElementById("loginRole").addEventListener("change", function() {
+  document.getElementById("rollNo").style.display =
+    this.value === "student" ? "block" : "none";
+});
+</script>
 
   <script type="module" src="js/auth.js"></script>
   <script type="module" src="js/script.js"></script>

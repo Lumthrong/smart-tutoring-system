@@ -124,7 +124,52 @@ notifications
       <h2 id="totalLectures">0</h2>
     </div>
   </div>
+<div class="card">
+   <h3>Upload Teachers</h3>
+<input
+  type="file"
+  id="teacherFile"
+  accept=".csv,text/csv">
 
+   <button id="uploadTeachersBtn">
+      Upload Teacher List
+   </button>
+</div>
+<div class="card">
+   <h3>Upload Students</h3>
+
+<input
+  type="file"
+  id="studentFile"
+  accept=".csv,text/csv">
+
+   <button id="uploadStudentsBtn">
+      Upload Student List
+   </button>
+</div>
+<div class="card">
+
+  <h3>Teacher Records</h3>
+
+  <button id="viewTeachersBtn">
+    View Teachers
+  </button>
+
+  <div id="teachersTableContainer"></div>
+
+</div>
+
+<div class="card">
+
+  <h3>Student Records</h3>
+
+  <button id="viewStudentsBtn">
+    View Students
+  </button>
+
+  <div id="studentsTableContainer"></div>
+
+</div>
   <!-- 📢 ANNOUNCEMENT PANEL -->
 <div class="card">
   <h3>Send Announcement</h3>
@@ -144,6 +189,7 @@ notifications
   <h3>Teacher Applications</h3>
   <div id="teacherApplications"></div>
 </div>
+
   <!-- 🔥 Search + Course Display -->
   <div class="card">
     <input type="text" id="searchInput" placeholder="Search course...">

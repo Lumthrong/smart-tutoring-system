@@ -44,6 +44,7 @@ function confirmDelete(message) {
 }
 let activeCourseId = null;
 let performanceChart = null;
+let assignedSubjects = [];
 
 function showMessage(text) {
 
@@ -175,17 +176,65 @@ videoPreview.classList.add("ready");
       return;
 
     }
+    (async () => {
 
-    loadMyCourses();
-    loadMyQuizzes();
+  await loadAssignedSubjects();
 
-    loadEnrolledCourses();
-    loadEnrollmentStats();
-    loadCourseDropdown();
-    loadQuizResults();
+  loadMyCourses();
+  loadMyQuizzes();
+  loadEnrollmentStats();
+  loadCourseDropdown();
+
+})();
+  });
+  
+async function loadAssignedSubjects() {
+
+  const teacherEmail =
+    auth.currentUser.email.toLowerCase();
+
+  const subjectSelect =
+    document.getElementById("subjectSelect");
+
+  subjectSelect.innerHTML =
+    '<option value="">Select Subject</option>';
+
+  const snap = await getDocs(
+    query(
+      collection(db, "subjects"),
+      where("teacherEmail", "==", teacherEmail)
+    )
+  );
+
+  snap.forEach(docSnap => {
+
+    const subject = docSnap.data();
+    assignedSubjects.push(
+  subject.subjectName.trim().toLowerCase()
+);
+
+    const option =
+      document.createElement("option");
+
+    option.value = docSnap.id;
+
+    option.textContent =
+      `Semester ${subject.semester} - ${subject.subjectName}`;
+
+    option.dataset.subject =
+      subject.subjectName;
+
+    option.dataset.department =
+      subject.department;
+
+    option.dataset.semester =
+      subject.semester;
+
+    subjectSelect.appendChild(option);
 
   });
 
+}
   /* CHAT CLOSE */
 
   if (closeBtn && chatBox) {
@@ -247,6 +296,34 @@ videoPreview.classList.add("ready");
       btn.disabled = true;
 
       const formData = new FormData(uploadForm);
+      const selected =
+  document.getElementById("subjectSelect")
+  .selectedOptions[0];
+
+if(!selected.value){
+
+  showMessage("Select a subject");
+
+  btn.classList.remove("loading");
+  btn.disabled = false;
+
+  return;
+}
+
+formData.append(
+  "department",
+  selected.dataset.department
+);
+
+formData.append(
+  "semester",
+  selected.dataset.semester
+);
+
+formData.append(
+  "course",
+  selected.dataset.subject
+);
 
 const res = await fetch("/upload", {
   method: "POST",
@@ -304,11 +381,9 @@ await addDoc(collection(db, "courses", courseId, "units"), {
   /* MY COURSES */
   function loadMyCourses() {
 
-    const q = query(
-      collection(db, "courses"),
-      where("uploadedBy", "==", auth.currentUser.uid)
-    );
-
+const q = query(
+  collection(db, "courses")
+);
     onSnapshot(q, (snapshot) => {
 
       courseContainer.innerHTML = "";
@@ -318,6 +393,16 @@ await addDoc(collection(db, "courses", courseId, "units"), {
       snapshot.forEach(docSnap => {
 
         const course = docSnap.data();
+        const courseName =
+  (course.course || "")
+  .trim()
+  .toLowerCase();
+
+if (
+  !assignedSubjects.includes(courseName)
+){
+  return;
+}
         const dept = course.department || "Others";
 
         if (!grouped[dept]) grouped[dept] = [];
@@ -476,14 +561,25 @@ await addDoc(collection(db, "courses", courseId, "units"), {
 
     const courseSnap = await getDocs(
 
-      query(collection(db, "courses"),
-        where("uploadedBy", "==", auth.currentUser.uid))
+      getDocs(
+  collection(db,"courses")
+)
 
     );
 
     container.innerHTML = "";
 
     for (const c of courseSnap.docs) {
+      const courseName =
+  (c.data().course || "")
+  .trim()
+  .toLowerCase();
+
+if (
+  !assignedSubjects.includes(courseName)
+){
+  continue;
+}
 
       const enrollSnap = await getDocs(
 
@@ -521,34 +617,29 @@ div.onclick = () => {
 
 function loadCourseDropdown() {
 
-  const select = document.getElementById("courseSelect");
+  const select =
+    document.getElementById("courseSelect");
 
-  const q = query(
-    collection(db, "courses"),
-    where("uploadedBy", "==", auth.currentUser.uid)
-  );
+  select.innerHTML =
+    "<option value=''>Select Course</option>";
 
-  onSnapshot(q, (snap) => {
+  assignedSubjects.forEach(subject => {
 
-    select.innerHTML = "<option>Select Course</option>";
+    const opt =
+      document.createElement("option");
 
-    snap.forEach(doc => {
+    opt.value = subject;
+    opt.textContent = subject;
 
-      const opt = document.createElement("option");
-
-      opt.value = doc.id;
-      opt.textContent = doc.data().course;
-
-      select.appendChild(opt);
-
-    });
+    select.appendChild(opt);
 
   });
 
-  /* KEEP THIS OUTSIDE SNAPSHOT */
-  select.addEventListener("change", (e) => {
-    loadStudentPerformance(e.target.value);
-  });
+  select.onchange = e => {
+    loadStudentPerformance(
+      e.target.value
+    );
+  };
 
 }
 

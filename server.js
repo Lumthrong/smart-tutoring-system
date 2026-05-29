@@ -414,16 +414,36 @@ app.post("/set-role", async (req, res) => {
 /* ================= COURSE UPLOAD ================= */
 
 const multiUpload = upload.fields([
-  { name: "cover", maxCount: 1 },
   { name: "pdf", maxCount: 1 },
   { name: "video", maxCount: 1 }
 ]);
 
-app.post("/upload", multiUpload, async (req, res) => {
+app.post(
+  "/upload",
+  verifyToken,
+  requireRole("teacher"),
+  multiUpload,
+  async (req, res) => {
 
   try {
 
 const { department, semester, course, unitTitle } = req.body;
+const teacherEmail =
+  req.user.email.toLowerCase();
+
+const subjectSnap = await db
+  .collection("subjects")
+  .where("teacherEmail", "==", teacherEmail)
+  .where("subjectName", "==", course)
+  .get();
+
+if (subjectSnap.empty) {
+
+  return res.status(403).json({
+    error: "Subject not assigned to teacher"
+  });
+
+}
 
     if (!req.files || !req.files.pdf)
       return res.status(400).json({ error: "PDF required" });
@@ -488,7 +508,9 @@ const courseRef = db.collection("courses").doc(course);
 await courseRef.set({
   course,
   department,
-  semester
+  semester,
+  teacherEmail,
+  uploadedBy: req.user.uid
 }, { merge: true });
 
 // add unit
@@ -496,6 +518,8 @@ await courseRef.collection("units").add({
   title: unitTitle || "Untitled Unit",
   videoURL: videoUpload ? videoUpload.secure_url : null,
   pdfURL: pdfUpload.secure_url,
+  teacherEmail,
+  uploadedBy: req.user.uid,
   createdAt: new Date()
 });
 

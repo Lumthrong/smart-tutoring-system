@@ -107,7 +107,6 @@ notifications
 
 <section class="dashboard">
 
-  <!-- 🔥 STATS -->
   <div class="stats-grid">
     <div class="card">
       <h3>Total Users</h3>
@@ -136,6 +135,20 @@ notifications
    </button>
 </div>
 <div class="card">
+
+  <h3>Upload Teacher Assignments</h3>
+
+  <input
+    type="file"
+    id="teacherAssignmentFile"
+    accept=".csv,text/csv">
+
+  <button id="uploadTeacherAssignmentsBtn">
+    Upload Assignments
+  </button>
+
+</div>
+<div class="card">
    <h3>Upload Students</h3>
 
 <input
@@ -156,6 +169,17 @@ notifications
   </button>
 
   <div id="teachersTableContainer"></div>
+
+</div>
+<div class="card">
+
+  <h3>subject view</h3>
+
+  <button id="viewSubjectsBtn">
+    View Teachers subject
+  </button>
+
+  <div id="subjectsTableContainer"></div>
 
 </div>
 

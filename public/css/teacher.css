@@ -23,6 +23,47 @@
 
   animation: fadeIn .3s ease;
 }
+
+.quiz-card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:18px;
+  margin-bottom:16px;
+  box-shadow:0 4px 12px rgba(0,0,0,.05);
+}
+
+.quiz-card h4{
+  margin-bottom:10px;
+}
+
+.aiQuestion{
+  width:100%;
+  min-height:70px;
+  border:1px solid #d1d5db;
+  border-radius:8px;
+  padding:10px;
+}
+
+.quiz-options{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:15px;
+}
+
+.quiz-option{
+  background:#f8fafc;
+  border:1px solid #dbeafe;
+  border-radius:8px;
+  padding:10px;
+}
+
+.quiz-answer{
+  margin-top:15px;
+  color:#16a34a;
+  font-weight:600;
+}
 /* ===== FLOATING UPLOAD BUTTON ===== */
 .top-actions{
   display: flex;

@@ -203,3 +203,44 @@ background:#dc2626;
     margin-left: 10px;
   }
 }
+.admin-table{
+  width:100%;
+  border-collapse:collapse;
+  margin-top:15px;
+}
+
+.admin-table th,
+.admin-table td{
+  border:1px solid #ddd;
+  padding:10px;
+  text-align:left;
+}
+
+.admin-table th{
+  background:#f4f4f4;
+}
+
+.teacher-card{
+  background:#fff;
+  border:1px solid #ddd;
+  border-radius:8px;
+  padding:12px;
+  margin:12px 0;
+}
+
+.teacher-card h4{
+  margin:0 0 8px;
+}
+
+.teacher-card p{
+  margin:4px 0;
+}
+
+.teacher-card ul{
+  margin-top:6px;
+  padding-left:20px;
+}
+
+.teacher-card li{
+  margin:3px 0;
+}

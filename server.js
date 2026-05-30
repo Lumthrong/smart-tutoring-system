@@ -1676,6 +1676,107 @@ app.post(
 
 });
 
+app.post("/validate-signup", async (req, res) => {
+
+  const {
+    role,
+    email,
+    rollNo,
+    department,
+    semester
+  } = req.body;
+
+  try {
+
+    if(role === "teacher"){
+
+      const teacherDoc = await db
+        .collection("teacher_master")
+        .doc(email.toLowerCase())
+        .get();
+
+      if(!teacherDoc.exists){
+        return res.json({
+          valid:false,
+          message:"Teacher not found"
+        });
+      }
+
+      const teacher = teacherDoc.data();
+
+if(
+  String(teacher.department).trim().toLowerCase()
+  !==
+  String(department).trim().toLowerCase()
+){
+        return res.json({
+          valid:false,
+          message:"Department mismatch"
+        });
+      }
+
+      return res.json({ valid:true });
+    }
+
+    const studentDoc = await db
+      .collection("student_master")
+      .doc(email.toLowerCase())
+      .get();
+
+    if(!studentDoc.exists){
+      return res.json({
+        valid:false,
+        message:"Student not found"
+      });
+    }
+
+    const student = studentDoc.data();
+
+if(
+  String(student.rollNo).trim().toLowerCase()
+  !==
+  String(rollNo).trim().toLowerCase()
+){
+      return res.json({
+        valid:false,
+        message:"Roll number mismatch"
+      });
+    }
+
+if(
+  String(student.department).trim().toLowerCase()
+  !==
+  String(department).trim().toLowerCase()
+){
+      return res.json({
+        valid:false,
+        message:"Department mismatch"
+      });
+    }
+
+if(
+  String(student.semester).trim()
+  !==
+  String(semester).trim()
+){
+      return res.json({
+        valid:false,
+        message:"Semester mismatch"
+      });
+    }
+
+    return res.json({ valid:true });
+
+  } catch(err){
+
+    console.error(err);
+
+    res.status(500).json({
+      valid:false
+    });
+  }
+});
+
 app.post("/validate-login", async (req, res) => {
 
   const { role, email, rollNo } = req.body;

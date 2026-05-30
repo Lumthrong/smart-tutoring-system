@@ -104,9 +104,9 @@ document.addEventListener("DOMContentLoaded", () => {
       loadAIChart(auth.currentUser.uid);
     });
     loadCourses(user.uid);
+    loadDepartmentCourses(user.uid);
     loadLearningHistory(user.uid);
     loadStats(user.uid);
-    generateRecommendations(user.uid);
     loadAvailableQuizzes(user.uid);
 
     const quizBtn = document.getElementById("globalQuizBtn");
@@ -1050,124 +1050,64 @@ unitsSnap.forEach(doc => {
   });
 
 }
-async function generateRecommendations(uid) {
+async function loadDepartmentCourses(uid) {
 
-  const container = document.getElementById("recommendedBooks");
-  if (!container) return;
-
-  /* ===== USER ACTIVITY ===== */
-
-  const activitySnap = await getDocs(
-    query(collection(db, "learning_activity"),
-      where("userId", "==", uid))
+  const userDoc = await getDoc(
+    doc(db, "users", uid)
   );
 
-  if (activitySnap.empty) {
-    container.innerHTML = "No recommendations yet.";
-    return;
-  }
+  if (!userDoc.exists()) return;
 
-  const tagScore = {};
-  const readCourses = new Set();
+  const userData = userDoc.data();
 
-  /* ===== GET TAGS FROM READ BOOKS ===== */
+const department = userData.department;
+const semester = userData.semester;
 
-  for (const activity of activitySnap.docs) {
+console.log("USER DATA:", userData);
+console.log("DEPARTMENT:", department);
+console.log("SEMESTER:", semester);
 
-    const courseId = activity.data().courseId;
-    readCourses.add(courseId);
+  const container =
+    document.getElementById("departmentCourses");
 
-    const courseDoc = await getDoc(doc(db, "courses", courseId));
-    if (!courseDoc.exists()) continue;
+  if (!container) return;
 
-    const tags = courseDoc.data().tags || [];
+container.innerHTML = `
+  <h3>${department} - Semester ${semester}</h3>
+`;
 
-    tags.forEach(tag => {
-      const t = tag.toLowerCase();
+const subjectSnap = await getDocs(
+  collection(db, "subjects")
+);
 
-      if (!tagScore[t]) tagScore[t] = 0;
-      tagScore[t]++;
-    });
+console.log("TOTAL SUBJECTS:", subjectSnap.size);
 
-  }
+subjectSnap.forEach(docSnap => {
 
-  /* ===== LOAD ALL COURSES ===== */
+    const course = docSnap.data();
 
-  const courseSnap = await getDocs(collection(db, "courses"));
+    if (
+      String(course.department).trim().toLowerCase() ===
+      String(department).trim().toLowerCase()
+      &&
+      String(course.semester).trim() ===
+      String(semester).trim()
+    ) {
 
-  const recommendations = [];
+      const div = document.createElement("div");
 
-  courseSnap.forEach(docSnap => {
+      div.className = "course-card";
 
-    const data = docSnap.data();
-    const courseId = docSnap.id;
+console.log("SUBJECT DOC:", course);
 
-    /* skip already read books */
+div.innerHTML = `
+  <h4>
+    ${course.subjectName || course.subject || docSnap.id}
+  </h4>
+`;
 
-    if (readCourses.has(courseId)) return;
-
-    const tags = (data.tags || []).map(t => t.toLowerCase());
-
-    let score = 0;
-
-    tags.forEach(tag => {
-      if (tagScore[tag]) score += tagScore[tag];
-    });
-
-    if (score > 0) {
-
-      recommendations.push({
-        id: courseId,
-        ...data,
-        score
-      });
-
+      container.appendChild(div);
     }
-
-  });
-
-  /* ===== SORT BY RELEVANCE ===== */
-
-  recommendations.sort((a, b) => b.score - a.score);
-
-  const topBooks = recommendations.slice(0, 6);
-
-  container.innerHTML = "";
-
-  const template = document.getElementById("courseCardTemplate");
-
-  topBooks.forEach(book => {
-
-    const card = template.content.cloneNode(true);
-
-    const cover = card.querySelector(".book-cover");
-    const title = card.querySelector(".course-title");
-    const semester = card.querySelector(".course-semester");
-    const pdfBtn = card.querySelector(".pdf-btn");
-    const joinBtn = card.querySelector(".join-btn");
-    const locked = card.querySelector(".locked");
-
-    title.textContent = book.course;
-    semester.textContent = "Semester " + book.semester;
-
-    if (book.coverURL) {
-      cover.src = book.coverURL;
-    } else {
-      cover.style.display = "none";
-    }
-
-    pdfBtn.href = book.pdfURL;
-
-    /* dashboard recommendations don't require join */
-    /* Hide all action elements for recommendation cards */
-
-    pdfBtn.style.display = "none";
-    joinBtn.style.display = "none";
-    locked.style.display = "none";
-    joinBtn.style.display = "none";
-    locked.style.display = "none";
-
-    container.appendChild(card);
 
   });
 

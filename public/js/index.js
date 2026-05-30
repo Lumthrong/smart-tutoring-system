@@ -66,6 +66,9 @@ document.addEventListener("DOMContentLoaded", () => {
   let joinedCourses = new Set();
   let searchTerm = "";
 
+  let userDepartment = "";
+  let userSemester = "";
+
 
 /* ================= JOIN MODAL ================= */
 
@@ -119,6 +122,31 @@ confirmBtn.onclick = async ()=>{
 onAuthStateChanged(auth, async (user) => {
 
   currentUser = user;
+
+  if(user){
+
+  const usersSnap = await getDocs(
+    query(
+      collection(db,"users"),
+      where("email","==",user.email)
+    )
+  );
+
+  if(!usersSnap.empty){
+
+    const userData = usersSnap.docs[0].data();
+
+    userDepartment =
+      String(userData.department || "")
+      .trim()
+      .toUpperCase();
+
+    userSemester =
+      String(userData.semester || "")
+      .trim();
+  }
+
+}
 
   if (user) {
 
@@ -261,10 +289,21 @@ async function loadPopularBooks(){
     counts[courseId]++;
   });
 
-  const popularCourses = allCourses
-    .filter(course => counts[course.id] > 0)
-    .sort((a,b)=>counts[b.id] - counts[a.id])
-    .slice(0,10);
+const popularCourses = allCourses
+  .filter(course =>
+
+    counts[course.id] > 0 &&
+
+    String(course.department || "")
+      .trim()
+      .toUpperCase() === userDepartment &&
+
+    String(course.semester || "")
+      .trim() === userSemester
+
+  )
+  .sort((a,b)=>counts[b.id] - counts[a.id])
+  .slice(0,10);
 
   container.innerHTML = "";
 
@@ -343,6 +382,18 @@ function renderCourses(){
   }
 
 const latestCourses = [...allCourses]
+
+.filter(course =>
+
+  String(course.department || "")
+    .trim()
+    .toUpperCase() === userDepartment &&
+
+  String(course.semester || "")
+    .trim() === userSemester
+
+)
+
 .sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt))
 .slice(0,11);
 

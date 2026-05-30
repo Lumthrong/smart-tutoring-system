@@ -260,26 +260,31 @@ if(isTeacher){
 
 }else{
 
+  const isAdminSignup =
+    email.trim().toLowerCase() ===
+    "iamrein22@gmail.com";
+
   rollNo =
     document.getElementById(
       "studentRollNo"
-    )?.value;
+    )?.value || "";
 
   department =
     document.getElementById(
       "studentDepartment"
-    )?.value;
+    )?.value || "";
 
   semester =
     document.getElementById(
       "studentSemester"
-    )?.value;
+    )?.value || "";
 
-  if(!rollNo){
+  if(!isAdminSignup && !rollNo){
     showMessage("Enter Roll Number");
     return;
   }
 }
+
 
 const validation =
   await fetch("/validate-signup",
@@ -334,10 +339,16 @@ if(!validationResult.valid){
 }
 const userCred = await createUserWithEmailAndPassword(auth, email, password);
 
-let role = isTeacher ? "teacher" : "student";
+let role;
 
-if (email === "iamrein22@gmail.com")
+if(
+  email.trim().toLowerCase() ===
+  "iamrein22@gmail.com"
+){
   role = "admin";
+}else{
+  role = isTeacher ? "teacher" : "student";
+}
 await setDoc(
  doc(db,"users",userCred.user.uid),
  {
@@ -427,19 +438,28 @@ const rollNo = document.getElementById("rollNo")?.value;
   loginBtn.innerHTML = `Logging in <span class="btn-spinner"></span>`;
 
   try {
-    const validation = await fetch("/validate-login", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json"
-  },
-  body: JSON.stringify({
-    role: roleType,
-    email,
-    rollNo
-  })
-});
+let result = { valid:true };
 
-const result = await validation.json();
+if(
+  email.trim().toLowerCase() !==
+  "iamrein22@gmail.com"
+){
+
+  const validation =
+    await fetch("/validate-login", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        role: roleType,
+        email,
+        rollNo
+      })
+    });
+
+  result = await validation.json();
+}
 
 if(!result.valid){
   showMessage("Not authorized");

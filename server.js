@@ -1478,65 +1478,25 @@ app.post(
               db.collection("teacher_master")
                 .doc(email.trim().toLowerCase());
 
-            batch.set(teacherRef, {
-              name:
-                teacher.name ||
-                teacher.Name ||
-                "",
+        batch.set(teacherRef, {
+  name:
+    teacher.name ||
+    teacher.Name ||
+    "",
 
-              email:
-                email.trim().toLowerCase(),
+  email:
+    email.trim().toLowerCase(),
 
-              department:
-                teacher.department ||
-                teacher.Department ||
-                "",
+  department:
+    teacher.department ||
+    teacher.Department ||
+    "",
 
-              semester:
-                teacher.semester ||
-                teacher.Semester ||
-                "",
+  role: "teacher",
 
-              subjects:
-                teacher.subjects ||
-                teacher.Subjects ||
-                "",
+  updatedAt: new Date()
+});
 
-              role: "teacher",
-
-              updatedAt: new Date()
-            });
-
-            const subjects =
-              (teacher.subjects ||
-               teacher.Subjects ||
-               "")
-              .split("|")
-              .filter(Boolean);
-
-            subjects.forEach(subject => {
-
-              const subjectId =
-                `${teacher.department}_${subject.trim()}`
-                  .replace(/[\/\\]/g, "_")
-                  .replace(/\s+/g, "_")
-                  .replace(/[^a-zA-Z0-9_]/g, "")
-                  .toLowerCase();
-
-              const subjectRef =
-                db.collection("subjects")
-                  .doc(subjectId);
-
-              batch.set(subjectRef, {
-                subjectName: subject.trim(),
-                department: teacher.department,
-                semester: teacher.semester,
-                teacherEmail: email.trim().toLowerCase(),
-                teacherName: teacher.name,
-                updatedAt: new Date()
-              });
-
-            });
 
           }
 
@@ -1557,6 +1517,92 @@ app.post(
 
       res.status(500).json({
         error: "Teacher upload failed"
+      });
+
+    }
+
+});
+    app.post(
+  "/admin/upload-teacher-assignments",
+  verifyToken,
+  requireRole("admin"),
+  upload.single("file"),
+  async (req, res) => {
+
+    try {
+
+      const assignments = [];
+
+      fs.createReadStream(req.file.path)
+        .pipe(csv())
+        .on("data", row => assignments.push(row))
+        .on("end", async () => {
+
+          const batch = db.batch();
+
+          const existingSubjects =
+            await db.collection("subjects").get();
+
+          existingSubjects.forEach(docSnap => {
+            batch.delete(docSnap.ref);
+          });
+
+assignments.forEach(row => {
+
+  console.log("CSV ROW:", row);
+
+  const email =
+    row.email ||
+    row.Email ||
+    row.EMAIL;
+
+  if (!email) {
+    console.log("Skipping row:", row);
+    return;
+  }
+
+  const ref =
+    db.collection("subjects").doc();
+
+  batch.set(ref, {
+
+    teacherEmail:
+      email.trim().toLowerCase(),
+
+    semester:
+      row.semester ||
+      row.Semester ||
+      "",
+
+    subjectName:
+      row.subject ||
+      row.Subject ||
+      "",
+
+    updatedAt:
+      new Date()
+
+  });
+
+});
+
+          await batch.commit();
+
+          fs.unlinkSync(req.file.path);
+
+          res.json({
+            success: true,
+            count: assignments.length
+          });
+
+        });
+
+    } catch (err) {
+
+      console.error(err);
+
+      res.status(500).json({
+        error: "Assignment upload failed"
       });
 
     }

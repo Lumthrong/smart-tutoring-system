@@ -1,5 +1,4 @@
 import { auth, db } from "./firebase.js";
-window.API = "https://smart-tutoring-system-3sk0.onrender.com";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
@@ -149,7 +148,7 @@ if(isTeacher){
 
   try {
 
-    const res = await fetch(API + "/send-otp", {
+    const res = await fetch("/send-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email })
@@ -236,7 +235,7 @@ if(isTeacher){
 
   try {
 
-    const verify = await fetch(API + "/verify-otp", {
+    const verify = await fetch("/verify-otp", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ email, otp })
@@ -249,14 +248,89 @@ if(isTeacher){
       return;
     }
 let rollNo = "";
+let department = "";
+let semester = "";
 
-if(!isTeacher){
-  rollNo = document.getElementById("studentRollNo")?.value;
+if(isTeacher){
+
+  department =
+    document.getElementById(
+      "teacherDepartment"
+    )?.value;
+
+}else{
+
+  rollNo =
+    document.getElementById(
+      "studentRollNo"
+    )?.value;
+
+  department =
+    document.getElementById(
+      "studentDepartment"
+    )?.value;
+
+  semester =
+    document.getElementById(
+      "studentSemester"
+    )?.value;
 
   if(!rollNo){
     showMessage("Enter Roll Number");
     return;
   }
+}
+
+const validation =
+  await fetch("/validate-signup",
+    {
+      method:"POST",
+      headers:{
+        "Content-Type":
+        "application/json"
+      },
+      body: JSON.stringify({
+
+        role:
+          isTeacher
+            ? "teacher"
+            : "student",
+
+        email,
+
+        rollNo:
+          rollNo || "",
+
+        department,
+
+        semester:
+          semester || ""
+
+      })
+    }
+  );
+
+const text = await validation.text();
+console.log("VALIDATE RESPONSE:", text);
+
+let validationResult;
+
+try{
+  validationResult = JSON.parse(text);
+}catch(err){
+  console.error("NOT JSON:", text);
+  showMessage("Server returned HTML instead of JSON");
+  return;
+}
+
+if(!validationResult.valid){
+
+  showMessage(
+    validationResult.message ||
+    "Not authorized"
+  );
+
+  return;
 }
 const userCred = await createUserWithEmailAndPassword(auth, email, password);
 
@@ -264,20 +338,32 @@ let role = isTeacher ? "teacher" : "student";
 
 if (email === "iamrein22@gmail.com")
   role = "admin";
+await setDoc(
+ doc(db,"users",userCred.user.uid),
+ {
+   email,
+   role,
 
-   await setDoc(doc(db, "users", userCred.user.uid), {
-  email,
-  role,
-  rollNo: rollNo || null,
-  requestedAt: new Date()
-});
+   rollNo:
+     rollNo || null,
+
+   department:
+     department || null,
+
+   semester:
+     semester || null,
+
+   requestedAt:
+     new Date()
+ }
+);
     if(teacherData){
   await setDoc(doc(db, "teacher_requests", userCred.user.uid), {
     ...teacherData,
     status: "pending",
     createdAt: new Date()
   });
-   await fetch(API + "/notify-teacher-request", {
+   await fetch("/notify-teacher-request", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(teacherData)

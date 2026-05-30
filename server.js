@@ -17,6 +17,23 @@ import axios from "axios";
 import { exec } from "child_process";
 import util from "util";
 import csv from "csv-parser";
+import { createWorker }
+from "tesseract.js";
+
+async function ocrImage(imagePath){
+
+  const worker =
+    await createWorker("eng");
+
+  const {
+    data:{ text }
+  } = await worker.recognize(imagePath);
+
+  await worker.terminate();
+
+  return text;
+
+}
 
 const execAsync = util.promisify(exec);
 
@@ -821,20 +838,30 @@ app.post("/generate-test", async (req, res) => {
       return res.status(500).json({ error: "Failed to fetch PDF from Cloudinary" });
     }
 
-    const pdfArrayBuffer = await responsePdf.arrayBuffer();
-    const pdfBuffer = Buffer.from(pdfArrayBuffer);
+const pdfArrayBuffer = await responsePdf.arrayBuffer();
+const pdfBuffer = Buffer.from(pdfArrayBuffer);
 
-    const pdfData = await pdfParse(pdfBuffer);
+/* ================= PDF PARSE ================= */
 
-    /* ================= CLEAN + SPLIT TEXT ================= */
+const pdfData = await pdfParse(pdfBuffer);
 
-    const words = pdfData.text
-      .replace(/\s+/g, " ")
-      .split(" ");
+let extractedText = pdfData.text || "";
 
-if (words.length < 300) {
-      return res.status(400).json({ error: "PDF text too small for quiz generation" });
-    }
+const words = extractedText
+  .replace(/\s+/g, " ")
+  .trim()
+  .split(" ")
+  .filter(Boolean);
+
+console.log("WORD COUNT:", words.length);
+
+if (words.length < 50) {
+
+  return res.status(400).json({
+    error: "PDF text too small for quiz generation"
+  });
+
+}
 
     /* ================= RANDOM CHUNK (AVOIDS TOKEN LIMITS) ================= */
 
@@ -967,7 +994,12 @@ ${text}
 
       await new Promise(r => setTimeout(r, 1200));
       /* FILTER BAD QUESTIONS */
-
+if(
+ !Array.isArray(q.options) ||
+ q.options.length !== 4
+){
+ continue;
+}
       if (!q.options.includes(q.answer)) {
         console.warn("Rejected question because answer not in options:", q.question);
         continue;

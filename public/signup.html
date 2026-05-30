@@ -52,6 +52,26 @@ menu
     <div id="studentForm">
 
       <input type="text" id="studentRollNo" placeholder="Roll Number" required>
+      <select id="studentDepartment" required>
+  <option value="">Select Department</option>
+  <option>CSE</option>
+  <option>ECE</option>
+  <option>AET</option>
+  <option>BT</option>
+  <option>IT</option>
+</select>
+
+<select id="studentSemester" required>
+  <option value="">Select Semester</option>
+  <option>1</option>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+  <option>6</option>
+  <option>7</option>
+  <option>8</option>
+</select>
 
       <input type="email" id="studentEmail" placeholder="Email" required>
 
@@ -71,6 +91,14 @@ menu
     <!-- ===== TEACHER FORM ===== -->
     <div id="teacherForm" style="display:none; margin-top:15px;">
       <input type="email" id="teacherEmail" placeholder="Email" required>
+      <select id="teacherDepartment" required>
+  <option value="">Select Department</option>
+  <option>CSE</option>
+  <option>ECE</option>
+  <option>AET</option>
+  <option>BT</option>
+  <option>IT</option>
+</select>
       <input type="password" id="teacherPassword" placeholder="Password" required>
       <input type="password" id="teacherConfirmPassword" placeholder="Confirm Password" required>
 

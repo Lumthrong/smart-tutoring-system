@@ -85,7 +85,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
   alert("Teacher CSV uploaded successfully");
 };
+  document
+.getElementById("uploadTeacherAssignmentsBtn")
+.onclick = async () => {
 
+  const file =
+    document.getElementById(
+      "teacherAssignmentFile"
+    ).files[0];
+
+  if (!file) {
+    alert("Select CSV");
+    return;
+  }
+
+  const formData = new FormData();
+
+  formData.append("file", file);
+
+  await fetch(
+    "/admin/upload-teacher-assignments",
+    {
+      method:"POST",
+      body:formData,
+      headers:{
+        Authorization:
+          "Bearer " +
+          await auth.currentUser.getIdToken()
+      }
+    }
+  );
+
+  alert("Assignments uploaded");
+};
 document
 .getElementById("uploadStudentsBtn")
 .onclick = async () => {
@@ -167,7 +199,7 @@ viewTeachersBtn.onclick = async () => {
       <tr>
         <th>Name</th>
         <th>Email</th>
-        <th>Subjects</th>
+        <th>Department</th>
       </tr>
     </thead>
 
@@ -176,17 +208,14 @@ viewTeachersBtn.onclick = async () => {
 
 grouped[dept].forEach(t => {
 
-  const subjects =
-    (t.subjects || "")
-      .split("|")
-      .filter(Boolean)
-      .join(", ");
+  const department =
+  t.department || "";
 
   html += `
     <tr>
       <td>${t.name}</td>
       <td>${t.email}</td>
-      <td>${subjects}</td>
+      <td>${department}</td>
     </tr>
   `;
 
@@ -313,6 +342,43 @@ viewStudentsBtn.onclick = async () => {
 };
 
 }
+document.getElementById("viewSubjectsBtn")
+.onclick = async () => {
+
+  const snap =
+    await getDocs(
+      collection(db, "subjects")
+    );
+
+  let html = `
+  <table class="admin-table">
+    <tr>
+      <th>Email</th>
+      <th>Semester</th>
+      <th>Subject</th>
+    </tr>
+  `;
+
+  snap.forEach(docSnap => {
+
+    const s = docSnap.data();
+
+    html += `
+    <tr>
+      <td>${s.teacherEmail || ""}</td>
+      <td>${s.semester || ""}</td>
+      <td>${s.subjectName || ""}</td>
+    </tr>
+    `;
+
+  });
+
+  html += "</table>";
+
+  document.getElementById(
+    "subjectsTableContainer"
+  ).innerHTML = html;
+};
   /* ================= ANNOUNCEMENT SYSTEM ================= */
   if (sendAnnounceBtn) {
     sendAnnounceBtn.onclick = async () => {

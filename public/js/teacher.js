@@ -44,6 +44,7 @@ function confirmDelete(message) {
 }
 let activeCourseId = null;
 let performanceChart = null;
+let generatedQuestions = [];
 let assignedSubjects = [];
 
 function showMessage(text) {
@@ -178,12 +179,14 @@ videoPreview.classList.add("ready");
     }
     (async () => {
 
-  await loadAssignedSubjects();
+await loadAssignedSubjects();
 
-  loadMyCourses();
-  loadMyQuizzes();
-  loadEnrollmentStats();
-  loadCourseDropdown();
+loadMyCourses();
+loadMyQuizzes();
+loadEnrollmentStats();
+loadCourseDropdown();
+
+initAIQuizGenerator();
 
 })();
   });
@@ -223,6 +226,15 @@ async function loadAssignedSubjects() {
 
     option.dataset.subject =
       subject.subjectName;
+option.dataset.courseId =
+  subject.subjectName.trim();
+    
+console.log(
+  "Subject:",
+  subject.subjectName,
+  "CourseId:",
+  option.dataset.courseId
+);
 
     option.dataset.department =
       subject.department;
@@ -231,6 +243,38 @@ async function loadAssignedSubjects() {
       subject.semester;
 
     subjectSelect.appendChild(option);
+
+    const aiSelect =
+  document.getElementById(
+    "aiSubjectSelect"
+  );
+
+if(aiSelect){
+
+  const aiOption =
+    document.createElement("option");
+
+aiOption.value =
+  option.dataset.courseId;
+
+  aiOption.textContent =
+    option.textContent;
+
+  aiOption.dataset.subject =
+    option.dataset.subject;
+
+  aiOption.dataset.courseId =
+    option.dataset.courseId;
+
+  aiOption.dataset.department =
+    option.dataset.department;
+
+  aiOption.dataset.semester =
+    option.dataset.semester;
+
+  aiSelect.appendChild(aiOption);
+
+}
 
   });
 
@@ -325,10 +369,30 @@ formData.append(
   selected.dataset.subject
 );
 
+const token =
+  await auth.currentUser.getIdToken();
+
 const res = await fetch("/upload", {
   method: "POST",
+  headers: {
+    Authorization: `Bearer ${token}`
+  },
   body: formData
 });
+if (!res.ok) {
+
+  const errorText =
+    await res.text();
+
+  console.error(
+    "UPLOAD ERROR:",
+    errorText
+  );
+
+  showMessage(errorText);
+
+  return;
+}
 
 const data = await res.json();
 
@@ -343,7 +407,7 @@ const tags = tagsInput
 
 /* ===== SAVE COURSE ===== */
 
-const courseId = data.course.trim().toLowerCase();
+const courseId = data.course.trim();
 
 const courseRef = doc(db, "courses", courseId);
 
@@ -359,12 +423,22 @@ await setDoc(courseRef, {
 }, { merge: true });
 
 /* ===== ADD UNIT ===== */
-await addDoc(collection(db, "courses", courseId, "units"), {
-  title: data.unitTitle || "Unit",
-  pdfURL: data.pdfURL,
-  videoURL: data.videoURL,
-  createdAt: new Date()
-});
+await addDoc(
+  collection(
+    db,
+    "courses",
+    courseId,
+    "units"
+  ),
+  {
+    title: data.unitTitle || "Unit",
+    pdfURL: data.pdfURL,
+    videoURL: data.videoURL,
+    uploadedBy: auth.currentUser.uid,
+    courseId: courseId,
+    createdAt: new Date()
+  }
+);
 
       btn.classList.remove("loading");
       btn.disabled = false;
@@ -379,12 +453,12 @@ await addDoc(collection(db, "courses", courseId, "units"), {
   }
 
   /* MY COURSES */
-  function loadMyCourses() {
+/* MY COURSES */
+function loadMyCourses() {
 
-const q = query(
-  collection(db, "courses")
-);
-    onSnapshot(q, (snapshot) => {
+onSnapshot(
+  collection(db, "courses"),
+  async (snapshot) => {
 
       courseContainer.innerHTML = "";
 
@@ -393,16 +467,19 @@ const q = query(
       snapshot.forEach(docSnap => {
 
         const course = docSnap.data();
+
         const courseName =
   (course.course || "")
   .trim()
   .toLowerCase();
 
-if (
-  !assignedSubjects.includes(courseName)
-){
+const teacherOwnsCourse =
+  assignedSubjects.includes(courseName);
+
+if (!teacherOwnsCourse) {
   return;
 }
+
         const dept = course.department || "Others";
 
         if (!grouped[dept]) grouped[dept] = [];
@@ -517,64 +594,27 @@ if (
 
   }
 
-  /* ENROLLED COURSES */
-
-  async function loadEnrolledCourses() {
-
-    const container = document.getElementById("enrolledCourses");
-
-    const snap = await getDocs(
-
-      query(collection(db, "enrollments"),
-        where("userId", "==", auth.currentUser.uid))
-
-    );
-
-    container.innerHTML = "";
-
-    for (const e of snap.docs) {
-
-      const courseDoc = await getDoc(doc(db, "courses", e.data().courseId));
-      if (!courseDoc.exists()) continue;
-
-      const course = courseDoc.data();
-
-      const div = document.createElement("div");
-
-      div.innerHTML = `
-<strong>${course.course}</strong>
-<br>
-<a href="${course.pdfURL}" target="_blank">Open PDF</a>
-`;
-
-      container.appendChild(div);
-
-    }
-
-  }
-
   /* ENROLLMENT STATS */
 
   async function loadEnrollmentStats() {
 
     const container = document.getElementById("enrollmentStats");
 
-  const courseSnap = await getDocs(
+const courseSnap = await getDocs(
   collection(db, "courses")
 );
 
     container.innerHTML = "";
 
     for (const c of courseSnap.docs) {
-const courseName =
-  String(c.data().course || "")
+
+      const courseName =
+  (c.data().course || "")
   .trim()
   .toLowerCase();
 
 const teacherOwnsCourse =
-  assignedSubjects.some(
-    s => s.trim().toLowerCase() === courseName
-  );
+  assignedSubjects.includes(courseName);
 
 if (!teacherOwnsCourse) {
   continue;
@@ -1172,99 +1212,405 @@ for (const quizTitle in quizzes) {
   }
 
   /* QUIZZES */
+async function loadMyQuizzes() {
 
-  function loadMyQuizzes() {
+  quizContainer.innerHTML = "";
 
-    const q = query(
-      collection(db, "quizzes"),
-      where("createdBy", "==", auth.currentUser.uid)
-    );
+  const [manualSnap, aiSnap] = await Promise.all([
+    getDocs(collection(db, "quizzes")),
+    getDocs(collection(db, "course_quiz"))
+  ]);
 
-    onSnapshot(q, async (snapshot) => {
+  const allQuizzes = [
+    ...manualSnap.docs.map(d => ({
+      id: d.id,
+      source: "quizzes",
+      ...d.data()
+    })),
+    ...aiSnap.docs.map(d => ({
+      id: d.id,
+      source: "course_quiz",
+      ...d.data()
+    }))
+  ];
 
-      quizContainer.innerHTML = "";
+  if (!allQuizzes.length) {
+    quizContainer.innerHTML =
+      "<p>No quizzes available.</p>";
+    return;
+  }
 
-      if (snapshot.empty) {
-        quizContainer.innerHTML = "<p>No quizzes created yet.</p>";
-        return;
-      }
+  allQuizzes.forEach(quiz => {
 
-      for (const quizDoc of snapshot.docs) {
+    const div = document.createElement("div");
 
-        const quiz = quizDoc.data();
-
-        let courseName = "Unknown Course";
-
-        if (quiz.courseId) {
-          const courseDoc = await getDoc(doc(db, "courses", quiz.courseId));
-          if (courseDoc.exists()) {
-            courseName = courseDoc.data().course;
-          }
-        }
-
-        const div = document.createElement("div");
-
-        div.innerHTML = `
-<p>
+    div.innerHTML = `
+      <p>
 📝 <strong>${quiz.title}</strong><br>
-<small>Course: ${courseName}</small>
+
+Course:
+${quiz.courseName || ""}
+
+<br>
+
+Unit:
+${quiz.unitTitle || "Unknown Unit"}
+
+<br>
+
+<small>
+${quiz.department || ""}
+${quiz.semester
+ ? ` | Semester ${quiz.semester}`
+ : ""}
+</small>
 </p>
 
-<button class="editQuiz">Edit</button>
-<button class="deleteQuiz">Delete</button>
+      <button class="editQuiz">
+        Edit
+      </button>
 
-<hr>
+      <button class="deleteQuiz">
+        Delete
+      </button>
+
+      <hr>
+    `;
+
+    div.querySelector(".editQuiz").onclick =
+      () => {
+
+        if (quiz.source === "quizzes") {
+          window.location =
+            "createQuiz.html?quiz=" + quiz.id;
+        } else {
+          window.location =
+            "createQuiz.html?aiQuiz=" + quiz.id;
+        }
+
+      };
+
+    div.querySelector(".deleteQuiz").onclick =
+      async () => {
+
+        const collectionName =
+          quiz.source;
+
+        await deleteDoc(
+          doc(
+            db,
+            collectionName,
+            quiz.id
+          )
+        );
+
+        showMessage("Quiz deleted");
+      };
+
+    quizContainer.appendChild(div);
+
+  });
+
+}
+
+});
+async function initAIQuizGenerator() {
+
+  document
+  .getElementById(
+    "saveAIQuizBtn"
+  )
+  .addEventListener(
+    "click",
+    saveAIQuiz
+  );
+
+  document
+  .getElementById("regenerateAIQuizBtn")
+  .addEventListener(
+    "click",
+    generateAIQuiz
+  );
+
+  const subjectSelect =
+    document.getElementById(
+      "aiSubjectSelect"
+    );
+
+  const unitSelect =
+    document.getElementById(
+      "aiUnitSelect"
+    );
+
+  subjectSelect.addEventListener(
+    "change",
+    async () => {
+
+      unitSelect.innerHTML =
+        "<option>Select Unit</option>";
+
+const courseId =
+  subjectSelect.selectedOptions[0]
+  .dataset.courseId;
+
+console.log(
+  "Selected Course:",
+  courseId
+);
+
+const units =
+  await getDocs(
+    collection(
+      db,
+      "courses",
+      courseId,
+      "units"
+    )
+  );
+
+console.log(
+  "Units Found:",
+  units.size
+);
+
+const unitsSnap = await getDocs(
+  collection(
+    db,
+    "courses",
+    courseId,
+    "units"
+  )
+);
+
+unitSelect.innerHTML =
+  "<option>Select Unit</option>";
+
+unitsSnap.forEach(doc => {
+
+  const unit = doc.data();
+
+  const opt =
+    document.createElement("option");
+
+  opt.value = unit.pdfURL;
+  opt.textContent = unit.title;
+
+  unitSelect.appendChild(opt);
+
+});
+
+    }
+  );
+
+  document
+    .getElementById(
+      "generateAIQuizBtn"
+    )
+    .addEventListener(
+      "click",
+      generateAIQuiz
+    );
+
+}
+async function generateAIQuiz() {
+
+  const pdfURL =
+    document.getElementById(
+      "aiUnitSelect"
+    ).value;
+
+  if(!pdfURL){
+    showMessage(
+      "Select a unit"
+    );
+    return;
+  }
+
+  const res =
+    await fetch(
+      "/generate-test",
+      {
+        method:"POST",
+        headers:{
+          "Content-Type":
+            "application/json"
+        },
+        body:JSON.stringify({
+          pdfURL
+        })
+      }
+    );
+
+const data = await res.json();
+
+console.log("AI RESPONSE:", data);
+
+if (!res.ok) {
+
+  showMessage(
+    data.error || "Quiz generation failed"
+  );
+
+  return;
+}
+
+if (
+  !data.questions ||
+  !Array.isArray(data.questions)
+) {
+
+  showMessage(
+    "No questions generated"
+  );
+
+  console.error(data);
+
+  return;
+}
+
+const preview =
+  document.getElementById(
+    "generatedQuizPreview"
+  );
+
+preview.innerHTML = "";
+
+generatedQuestions = data.questions;
+data.questions.forEach(
+    (q,index)=>{
+
+preview.innerHTML += `
+<div class="quiz-card">
+
+<h4>Q${index+1}</h4>
+
+<textarea
+class="aiQuestion"
+data-index="${index}"
+>${q.question}</textarea>
+
+<div class="quiz-options">
+
+${q.options.map(opt => `
+<div class="quiz-option">
+${opt}
+</div>
+`).join("")}
+
+</div>
+
+<div class="quiz-answer">
+Answer: ${q.answer}
+</div>
+
+</div>
 `;
 
-        div.querySelector(".editQuiz").onclick = () => {
-          window.location = "createQuiz.html?quiz=" + quizDoc.id;
-        };
+    }
+  );
 
-        div.querySelector(".deleteQuiz").onclick = async () => {
+}
+async function saveAIQuiz() {
 
-          if (!(await confirmDelete("Delete this quiz?"))) return;
+  if (!generatedQuestions.length) {
 
-          try {
+    showMessage(
+      "Generate a quiz first"
+    );
 
-            const questionQuery = query(
-              collection(db, "quiz_questions"),
-              where("quizId", "==", quizDoc.id)
-            );
+    return;
+  }
 
-            const questions = await getDocs(questionQuery);
+  const selected =
+    document.getElementById(
+      "aiSubjectSelect"
+    ).selectedOptions[0];
 
-            for (const q of questions.docs) {
-              await deleteDoc(q.ref);
-            }
+  const department =
+    selected.dataset.department;
 
-            const resultQuery = query(
-              collection(db, "quiz_results"),
-              where("quizId", "==", quizDoc.id)
-            );
+  const semester =
+    selected.dataset.semester;
 
-            const results = await getDocs(resultQuery);
+  const courseId =
+    selected.dataset.courseId;
+    const courseName =
+  selected.dataset.subject;
 
-            for (const r of results.docs) {
-              await deleteDoc(r.ref);
-            }
+  const unitSelect =
+  document.getElementById(
+    "aiUnitSelect"
+  );
 
-            await deleteDoc(doc(db, "quizzes", quizDoc.id));
+const unitTitle =
+  unitSelect.selectedOptions[0]
+  ?.textContent || "";
 
-            showMessage("Quiz deleted");
+const pdfURL =
+  unitSelect.value;
 
-          } catch (err) {
-            console.error(err);
-            showMessage("Delete failed");
-          }
+const quizRef = await addDoc(
+ collection(db,"course_quiz"),
+{
+   title: `${courseName} - ${unitTitle}`,
 
-        };
+   courseId,
+   courseName,
 
-        quizContainer.appendChild(div);
+   unitTitle,
+   pdfURL,
 
+   department,
+   semester,
+
+   createdBy: auth.currentUser.uid,
+   createdAt: new Date()
+}
+);
+
+  for (
+    let i = 0;
+    i < generatedQuestions.length;
+    i++
+  ) {
+
+    const q =
+      generatedQuestions[i];
+
+    const editedQuestion =
+      document.querySelectorAll(
+        ".aiQuestion"
+      )[i].value;
+
+    await addDoc(
+collection(
+  db,
+  "course_quiz_questions"
+),
+      {
+        quizId:
+          quizRef.id,
+
+        courseId,
+
+        question:
+          editedQuestion,
+
+        options:
+          q.options,
+
+        answer:
+          q.answer,
+
+        explanation:
+          q.explanation || ""
       }
-
-    });
+    );
 
   }
 
-});
+  showMessage(
+    "Quiz Saved"
+  );
+
+}

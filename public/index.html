@@ -29,75 +29,49 @@
     </div>
 
     <a href="index.html"><span class="material-symbols-outlined">home
-</span> Home</a>
+      </span> Home</a>
 
     <!-- PROFILE DROPDOWN -->
     <div class="profile-wrapper">
       <div class="profile-toggle" id="profileToggle"><span class="material-symbols-outlined">
-account_circle
-</span>
-      Profile ▾
+          account_circle
+        </span>
+        Profile ▾
       </div>
       <div class="profile-dropdown" id="profileDropdown">
         <a href="dashboard.html" id="dashboardLink"><span class="material-symbols-outlined">
-dashboard
-</span> Dashboard</a>
+            dashboard
+          </span> Dashboard</a>
         <a href="/accsettings.html"><span class="material-symbols-outlined">
-settings
-</span> Profile Settings</a>
+            settings
+          </span> Profile Settings</a>
         <a href="#" id="logoutLink"><span class="material-symbols-outlined">
-logout
-</span> Logout</a>
+            logout
+          </span> Logout</a>
       </div>
     </div>
     <div class="book-wrapper">
-      <div class="book-toggle" id="bookToggle"> <span class="material-symbols-outlined">
-newsstand
-</span>
-        Books ▾
-      </div>
-      <div class="book-dropdown" id="bookDropdown">
-        <a href="/department.html?dept=COMPUTER SCIENCE">
-          Computer Science
-        </a>
-        <a href="/department.html?dept=MECHANICAL">
-          Mechanical Engineering
-        </a>
-        <a href="/department.html?dept=CIVIL">
-          Civil Engineering
-        </a>
-        <a href="/department.html?dept=ELECTRICAL">
-          Electrical Engineering
-        </a>
-        <a href="/department.html?dept=GENERAL KNOWLEDGE">
-          General Knowledge
-        </a>
-        <a href="/department.html?dept=OTHERS">
-          Others
-        </a>
-      </div>
+
     </div>
     <div class="footer">
+      <a href="department.html"><span class="material-symbols-outlined">newsstand</span>Department</a>
       <a href="about.html"><span class="material-symbols-outlined">
-info
-</span> About</a>
-  <a href="teacher_request.html"><span class="material-symbols-outlined">
-contract_edit
-</span> Request Access</a>
+          info
+        </span> About</a>
     </div>
   </div>
   <div class="overlay" id="overlay"></div>
 
   <header>
     <button class="menu-btn" id="menuBtn"><span class="material-symbols-outlined">
-menu
-</span></button>
+        menu
+      </span></button>
     <h1>Home</h1>
 
     <div class="notify" id="notifyBell">
       <span class="material-symbols-outlined">
-notifications
-</span>
+        notifications
+      </span>
       <span id="notifyCount">0</span>
       <div id="notificationPanel" class="notify-panel">
         <div class="notify-header">
@@ -111,13 +85,13 @@ notifications
   <section class="hero">
     <div class="hero-slider">
       <img
-        src="https://res.cloudinary.com/df0vciznk/image/upload/v1773073276/file_00000000232c7208ae8fb1150ba5c43c_exbqb3.png"
+        src="https://res.cloudinary.com/df0vciznk/image/upload/v1780259425/file_00000000232c7208ae8fb1150ba5c43c_scyyxo.png"
         class="hero-slide active">
       <img
-        src="https://res.cloudinary.com/df0vciznk/image/upload/v1773075049/file_000000006e3871fa9b4a46848a3b29af_u1bh7v.png"
+        src="https://res.cloudinary.com/df0vciznk/image/upload/v1780259424/file_00000000e8f071faa0da7a8c743d2aa1_saalil.png"
         class="hero-slide">
       <img
-        src="https://res.cloudinary.com/df0vciznk/image/upload/v1773075216/file_00000000e8f071faa0da7a8c743d2aa1_klkkk4.png"
+        src="https://res.cloudinary.com/df0vciznk/image/upload/v1780259422/file_000000006e3871fa9b4a46848a3b29af_aid4xs.png"
         class="hero-slide">
     </div>
 
@@ -125,94 +99,139 @@ notifications
 
     <div class="hero-content">
       <h2>Learn Smarter. Study Better.</h2>
-      <p>Access books, quizzes and AI-powered learning tools.</p>
+      <p>Access courses, Track Progress, quizzes and AI-powered learning tools.</p>
       <a href="#recentUploads" id="getStartedBtn" class="btn-primary">Get Started</a>
     </div>
-
   </section>
 
-<section class="search">
-  <div class="search-box">
+  <section class="about-system" id="intro">
 
-    <i class="fa-solid fa-magnifying-glass"></i>
-
-    <input type="text"
-           id="courseSearch"
-           placeholder="Search course..."
-           class="course-search" />
-
-    <!-- SEARCH DROPDOWN -->
-    <div id="searchDropdown" class="search-dropdown"></div>
-
-  </div>
-</section>
-
-<section class="books" id="popularBooksSection">
-
-  <div class="dept-header">
-
-    <h3 class="dept-title">
-      <span class="material-symbols-outlined">local_fire_department</span>
-      Popular Books
-    </h3>
-
-    <a class="show-more" href="popular.html">
-      Show More
-    </a>
-
+  <div class="section-header">
+    <h2>What is Smart Tutoring System?</h2>
+    <p>
+      A modern AI-powered learning platform designed to improve teaching,
+      learning, assessment, and academic performance.
+    </p>
   </div>
 
-  <div class="dept-slider" id="popularBooks"></div>
+  <div class="about-grid">
 
-</section>
-
-<section class="books" id="recentUploads">
-
-    <span class="material-symbols-outlined">
-newsstand
-</span><h2>Recent Uploads </h2>
-
-    <div id="departmentSections"></div>
-
-    <!-- COURSE CARD TEMPLATE -->
-    <template id="courseCardTemplate">
-
-      <div class="book-card">
-
-        <img class="book-cover">
-
-        <div class="card-info">
-          <h3 class="course-title"></h3>
-          <p class="course-semester"></p>
-        </div>
-
-        <a class="pdf-btn" target="_blank">View</a>
-
-        <div class="locked">
-          🔒 Join to access materials
-        </div>
-        <button class="join-btn"></button>
-
-      </div>
-
-    </template>
-    <div id="joinModal" class="join-modal">
-      <div class="join-modal-box">
-
-        <h3>Join Course</h3>
-
-        <p id="joinCourseName"></p>
-
-        <div class="join-actions">
-          <button id="cancelJoin" class="cancel-btn">Cancel</button>
-          <button id="confirmJoin" class="confirm-btn">Join</button>
-        </div>
-
-      </div>
+    <div class="about-card">
+      <span class="material-symbols-outlined">school</span>
+      <h3>Personalized Learning</h3>
+      <p>
+        Receive course-specific learning materials, generate quiz, notes.
+      </p>
     </div>
-    <div id="systemMessage"></div>
-  </section>
 
+    <div class="about-card">
+      <span class="material-symbols-outlined">psychology</span>
+      <h3>AI-Powered Assistance</h3>
+      <p>
+        Artificial Intelligence automatically generates quizzes, summaries,
+        transcripts, and study notes from uploaded course materials.
+      </p>
+    </div>
+
+    <div class="about-card">
+      <span class="material-symbols-outlined">menu_book</span>
+      <h3>Digital Learning Resources</h3>
+      <p>
+        Teachers can upload PDFs, video lectures, and course units, allowing
+        students to access learning resources anytime.
+      </p>
+    </div>
+
+    <div class="about-card">
+      <span class="material-symbols-outlined">analytics</span>
+      <h3>Performance Analytics</h3>
+      <p>
+        Track student engagement, quiz performance, and learning progress
+        through intelligent analytics and reports.
+      </p>
+    </div>
+
+  </div>
+
+</section>
+
+<section class="features-section">
+
+  <div class="section-header">
+    <h2>Key Features</h2>
+  </div>
+
+  <div class="features-grid">
+
+    <div class="feature-box">
+      <h3>Course Management</h3>
+      <p>Create and organize courses, subjects, and learning units.</p>
+    </div>
+
+    <div class="feature-box">
+      <h3>AI Quiz Generation</h3>
+      <p>Generate quizzes automatically from uploaded PDFs.</p>
+    </div>
+
+    <div class="feature-box">
+      <h3>Lecture Uploads</h3>
+      <p>Upload videos and study materials for students.</p>
+    </div>
+
+    <div class="feature-box">
+      <h3>Smart Notes</h3>
+      <p>Convert lecture transcripts into concise revision notes.</p>
+    </div>
+
+    <div class="feature-box">
+      <h3>Progress Tracking</h3>
+      <p>Monitor academic growth and learning outcomes.</p>
+    </div>
+
+    <div class="feature-box">
+      <h3>Secure Access</h3>
+      <p>Role-based authentication for students, teachers, and administrators.</p>
+    </div>
+
+  </div>
+
+</section>
+
+<section class="workflow-section">
+
+  <div class="section-header">
+    <h2>How It Works</h2>
+  </div>
+
+  <div class="workflow">
+
+    <div class="step">
+      <div class="step-number">1</div>
+      <h3>Teacher Uploads Content</h3>
+      <p>Course materials, PDFs, and video lectures are uploaded.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-number">2</div>
+      <h3>AI Processes Materials</h3>
+      <p>AI creates summaries, quizzes, transcripts, and notes.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-number">3</div>
+      <h3>Students Learn</h3>
+      <p>Students access resources and complete assessments.</p>
+    </div>
+
+    <div class="step">
+      <div class="step-number">4</div>
+      <h3>Performance Analysis</h3>
+      <p>Progress and learning outcomes are continuously tracked.</p>
+    </div>
+
+  </div>
+
+</section>
   <script type="module" src="js/script.js"></script>
   <script type="module" src="js/index.js"></script>
   <script type="module" src="js/auth.js"></script>

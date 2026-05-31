@@ -9,9 +9,9 @@
 </head>
 <body>
 
-<div class="sidebar" id="sidebar">
+  <div class="sidebar" id="sidebar">
 
-  <!-- USER MINI HEADER -->
+    <!-- USER MINI HEADER -->
     <div class="profile-mini">
       <div class="avatar-circle">
         <img id="miniProfileImg" src="" alt="Avatar">
@@ -22,21 +22,61 @@
         <small id="profileEmail"></small>
       </div>
     </div>
-  <a href="index.html"><span class="material-symbols-outlined">home
-</span> Home</a>
-  <a href="dashboard.html"><span class="material-symbols-outlined">
-dashboard
-</span> Dashboard</a>
-</div>
 
-<div class="overlay" id="overlay"></div>
+    <a href="index.html"><span class="material-symbols-outlined">home
+      </span> Home</a>
 
-<header>
-  <button class="menu-btn" id="menuBtn"><span class="material-symbols-outlined">
-menu
-</span></button>
-  <h1>Signup</h1>
-</header>
+    <!-- PROFILE DROPDOWN -->
+    <div class="profile-wrapper">
+      <div class="profile-toggle" id="profileToggle"><span class="material-symbols-outlined">
+          account_circle
+        </span>
+        Profile ▾
+      </div>
+      <div class="profile-dropdown" id="profileDropdown">
+        <a href="dashboard.html" id="dashboardLink"><span class="material-symbols-outlined">
+            dashboard
+          </span> Dashboard</a>
+        <a href="/accsettings.html"><span class="material-symbols-outlined">
+            settings
+          </span> Profile Settings</a>
+        <a href="#" id="logoutLink"><span class="material-symbols-outlined">
+            logout
+          </span> Logout</a>
+      </div>
+    </div>
+    <div class="book-wrapper">
+
+    </div>
+    <div class="footer">
+      <a href="department.html"><span class="material-symbols-outlined">newsstand</span>Department</a>
+      <a href="about.html"><span class="material-symbols-outlined">
+          info
+        </span> About</a>
+    </div>
+  </div>
+  <div class="overlay" id="overlay"></div>
+
+  <header>
+    <button class="menu-btn" id="menuBtn"><span class="material-symbols-outlined">
+        menu
+      </span></button>
+    <h1>Home</h1>
+
+    <div class="notify" id="notifyBell">
+      <span class="material-symbols-outlined">
+        notifications
+      </span>
+      <span id="notifyCount">0</span>
+      <div id="notificationPanel" class="notify-panel">
+        <div class="notify-header">
+          Notifications
+        </div>
+
+        <div id="notificationList"></div>
+      </div>
+    </div>
+  </header>
 
 <section class="auth-section">
   <div class="auth-box">

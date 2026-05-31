@@ -5,7 +5,7 @@
   background:#fff;
   border-radius:12px;
   padding:20px;
-  margin:20px 0;
+  margin:10px 0;
   box-shadow:0 2px 8px rgba(0,0,0,0.08);
 }
 
@@ -24,7 +24,6 @@
   background:#f8fafc;
   border-left:4px solid #2563eb;
   border-radius:8px;
-  font-size:15px;
   font-weight:600;
   color:#111827;
   transition:all .2s ease;
@@ -42,10 +41,10 @@
   padding:30px 25px;
   display:flex;
   flex-direction:column;
-  gap:25px;
+  gap:10px;
 }
 .dashboard-user {
-  margin-bottom: 12px;
+  margin-bottom: 8px;
   padding: 8px 4px;
 }
 
@@ -55,7 +54,7 @@
   color: #333;
 }
 .dashboard-user {
-  margin-bottom: 16px;
+  margin-bottom: 10px;
 }
 
 /* CARD */
@@ -222,7 +221,7 @@ background:rgba(0, 0, 0, 0.45);
 .stats-grid{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-  gap:20px;
+  gap:10px;
 }
 
 .stat-card{

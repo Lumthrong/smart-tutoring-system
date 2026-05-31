@@ -404,69 +404,6 @@ header h1 {
   color: white;
 }
 
-/* ================= BOOKS DROPDOWN ================= */
-
-.book-wrapper {
-  margin-top: 5px;
-}
-
-/* toggle button */
-
-.book-toggle {
-  padding: 14px 20px;
-  cursor: pointer;
-  font-size: 14px;
-  color: #ccc;
-  transition: all .25s ease;
-}
-
-.book-toggle:hover {
-  background: rgba(255, 255, 255, 0.08);
-  padding-left: 25px;
-  color: white;
-}
-
-/* dropdown container */
-
-.book-dropdown {
-
-  max-height: 0;
-  overflow: hidden;
-
-  display: flex;
-  flex-direction: column;
-
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(12px);
-
-  transition: max-height .35s ease;
-
-}
-
-/* dropdown open */
-
-.book-dropdown.show {
-  max-height: 400px;
-}
-
-/* dropdown links */
-
-.book-dropdown a {
-  padding: 12px 30px;
-  font-size: 13px;
-  color: #aaa;
-  text-decoration: none;
-  transition: all .25s ease;
-}
-
-/* hover animation */
-
-.book-dropdown a:hover {
-  background: rgba(255, 255, 255, 0.08);
-  color: white;
-  padding-left: 35px;
-}
-
 /* ================= QUIZ ================= */
 
 .question-block {

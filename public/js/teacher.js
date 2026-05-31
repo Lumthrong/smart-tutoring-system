@@ -185,7 +185,7 @@ loadMyCourses();
 loadMyQuizzes();
 loadEnrollmentStats();
 loadCourseDropdown();
-
+loadQuizResults();
 initAIQuizGenerator();
 
 })();
@@ -396,14 +396,6 @@ if (!res.ok) {
 
 const data = await res.json();
 
-/* ===== READ TAGS ===== */
-
-const tagsInput = uploadForm.tags.value || "";
-
-const tags = tagsInput
-  .split(",")
-  .map(tag => tag.trim().toLowerCase())
-  .filter(tag => tag.length > 0);
 
 /* ===== SAVE COURSE ===== */
 
@@ -416,7 +408,6 @@ await setDoc(courseRef, {
   department: data.department,
   semester: data.semester,
   course: data.course,
-  tags: tags,
   coverURL: data.coverURL,
   uploadedBy: auth.currentUser.uid,
   createdAt: new Date()
@@ -464,9 +455,9 @@ onSnapshot(
 
       const grouped = {};
 
-      snapshot.forEach(docSnap => {
+     for (const docSnap of snapshot.docs) {
 
-        const course = docSnap.data();
+  const course = docSnap.data();
 
         const courseName =
   (course.course || "")
@@ -477,10 +468,73 @@ const teacherOwnsCourse =
   assignedSubjects.includes(courseName);
 
 if (!teacherOwnsCourse) {
-  return;
+  continue;
 }
 
-        const dept = course.department || "Others";
+       let dept = "Others";
+
+if (course.uploadedBy) {
+
+  const userSnap = await getDoc(
+    doc(db, "users", course.uploadedBy)
+  );
+
+  if (userSnap.exists()) {
+
+    const teacherEmail =
+      userSnap.data().email
+        .trim()
+        .toLowerCase();
+
+    const subjectSnap = await getDocs(
+      query(
+        collection(db, "subjects"),
+        where(
+          "teacherEmail",
+          "==",
+          teacherEmail
+        )
+      )
+    );
+
+for (const docSnap of subjectSnap.docs) {
+
+  const subject = docSnap.data();
+
+  if (
+    subject.subjectName
+      ?.trim()
+      .toLowerCase()
+    ===
+    course.course
+      ?.trim()
+      .toLowerCase()
+  ) {
+
+    const teacherSnap = await getDoc(
+      doc(
+        db,
+        "teacher_master",
+        teacherEmail
+      )
+    );
+
+    if (teacherSnap.exists()) {
+
+      dept =
+        teacherSnap.data().department ||
+        "Others";
+
+    }
+
+    break;
+  }
+
+}
+
+  }
+
+}
 
         if (!grouped[dept]) grouped[dept] = [];
 
@@ -489,7 +543,7 @@ if (!teacherOwnsCourse) {
           ...course
         });
 
-      });
+      }
 
       for (const dept in grouped) {
 
@@ -600,16 +654,23 @@ if (!teacherOwnsCourse) {
 
     const container = document.getElementById("enrollmentStats");
 
-const courseSnap = await getDocs(
-  collection(db, "courses")
+const subjectSnap = await getDocs(
+  query(
+    collection(db, "subjects"),
+    where(
+      "teacherEmail",
+      "==",
+      auth.currentUser.email.toLowerCase()
+    )
+  )
 );
 
     container.innerHTML = "";
 
-    for (const c of courseSnap.docs) {
+    for (const c of subjectSnap.docs) {
 
-      const courseName =
-  (c.data().course || "")
+const courseName =
+  (c.data().subjectName || "")
   .trim()
   .toLowerCase();
 
@@ -620,12 +681,21 @@ if (!teacherOwnsCourse) {
   continue;
 }
 
-      const enrollSnap = await getDocs(
+const subjectData = c.data();
+console.log("SUBJECT DATA:", subjectData);
 
-        query(collection(db, "enrollments"),
-          where("courseId", "==", c.id))
-
-      );
+console.log("COURSE DEPARTMENT:", subjectData.department);
+console.log("SUBJECT SEMESTER:", subjectData.semester);
+const studentSnap = await getDocs(
+  query(
+    collection(db, "student_master"),
+    where(
+      "semester",
+      "==",
+      subjectData.semester
+    )
+  )
+);
 
       const div = document.createElement("div");
 
@@ -635,15 +705,17 @@ if (!teacherOwnsCourse) {
 
 div.innerHTML = `
 <div>
-  <div class="enrollment-course">${c.data().course}</div>
+ <div class="enrollment-course">${subjectData.subjectName}</div>
   <div class="enrollment-label">Students Enrolled</div>
 </div>
 
-<div class="enrollment-count">${enrollSnap.size}</div>
+<div class="enrollment-count">${studentSnap.size}</div>
 `;
 
 div.onclick = () => {
-  window.location = `courseStudents.html?courseId=${c.id}`;
+window.location =
+  `courseStudents.html?courseId=${encodeURIComponent(subjectData.subjectName)}`
+  + `&semester=${subjectData.semester}`;
 };
 
       container.appendChild(div);
@@ -705,28 +777,55 @@ function loadCourseDropdown() {
 
       const quiz = quizSnap.data();
 
-      if (quiz.courseId !== courseId) continue;
+     if (
+  String(quiz.courseId).trim().toLowerCase() !==
+  String(courseId).trim().toLowerCase()
+) {
+  continue;
+}
 
       let studentName = "Student";
 
-      if (data.userId) {
+if (data.userId) {
 
-        const userSnap = await getDoc(doc(db, "users", data.userId));
+  const userSnap = await getDoc(
+    doc(db, "users", data.userId)
+  );
 
-        if (userSnap.exists()) {
+  if (userSnap.exists()) {
 
-          const user = userSnap.data();
+    const user = userSnap.data();
 
-          studentName =
-            user.firstName ||
-            user.name ||
-            user.fullName ||
-            user.email ||
-            "Student";
+    const email =
+      String(user.email || "")
+        .trim()
+        .toLowerCase();
 
-        }
+    const studentMasterSnap =
+      await getDoc(
+        doc(db, "student_master", email)
+      );
 
-      }
+    if (studentMasterSnap.exists()) {
+
+      studentName =
+        studentMasterSnap.data().name ||
+        user.firstName ||
+        user.email ||
+        "Student";
+
+    } else {
+
+      studentName =
+        user.firstName ||
+        user.email ||
+        "Student";
+
+    }
+
+  }
+
+}
 
       if (!studentScores[data.userId]) {
         studentScores[data.userId] = [];
@@ -913,7 +1012,12 @@ ${lowName} (${lowScore}%)
 
       const quiz = quizSnap.data();
 
-      if (quiz.courseId !== courseId) continue;
+      if (
+  String(quiz.courseId).trim().toLowerCase() !==
+  String(courseId).trim().toLowerCase()
+) {
+  continue;
+}
 
       const date = data.submittedAt.toDate();
 
@@ -1034,26 +1138,53 @@ ${lowName} (${lowScore}%)
 
       const data = resultDoc.data();
 
-      let studentName = "Unknown Student";
       let courseName = "Unknown Course";
       let department = "Others";
       let submitTime = "Unknown time";
 
-      /* FETCH USER */
+     let studentName = "Student";
 
-      if (data.userId) {
-        const userSnap = await getDoc(doc(db, "users", data.userId));
+if (data.userId) {
 
-        if (userSnap.exists()) {
-          const user = userSnap.data();
-          studentName =
-            user.firstName ||
-            user.name ||
-            user.fullName ||
-            user.email ||
-            "Student";
-        }
-      }
+  const userSnap =
+    await getDoc(
+      doc(db, "users", data.userId)
+    );
+
+  if (userSnap.exists()) {
+
+    const user = userSnap.data();
+
+    const email =
+      String(user.email || "")
+        .trim()
+        .toLowerCase();
+
+    const studentSnap =
+      await getDoc(
+        doc(
+          db,
+          "student_master",
+          email
+        )
+      );
+
+    if (studentSnap.exists()) {
+
+      studentName =
+        studentSnap.data().name ||
+        user.email;
+
+    } else {
+
+      studentName =
+        user.email;
+
+    }
+
+  }
+
+}
 
       /* FETCH QUIZ → COURSE */
 
@@ -1069,16 +1200,49 @@ if (data.quizId) {
 
     quizTitle = quiz.title || "Untitled Quiz";  // ✅ assign here
 
-    const courseSnap = await getDoc(doc(db, "courses", quiz.courseId));
+courseName = quiz.courseId || quiz.courseName;
 
-    if (courseSnap.exists()) {
+const subjectsSnap =
+  await getDocs(
+    collection(db, "subjects")
+  );
 
-      const course = courseSnap.data();
+for (const docSnap of subjectsSnap.docs) {
 
-      courseName = course.course;
-      department = course.department || "Others";
+  const subject =
+    docSnap.data();
+
+  if (
+    String(subject.subjectName)
+      .trim()
+      .toLowerCase()
+    ===
+    String(courseName)
+      .trim()
+      .toLowerCase()
+  ) {
+
+    const teacherDoc =
+      await getDoc(
+        doc(
+          db,
+          "teacher_master",
+          subject.teacherEmail
+        )
+      );
+
+    if (teacherDoc.exists()) {
+
+      department =
+        teacherDoc.data().department ||
+        "Others";
 
     }
+
+    break;
+  }
+
+}
 
   }
 
@@ -1180,9 +1344,9 @@ for (const quizTitle in quizzes) {
     const div = document.createElement("div");
     div.className = "result-item";
 
-    div.innerHTML = `
+div.innerHTML = `
 <span>${r.studentName}</span>
-<span class="result-score">${r.score}%</span>
+<span class="result-score">${r.score}</span>
 <span>${r.submitTime}</span>
 `;
 
@@ -1216,10 +1380,10 @@ async function loadMyQuizzes() {
 
   quizContainer.innerHTML = "";
 
-  const [manualSnap, aiSnap] = await Promise.all([
-    getDocs(collection(db, "quizzes")),
-    getDocs(collection(db, "course_quiz"))
-  ]);
+const [manualSnap, aiSnap] = await Promise.all([
+  getDocs(collection(db, "quizzes")),
+  getDocs(collection(db, "course_quiz"))
+]);
 
   const allQuizzes = [
     ...manualSnap.docs.map(d => ({
@@ -1241,6 +1405,22 @@ async function loadMyQuizzes() {
   }
 
   allQuizzes.forEach(quiz => {
+    const courseName =
+  String(
+    quiz.courseName ||
+    quiz.courseId ||
+    ""
+  )
+  .trim()
+  .toLowerCase();
+
+if (
+  !assignedSubjects.includes(
+    courseName
+  )
+) {
+  return;
+}
 
     const div = document.createElement("div");
 
@@ -1249,12 +1429,12 @@ async function loadMyQuizzes() {
 📝 <strong>${quiz.title}</strong><br>
 
 Course:
-${quiz.courseName || ""}
+${quiz.courseName || quiz.courseId || "Unknown Course"}
 
 <br>
 
 Unit:
-${quiz.unitTitle || "Unknown Unit"}
+${quiz.unitTitle || "Manual Quiz"}
 
 <br>
 
@@ -1562,6 +1742,9 @@ const quizRef = await addDoc(
 
    department,
    semester,
+
+   teacherEmail:
+  auth.currentUser.email.toLowerCase(),
 
    createdBy: auth.currentUser.uid,
    createdAt: new Date()

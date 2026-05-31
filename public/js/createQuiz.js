@@ -88,6 +88,8 @@ window.saveQuiz=async function(){
       courseId,
       title,
       timeLimit,
+      teacherEmail:
+  auth.currentUser.email.toLowerCase(),
       createdBy:auth.currentUser.uid,
       createdAt:new Date()
     });

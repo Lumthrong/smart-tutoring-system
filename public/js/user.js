@@ -65,12 +65,30 @@ document.addEventListener("DOMContentLoaded", () => {
     const avatarLetter = document.getElementById("dashAvatarLetter");
     const profileImg = document.getElementById("dashProfileImg");
 
-    const name = userData?.firstName || user.displayName || user.email || "User";
+   /* ===== FETCH NAME FROM student_master ===== */
+let studentName = null;
 
-    /* ===== NAME ===== */
-    if (dashName) {
-      dashName.innerText = name;
-    }
+const studentSnap = await getDocs(
+  query(
+    collection(db, "student_master"),
+    where("email", "==", user.email)
+  )
+);
+
+if (!studentSnap.empty) {
+  studentName = studentSnap.docs[0].data().name;
+}
+
+const name =
+  studentName ||
+  userData?.firstName ||
+  user.displayName ||
+  user.email ||
+  "User";
+
+if (dashName) {
+  dashName.innerText = name;
+}
 
     /* ===== 🔥 USE FIREBASE AUTH photoURL ===== */
     /* ===== FETCH IMAGE FROM FIRESTORE (CLOUDINARY) ===== */
@@ -157,10 +175,17 @@ function generateVTT(segments) {
 }
 /* ================= LOAD COURSES ================= */
 async function loadCourses(uid) {
-  const enrollQuery = query(
-    collection(db, "enrollments"),
-    where("userId", "==", uid)
+
+  const userDoc = await getDoc(
+    doc(db, "users", uid)
   );
+
+  if (!userDoc.exists()) return;
+
+  const userData = userDoc.data();
+
+  const department = userData.department;
+  const semester = userData.semester;
 
   const enrolledDiv = document.getElementById("enrolledCourses");
   const courseSelect = document.getElementById("courseSelect");
@@ -195,36 +220,57 @@ unitsSnap.forEach(doc => {
 
 });
 
-  onSnapshot(enrollQuery, async (snapshot) => {
+const snapshot = await getDocs(
+  query(
+    collection(db, "subjects"),
+    where("semester", "==", semester)
+  )
+);
 
-    enrolledDiv.innerHTML = "";
-    courseSelect.innerHTML = "";
-    courseChartSelect.innerHTML = "";
-    aiChartSelect.innerHTML = "";
+enrolledDiv.innerHTML = "";
+courseSelect.innerHTML = "";
+courseChartSelect.innerHTML = "";
+aiChartSelect.innerHTML = "";
 
-    document.getElementById("courseCount").innerText = snapshot.size;
+document.getElementById("courseCount").innerText = snapshot.size;
 
-    for (const enrollDoc of snapshot.docs) {
+for (const subjectDoc of snapshot.docs) {
 
-      const courseId = enrollDoc.data().courseId;
+  const subject = subjectDoc.data();
 
-      const courseDoc = await getDoc(doc(db, "courses", courseId));
-      if (!courseDoc.exists()) continue;
+  const subjectName = subject.subjectName;
 
-      const data = courseDoc.data();
+  let courseId = null;
+  let data = null;
+
+  const courseSnap = await getDocs(
+    query(
+      collection(db, "courses"),
+      where("course", "==", subjectName)
+    )
+  );
+
+  if (!courseSnap.empty) {
+    courseId = courseSnap.docs[0].id;
+    data = courseSnap.docs[0].data();
+  }
 
       /* ===== dropdown select ===== */
 
       const option1 = document.createElement("option");
       option1.value = courseId;
-      option1.textContent = data.course;
+      option1.textContent =
+  data?.course || subjectName;
 
       const option2 = option1.cloneNode(true);
       const option3 = option1.cloneNode(true);
 
-      courseSelect.appendChild(option1);        // Quick Quiz
-      courseChartSelect.appendChild(option2);  // Course Chart
-      aiChartSelect.appendChild(option3);      // AI Chart
+      courseSelect.appendChild(option1);
+
+if (courseId) {
+  courseChartSelect.appendChild(option2);
+  aiChartSelect.appendChild(option3);
+}
 
       /* ===== check quiz ===== */
 
@@ -241,13 +287,15 @@ unitsSnap.forEach(doc => {
 
       div.innerHTML = `
       <p>
-      <strong>${data.course}</strong>
-      (${data.department} - Sem ${data.semester})
+      <strong>${data?.course || subjectName}</strong>
+      (${data?.department || department}
+ - Sem
+ ${data?.semester || semester})
       </p>
 
       <div class="unitContainer"></div>
 
-      ${data.pdfURL ? `<a class="pdfLink coursePdfLink"><span class="material-symbols-outlined">
+      ${data?.pdfURL ? `<a class="pdfLink coursePdfLink"><span class="material-symbols-outlined">
 file_open
 </span>Open</a>` : ""}
 
@@ -257,7 +305,7 @@ file_open
 
 <div class="videoBox">
 <video controls>
-    <source src="${data.videoURL}">
+    <source src="${data?.videoURL}">
   </video>
 </div>
 
@@ -283,6 +331,10 @@ file_open
       `;
       /* ===== LOAD UNITS ===== */
       const unitContainer = div.querySelector(".unitContainer");
+      if (!courseId) {
+  enrolledDiv.appendChild(div);
+  continue;
+}
 
       const unitsSnap = await getDocs(
         collection(db, "courses", courseId, "units")
@@ -980,8 +1032,11 @@ if (coursePdfLink && data.pdfURL) {
 
       }
 
+let deptSection =
+document.querySelector(
+ `[data-dept="${data?.department || department}"]`
+);
 
-      let deptSection = document.querySelector(`[data-dept="${data.department}"]`);
 
       if (!deptSection) {
 
@@ -990,11 +1045,15 @@ if (coursePdfLink && data.pdfURL) {
 
         const title = document.createElement("h4");
         title.className = "dept-title";
-        title.textContent = data.department;
+     title.textContent =
+ data?.department || department;
 
         deptSection = document.createElement("div");
         deptSection.className = "dept-courses hidden";
-        deptSection.setAttribute("data-dept", data.department);
+        deptSection.setAttribute(
+  "data-dept",
+  data?.department || department
+);
 
         title.onclick = () => {
           deptSection.classList.toggle("hidden");
@@ -1047,8 +1106,6 @@ unitsSnap.forEach(doc => {
       aiChartSelect.selectedIndex = 0;
       loadAIChart(uid);
     }
-  });
-
 }
 async function loadDepartmentCourses(uid) {
 
@@ -1076,40 +1133,61 @@ container.innerHTML = `
   <h3>${department} - Semester ${semester}</h3>
 `;
 
-const subjectSnap = await getDocs(
-  collection(db, "subjects")
+const teacherSnap = await getDocs(
+  query(
+    collection(db,"teacher_master"),
+    where(
+      "department",
+      "==",
+      department
+    )
+  )
 );
 
-console.log("TOTAL SUBJECTS:", subjectSnap.size);
+const teacherEmails =
+  teacherSnap.docs.map(
+    d => d.data().email.toLowerCase()
+  );
+
+const subjectSnap =
+  await getDocs(
+    collection(db,"subjects")
+  );
 
 subjectSnap.forEach(docSnap => {
 
-    const course = docSnap.data();
+  const subject =
+    docSnap.data();
 
-    if (
-      String(course.department).trim().toLowerCase() ===
-      String(department).trim().toLowerCase()
-      &&
-      String(course.semester).trim() ===
-      String(semester).trim()
-    ) {
+  const teacherEmail =
+    (subject.teacherEmail || "")
+    .toLowerCase();
 
-      const div = document.createElement("div");
+  if (
+    teacherEmails.includes(
+      teacherEmail
+    ) &&
+    String(subject.semester).trim() ===
+    String(semester).trim()
+  ) {
 
-      div.className = "course-card";
+    const div =
+      document.createElement("div");
 
-console.log("SUBJECT DOC:", course);
+    div.className =
+      "course-card";
 
-div.innerHTML = `
-  <h4>
-    ${course.subjectName || course.subject || docSnap.id}
-  </h4>
-`;
+    div.innerHTML = `
+      <h4>
+        ${subject.subjectName}
+      </h4>
+    `;
 
-      container.appendChild(div);
-    }
+    container.appendChild(div);
 
-  });
+  }
+
+});
 
 }
 
@@ -1256,48 +1334,55 @@ async function loadAIChart(uid) {
 
 /* ================= COURSE QUIZ ================= */
 
-async function startTeacherQuiz(courseId) {
+async function startTeacherQuiz(quizId) {
 
-  const quizQuery = query(
-    collection(db, "quizzes"),
-    where("courseId", "==", courseId)
+  const quizDoc = await getDoc(
+    doc(db, "quizzes", quizId)
   );
 
-  const quizSnap = await getDocs(quizQuery);
-
-  if (quizSnap.empty) {
-    showMessage("No quiz available");
+  if (!quizDoc.exists()) {
+    showMessage("Quiz not found");
     return;
   }
 
-  const quizDoc = quizSnap.docs[0];
-  const quizId = quizDoc.id;
   const quizData = quizDoc.data();
 
-  /* prevent reattempt */
+  const resultId =
+    auth.currentUser.uid + "_" + quizId;
 
-  const resultId = auth.currentUser.uid + "_" + quizId;
-  const resultDoc = await getDoc(doc(db, "course_quiz_results", resultId));
+  const resultDoc = await getDoc(
+    doc(db, "course_quiz_results", resultId)
+  );
 
   if (resultDoc.exists()) {
     showMessage("You already attempted this quiz");
     return;
   }
 
-  const questionQuery = query(
-    collection(db, "quiz_questions"),
-    where("quizId", "==", quizId)
+  const questionSnap = await getDocs(
+    query(
+      collection(db, "quiz_questions"),
+      where("quizId", "==", quizId)
+    )
   );
+  console.log("QUIZ:", quizId);
+console.log("QUESTION DOCS:", questionSnap.size);
 
-  const questionSnap = await getDocs(questionQuery);
+questionSnap.forEach(doc => {
+  console.log("QUESTION:", doc.data());
+});
 
-  const questions = questionSnap.docs.map(d => d.data());
+  const questions =
+    questionSnap.docs.map(d => d.data());
 
-  renderQuiz(questions, quizId, {
-    ...quizData,
-    courseId
-  });
-
+  renderQuiz(
+    questions,
+    quizId,
+    {
+      ...quizData,
+      courseId: quizData.courseId
+    }
+  );
 }
 
 
@@ -1627,31 +1712,63 @@ function startTimer(minutes) {
 
 }
 
-function loadAvailableQuizzes(uid) {
+async function loadAvailableQuizzes(uid) {
+  const userDoc = await getDoc(
+  doc(db, "users", uid)
+);
+
+if (!userDoc.exists()) return;
+
+const userData = userDoc.data();
+
+const courseSnap = await getDocs(
+  collection(db, "courses")
+);
+
+const allowedCourses = {};
+
+courseSnap.forEach(docSnap => {
+
+  const course = docSnap.data();
+
+  if (
+    String(course.department || "")
+      .trim()
+      .toLowerCase() ===
+    String(userData.department || "")
+      .trim()
+      .toLowerCase()
+    &&
+    String(course.semester || "")
+      .trim() ===
+    String(userData.semester || "")
+      .trim()
+  ) {
+    allowedCourses[docSnap.id] = course;
+  }
+
+});
+
+console.log("ALLOWED COURSES:", allowedCourses);
+
+console.log(
+  "ALL COURSES:",
+  courseSnap.docs.map(d => ({
+    id: d.id,
+    ...d.data()
+  }))
+);
+
+courseSnap.forEach(doc => {
+  allowedCourses[doc.id] = doc.data();
+});
 
   const panel = document.getElementById("quizListPanel");
   const countEl = document.getElementById("quizAvailableCount");
 
-  let enrolledCourses = new Set();
-
-  /* 🔹 LISTEN TO ENROLLMENTS */
-  onSnapshot(
-    query(collection(db, "enrollments"),
-      where("userId", "==", uid)),
-
-    (enrollSnap) => {
-
-      enrolledCourses.clear();
-
-      enrollSnap.forEach(doc => {
-        enrolledCourses.add(doc.data().courseId);
-      });
-
-    }
-  );
-
   /* 🔹 LISTEN TO QUIZZES (MAIN REAL-TIME) */
   onSnapshot(collection(db, "quizzes"), async (quizSnap) => {
+    console.log("TOTAL QUIZZES:", quizSnap.size);
 
     let total = 0;
     const structure = {};
@@ -1661,14 +1778,51 @@ function loadAvailableQuizzes(uid) {
       const quiz = q.data();
       const quizId = q.id;
       const courseId = quiz.courseId;
+      console.log("QUIZ DATA:", quiz);
+console.log("QUIZ ID:", quizId);
+console.log("QUIZ COURSE ID:", courseId);
+console.log("ALLOWED COURSES:", Object.keys(allowedCourses));
+      const questionSnap = await getDocs(
+  query(
+    collection(db, "quiz_questions"),
+    where("quizId", "==", quizId)
+  )
+  
+);
 
-      /* ✅ skip if not enrolled */
-      if (!enrolledCourses.has(courseId)) continue;
+const questionCount = questionSnap.size;
+console.log("QUESTION COUNT:", questionCount);
+if (questionCount === 0) {
+  continue;
+}
+      
+// build allowed courses once
+const courseQuery = await getDocs(
+  query(
+    collection(db, "courses"),
+    where("course", "==", courseId)
+  )
+);
 
-      const courseDoc = await getDoc(doc(db, "courses", courseId));
-      if (!courseDoc.exists()) continue;
+if (courseQuery.empty) {
+  console.log("Course not found:", courseId);
+  continue;
+}
 
-      const course = courseDoc.data();
+const course = courseQuery.docs[0].data();
+
+const subjectSnap = await getDocs(
+  query(
+    collection(db, "subjects"),
+    where("subjectName", "==", courseId),
+    where("semester", "==", userData.semester)
+  )
+);
+
+if (subjectSnap.empty) {
+  console.log("Subject not assigned:", courseId);
+  continue;
+}
 
       /* ✅ prevent reattempt */
       const resultId = uid + "_" + quizId;
@@ -1686,11 +1840,14 @@ function loadAvailableQuizzes(uid) {
         structure[course.department][course.course] = [];
       }
 
-      structure[course.department][course.course].push({
-        quizId,
-        title: quiz.title,
-        courseId
-      });
+    structure[course.department][course.course].push({
+  quizId,
+  title: quiz.title,
+  courseId,
+  duration: quiz.timeLimit || 0,
+  createdBy: quiz.createdBy || "Teacher",
+  questionCount
+});
 
     }
 
@@ -1724,11 +1881,17 @@ function loadAvailableQuizzes(uid) {
 
           const btn = document.createElement("button");
           btn.className = "quiz-btn";
-          btn.innerText = q.title;
+          btn.innerHTML = `
+${q.title}<br>
+<small>
+${q.questionCount} Questions |
+${q.duration} Min
+</small>
+`;
 
           btn.onclick = () => {
-            startTeacherQuiz(q.courseId);
-          };
+   startTeacherQuiz(q.quizId);
+};
 
           quizRow.appendChild(btn);
         });

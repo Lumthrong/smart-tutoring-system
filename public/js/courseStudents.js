@@ -11,6 +11,7 @@ import {
 /* ===== GET COURSE ID ===== */
 const params = new URLSearchParams(window.location.search);
 const courseId = params.get("courseId");
+const semester = params.get("semester");
 
 const container = document.getElementById("studentList");
 
@@ -25,27 +26,55 @@ function showEmpty(msg) {
 }
 
 async function loadCourseTitle() {
-  const title = document.getElementById("courseTitle");
+
+  const title =
+    document.getElementById("courseTitle");
 
   if (!courseId) {
+
     title.innerText = "Course";
     return;
+
   }
 
   try {
-    const courseSnap = await getDoc(doc(db, "courses", courseId));
 
-    if (courseSnap.exists()) {
-      const course = courseSnap.data();
-      title.innerText = `Students enrolled in: ${course.course}`;
-    } else {
-      title.innerText = "Course not found";
-    }
+const subjectQuery =
+  await getDocs(
+    query(
+      collection(db, "subjects"),
+      where(
+        "subjectName",
+        "==",
+        courseId
+      )
+    )
+  );
+
+if (!subjectQuery.empty) {
+
+  const subject =
+    subjectQuery.docs[0].data();
+
+  title.innerText =
+    `Students enrolled in: ${subject.subjectName}`;
+
+} else {
+
+  title.innerText =
+    courseId;
+
+}
 
   } catch (err) {
+
     console.error(err);
-    title.innerText = "Error loading course";
+
+    title.innerText =
+      "Error loading course";
+
   }
+
 }
 /* ===== LOAD STUDENTS ===== */
 async function loadStudents() {
@@ -59,57 +88,67 @@ async function loadStudents() {
 
   try {
 
-    const enrollSnap = await getDocs(
-      query(
-        collection(db, "enrollments"),
-        where("courseId", "==", courseId)
-      )
-    );
+if (!semester) {
+  showEmpty("No semester assigned");
+  return;
+}
 
-    if (enrollSnap.empty) {
-      showEmpty("No students enrolled");
+    const studentSnap =
+      await getDocs(
+        query(
+          collection(
+            db,
+            "student_master"
+          ),
+          where(
+            "semester",
+            "==",
+            semester
+          )
+        )
+      );
+
+    if (studentSnap.empty) {
+      showEmpty("No students found");
       return;
     }
 
     container.innerHTML = "";
 
-    for (const e of enrollSnap.docs) {
+    studentSnap.forEach(docSnap => {
 
-      const userId = e.data().userId;
+      const student =
+        docSnap.data();
 
-      const userSnap = await getDoc(doc(db, "users", userId));
+      const div =
+        document.createElement("div");
 
-      if (!userSnap.exists()) continue;
-
-      const user = userSnap.data();
-
-      const name =
-        user.firstName ||
-        user.name ||
-        user.fullName ||
-        "Student";
-
-      const email = user.email || "No email";
-
-      const div = document.createElement("div");
-      div.className = "student-card";
+      div.className =
+        "student-card";
 
       div.innerHTML = `
         <div>
-          <div class="student-name">${name}</div>
-          <div class="student-email">${email}</div>
+          <div class="student-name">
+            ${student.name || "Student"}
+          </div>
+
+          <div class="student-email">
+            ${student.email || ""}
+          </div>
         </div>
       `;
 
       container.appendChild(div);
-    }
+
+    });
 
   } catch (err) {
+
     console.error(err);
     showEmpty("Failed to load students");
+
   }
 
 }
-
 loadCourseTitle();
 loadStudents();

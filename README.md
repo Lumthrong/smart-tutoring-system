@@ -1,7 +1,7 @@
 ````md
 # smart-tutoring-system
 
-# Build Environment Setup Using Node.js
+# Build Environment Setup and install dependencies
 
 ## 1. Install Node.js
 
@@ -39,11 +39,7 @@ pip --version
 ````md
 # Install Dependencies, Libraries and Packages
 
-## Install Backend Dependencies
-If package.json exists then use command in the terminal 
-```bash
-npm install
-```
+## Install nodejs Dependencies
 
 Install the required Node.js packages using npm:
 
@@ -65,6 +61,10 @@ npm install @google/generative-ai
 ```
 
 ---
+If package.json exists in project root, install dependencies using command:
+```bash
+npm install
+```
 
 ## Install Development Dependency
 

@@ -45,6 +45,7 @@ function confirmDelete(message) {
 let activeCourseId = null;
 let performanceChart = null;
 let generatedQuestions = [];
+let generatedQuizMeta = null;
 let assignedSubjects = [];
 
 function showMessage(text) {
@@ -187,6 +188,20 @@ loadEnrollmentStats();
 loadCourseDropdown();
 loadQuizResults();
 initAIQuizGenerator();
+
+const sendBtn =
+  document.getElementById(
+    "sendAIQuizBtn"
+  );
+
+if(sendBtn){
+
+  sendBtn.addEventListener(
+    "click",
+    sendAIQuiz
+  );
+
+}
 
 })();
   });
@@ -1380,23 +1395,17 @@ async function loadMyQuizzes() {
 
   quizContainer.innerHTML = "";
 
-const [manualSnap, aiSnap] = await Promise.all([
-  getDocs(collection(db, "quizzes")),
-  getDocs(collection(db, "course_quiz"))
-]);
+const snap =
+  await getDocs(
+    collection(db, "quizzes")
+  );
 
-  const allQuizzes = [
-    ...manualSnap.docs.map(d => ({
-      id: d.id,
-      source: "quizzes",
-      ...d.data()
-    })),
-    ...aiSnap.docs.map(d => ({
-      id: d.id,
-      source: "course_quiz",
-      ...d.data()
-    }))
-  ];
+const allQuizzes =
+  snap.docs.map(d => ({
+    id: d.id,
+    source: "quizzes",
+    ...d.data()
+  }));
 
   if (!allQuizzes.length) {
     quizContainer.innerHTML =
@@ -1656,6 +1665,29 @@ const preview =
 preview.innerHTML = "";
 
 generatedQuestions = data.questions;
+const selectedSubject =
+  document.getElementById("aiSubjectSelect")
+  .selectedOptions[0];
+
+generatedQuizMeta = {
+
+  courseId:
+    selectedSubject.dataset.courseId,
+
+  courseName:
+    selectedSubject.dataset.subject,
+
+  department:
+    selectedSubject.dataset.department,
+
+  semester:
+    selectedSubject.dataset.semester,
+
+  unitTitle:
+    document.getElementById("aiUnitSelect")
+    .selectedOptions[0]?.textContent || ""
+
+};
 data.questions.forEach(
     (q,index)=>{
 
@@ -1795,5 +1827,85 @@ collection(
   showMessage(
     "Quiz Saved"
   );
+
+}
+async function sendAIQuiz() {
+
+  if (!generatedQuestions.length) {
+
+    showMessage(
+      "Generate a quiz first"
+    );
+
+    return;
+  }
+
+  const duration =
+    parseInt(
+      document.getElementById(
+        "quizDuration"
+      ).value
+    ) || 10;
+
+  try {
+
+    const token =
+      await auth.currentUser
+      .getIdToken();
+
+    const response =
+      await fetch(
+        "/publish-ai-quiz",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type":
+              "application/json",
+            Authorization:
+              `Bearer ${token}`
+          },
+          body: JSON.stringify({
+
+            title:
+              `${generatedQuizMeta.unitTitle} Quiz`,
+
+            duration,
+
+            ...generatedQuizMeta,
+
+            questions:
+              generatedQuestions
+
+          })
+        }
+      );
+
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+
+      throw new Error(
+        data.error
+      );
+
+    }
+
+showMessage(
+  "Quiz sent successfully"
+);
+
+window.location.reload();
+
+  }
+  catch(err){
+
+    console.error(err);
+
+    showMessage(
+      "Failed to send quiz"
+    );
+
+  }
 
 }

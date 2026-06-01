@@ -1035,6 +1035,97 @@ if(
   }
 
 });
+
+app.post(
+  "/publish-ai-quiz",
+  verifyToken,
+  requireRole("teacher"),
+  async (req, res) => {
+
+    try {
+
+      const {
+
+        title,
+        courseId,
+        courseName,
+        unitTitle,
+
+        department,
+        semester,
+
+        duration,
+
+        questions
+
+      } = req.body;
+
+const quizRef =
+  await db
+    .collection("quizzes")
+    .add({
+
+      title,
+
+      courseId,
+
+      teacherEmail:
+        req.user.email,
+
+      createdBy:
+        req.user.uid,
+
+      createdAt:
+        new Date(),
+
+      timeLimit:
+        duration
+    });
+
+      const batch =
+        db.batch();
+
+      questions.forEach(q => {
+
+const questionRef =
+  db.collection(
+    "quiz_questions"
+  ).doc();
+
+batch.set(questionRef,{
+  quizId: quizRef.id,
+  question: q.question,
+  options: q.options,
+  answer: q.answer
+});
+
+      });
+
+      await batch.commit();
+
+      res.json({
+        success: true,
+        quizId:
+          quizRef.id
+      });
+
+    }
+    catch(err){
+
+      console.error(
+        "PUBLISH QUIZ ERROR:",
+        err
+      );
+
+      res.status(500).json({
+        error:
+          "Failed to publish quiz"
+      });
+
+    }
+
+  }
+);
 /* ================= AI COURSE SUMMARY ================= */
 
 app.post("/summarize-course", async (req, res) => {

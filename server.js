@@ -1356,7 +1356,13 @@ app.get("/transcript-status/:jobId", async (req, res) => {
 });
 app.post("/generate-notes", verifyToken, async (req, res) => {
 
-const { transcript, courseId } = req.body;
+const {
+  transcript,
+  courseId,
+  courseName,
+  unitId,
+  unitTitle
+} = req.body;
 
   if (!transcript) {
     return res.status(400).json({ error: "Transcript required" });
@@ -1382,20 +1388,27 @@ ${transcript}
     );
 
     // 🔥 SAVE TO FIRESTORE
-const docId = req.user.uid + "_" + req.body.courseId;
+const docId =
+  req.user.uid +
+  "_" +
+  courseId +
+  "_" +
+  unitId;
 
-const docRef = await db.collection("notes").doc(docId).set({
+await db.collection("notes").doc(docId).set({
   userId: req.user.uid,
-  courseId: courseId, // ✅ ADD THIS
+  courseId,
+  courseName,
+  unitId,
+  unitTitle,
   transcript: transcript.substring(0, 5000),
   notes: ai,
   createdAt: new Date()
 });
 
-    res.json({
-      notes: ai,
-      id: docRef.id
-    });
+res.json({
+  notes: ai
+});
 
   } catch (err) {
 

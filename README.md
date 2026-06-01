@@ -13,3 +13,6 @@ After installation, verify using:
 node -v
 npm -v
 
+## 2. Install python
+
+

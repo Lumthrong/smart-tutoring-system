@@ -14,7 +14,9 @@ After installation, verify using:
 ```bash
 node -v
 npm -v
+```
 
+---
 
 ## 2. Install Python
 
@@ -24,8 +26,8 @@ https://www.python.org/downloads/
 
 During installation:
 
-* Enable Add Python to PATH
-* Install pip package manager
+- Enable Add Python to PATH
+- Install pip package manager
 
 After installation, verify using:
 
@@ -33,6 +35,4 @@ After installation, verify using:
 python --version
 pip --version
 ```
-
-```
-```
+````

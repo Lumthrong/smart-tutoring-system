@@ -86,13 +86,24 @@
 
 <section class ="notes">
 <div class="card">
-  <h3>Course Notes</h3>
 
-  <textarea id="notesEditor" style="width:100%;height:300px;"></textarea>
+  <div id="notesList"></div>
+
+  <hr>
+
+  <h3 id="selectedCourseTitle">Course Notes</h3>
+
+  <textarea
+    id="notesEditor"
+    style="width:100%;height:300px;"
+  ></textarea>
 
   <br><br>
 
-  <button id="saveNotesBtn">Save Notes</button>
+  <button id="saveNotesBtn">
+    Save Notes
+  </button>
+
 </div>
 </section>
 <script type="module" src="js/notes.js"></script>

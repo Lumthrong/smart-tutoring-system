@@ -92,62 +92,62 @@
         Upload Lecture
       </button>
       <button id="enrollToggle" class="secondary-btn"> <span class="material-symbols-outlined">
-school
-</span>
+          school
+        </span>
         Total Enrollment ▾
       </button>
     </div>
- <!-- DROPDOWN FORM -->
-      <div id="uploadDropdown" class="upload-dropdown hidden">
+    <!-- DROPDOWN FORM -->
+    <div id="uploadDropdown" class="upload-dropdown hidden">
 
-        <div class="card">
+      <div class="card">
 
-          <div class="upload-header">
-            <h3>Upload Lecture</h3>
-            <button id="closeUpload">✕</button>
+        <div class="upload-header">
+          <h3>Upload Lecture</h3>
+          <button id="closeUpload">✕</button>
+        </div>
+
+        <form id="uploadLectureForm" enctype="multipart/form-data">
+
+          <select id="subjectSelect" required>
+            <option value="">Select Subject</option>
+          </select>
+          <input name="unitTitle" id="placeholder" placeholder="Unit Title (e.g. Unit 1: Intro)">
+
+          <label>Upload PDF</label>
+          <div class="file-upload">
+            <input type="file" name="pdf" id="pdfInput" accept="application/pdf" required>
+            <div class="file-preview" id="pdfPreview">
+              <span class="material-symbols-outlined">upload_file</span>
+              Select pdf
+            </div>
           </div>
 
-          <form id="uploadLectureForm" enctype="multipart/form-data">
-
-<select id="subjectSelect" required>
-  <option value="">Select Subject</option>
-</select>
-            <input name="unitTitle" id="placeholder" placeholder="Unit Title (e.g. Unit 1: Intro)">
-
-            <label>Upload PDF</label>
-            <div class="file-upload">
-              <input type="file" name="pdf" id="pdfInput" accept="application/pdf" required>
-              <div class="file-preview" id="pdfPreview">
-                <span class="material-symbols-outlined">upload_file</span>
-                Select pdf
-              </div>
+          <label>Upload Video</label>
+          <div class="file-upload">
+            <input type="file" name="video" id="videoInput" accept="video/*">
+            <div class="file-preview" id="videoPreview">
+              <span class="material-symbols-outlined">video_camera_back_add</span>
+              Select Video
             </div>
+          </div>
 
-            <label>Upload Video</label>
-            <div class="file-upload">
-              <input type="file" name="video" id="videoInput" accept="video/*">
-              <div class="file-preview" id="videoPreview">
-                <span class="material-symbols-outlined">video_camera_back_add</span>
-                Select Video
-              </div>
-            </div>
+          <button type="submit" id="uploadBtn" class="upload-btn">
+            <span class="btn-text">
+              <span class="material-symbols-outlined">upload</span> Upload
+            </span>
+            <span class="btn-loader"></span>
+          </button>
 
-            <button type="submit" id="uploadBtn" class="upload-btn">
-              <span class="btn-text">
-                <span class="material-symbols-outlined">upload</span> Upload
-              </span>
-              <span class="btn-loader"></span>
-            </button>
-
-          </form>
-
-        </div>
+        </form>
 
       </div>
 
-      <div id="systemMessage"></div>
-      <!-- Enrollment stats -->
-      <div id="enrollmentStats"></div>
+    </div>
+
+    <div id="systemMessage"></div>
+    <!-- Enrollment stats -->
+    <div id="enrollmentStats"></div>
 
     <!-- Student performance -->
 
@@ -176,36 +176,52 @@ school
     <!-- My quizzes -->
 
     <div class="card">
-<div class="card">
+      <div class="card ai-quiz-card">
 
-  <h3>AI Quiz Generator</h3>
+        <h3>AI Quiz Generator</h3>
 
-  <select id="aiSubjectSelect">
-    <option value="">Select Subject</option>
-  </select>
+        <select id="aiSubjectSelect">
+          <option value="">Select Subject</option>
+        </select>
 
-  <select id="aiUnitSelect">
-    <option value="">Select Unit</option>
-  </select>
+        <select id="aiUnitSelect">
+          <option value="">Select Unit</option>
+        </select>
 
-<button id="generateAIQuizBtn">
-  Generate AI Quiz
-</button>
+        <label for="quizDuration">
+          Quiz Duration (Minutes)
+        </label>
 
-<button id="regenerateAIQuizBtn">
-  Regenerate
-</button>
+        <input type="number" id="quizDuration" min="1" value="10" placeholder="Duration" />
 
-<button id="saveAIQuizBtn">
-  Save Quiz
-</button>
+        <div class="ai-quiz-actions">
 
-<div id="generatedQuizPreview"></div>
+          <button id="generateAIQuizBtn">
+            Generate AI Quiz
+          </button>
 
-</div>
-      <h3>My Quizzes</h3>
+          <button id="regenerateAIQuizBtn">
+            Regenerate
+          </button>
 
-      <div id="teacherQuizzes"></div>
+          <button id="saveAIQuizBtn">
+            Save Quiz
+          </button>
+
+          <button id="sendAIQuizBtn">
+            Send Quiz
+          </button>
+
+        </div>
+
+        <div id="generatedQuizPreview"></div>
+
+      </div>
+
+    </div>
+    <h3>My Quizzes</h3>
+
+    <div id="teacherQuizzes"></div>
 
     </div>
 

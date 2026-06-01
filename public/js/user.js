@@ -435,14 +435,61 @@ if (pdfLink) {
 }
 
         /* ===== NOTES ===== */
-        const notesBtn = unitDiv.querySelector(".openNotesBtn");
+        /* ===== NOTES ===== */
+const notesBtn = unitDiv.querySelector(".openNotesBtn");
 
-        if (notesBtn) {
-          notesBtn.onclick = () => {
-            window.location.href =
-              `notes.html?courseId=${courseId}&unitId=${unit.id}`;
-          };
-        }
+if (notesBtn) {
+
+  notesBtn.onclick = async () => {
+
+    try {
+
+      if (!currentTranscript) {
+        showMessage("Generate transcript first");
+        return;
+      }
+
+      const token =
+        await auth.currentUser.getIdToken();
+
+      const res = await fetch("/generate-notes", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+          transcript: currentTranscript,
+          courseId,
+          courseName: data?.course || subjectName,
+          unitId: unit.id,
+          unitTitle: unit.title
+        })
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        showMessage(
+          result.error || "Notes generation failed"
+        );
+        return;
+      }
+
+      showMessage("Notes generated");
+
+      window.location.href = "notes.html";
+
+    } catch (err) {
+
+      console.error(err);
+      showMessage("Notes generation failed");
+
+    }
+
+  };
+
+}
 
         unitContainer.appendChild(unitDiv);
       });
@@ -457,76 +504,6 @@ if (pdfLink) {
           video.setAttribute("controls", true);
           video.play();
           playBtn.style.display = "none";
-        };
-      }
-      const notesBtn = div.querySelector(".openNotesBtn");
-
-      if (notesBtn) {
-        notesBtn.onclick = async () => {
-
-          const notesRef = doc(
-            db,
-            "notes",
-            courseId + "_" + auth.currentUser.uid
-          );
-
-          const notesSnap = await getDoc(notesRef);
-
-          /* ✅ IF NOTES EXIST → ONLY MESSAGE */
-          if (notesSnap.exists()) {
-            showMessage("Notes already exist");
-            return;
-          }
-
-          try {
-            if (!currentTranscript) {
-  showMessage("Generate transcript first");
-  return;
-}
-            const token = await auth.currentUser.getIdToken();
-
-            const res = await fetch("/generate-notes", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "Authorization": "Bearer " + token
-              },
-              body: JSON.stringify({
-               transcript: currentTranscript,
-                courseId
-              })
-            });
-
-           const data = await res.json();
-
-if (!res.ok) {
-  console.error("NOTES ERROR:", data);
-  showMessage(data.error || "Notes generation failed");
-  return;
-}
-
-if (!data.notes) {
-  console.error("NO NOTES RETURNED:", data);
-  showMessage("Notes generation failed");
-  return;
-}
-
-            await setDoc(notesRef, {
-              userId: auth.currentUser.uid,
-              courseId,
-              text: data.notes,
-              createdAt: new Date()
-            });
-
-            showMessage("Notes generated");
-
-          } catch (err) {
-
-            console.error(err);
-            showMessage("Failed to generate notes");
-
-          }
-
         };
       }
       /* ===== TRACK PDF OPEN ===== */

@@ -1,15 +1,14 @@
-````md
-# smart-tutoring-system
+# Smart Tutoring System
 
-# Build Environment Setup and install dependencies
+## Build Environment Setup
 
-## 1. Install Node.js
+### 1. Install Node.js
 
 Download and install Node.js from the official website:
 
 https://nodejs.org
 
-After installation, verify using:
+After installation, verify that Node.js and npm are available:
 
 ```bash
 node -v
@@ -18,7 +17,7 @@ npm -v
 
 ---
 
-## 2. Install Python
+### 2. Install Python
 
 Download and install Python from the official website:
 
@@ -26,79 +25,43 @@ https://www.python.org/downloads/
 
 During installation:
 
-- Enable Add Python to PATH
-- Install pip package manager
+* Enable **Add Python to PATH**
+* Ensure **pip** is installed
 
-After installation, verify using:
+After installation, verify:
 
 ```bash
 python --version
 pip --version
 ```
-````
-````md
-
-# Install Dependencies
-
-## Install nodejs Dependencies
-
-Install the required Node.js packages using npm:
-
-```bash
-npm install express
-npm install firebase
-npm install firebase-admin
-npm install multer
-npm install csv-parser
-npm install cors
-npm install dotenv
-npm install axios
-npm install pdfjs-dist
-npm install chart.js
-npm install cloudinary
-npm install tesseract.js
-npm install openai
-npm install @google/generative-ai
-```
 
 ---
-If package.json exists in project root, install dependencies using command:
+
+### 3. Install Project Dependencies
+
+Open a terminal in the project root directory and run:
+
 ```bash
 npm install
 ```
 
-## Install Python Dependencies
+This will install all required Node.js dependencies for the Smart Tutoring System.
 
-Install Python libraries required for AI transcription and processing:
+---
+
+### 4. Install Python Dependencies
+
+Install the required Python packages:
 
 ```bash
-pip install openai-whisper
-pip install ffmpeg-python
+pip install -r requirements.txt
 ```
 
 ---
 
-## Install FFmpeg
+### 5. Environment Variable Configuration
 
-Download and install FFmpeg from:
-
-https://ffmpeg.org/download.html
-
-After installation, add FFmpeg to the system PATH.
-
-Verify installation using:
-
-```bash
-ffmpeg -version
-```
-
----
-
-## Build Environment Ready
-
-# Environment Variable Configuration
-
-Before running the Smart Tutoring System, create a `.env` file in the project root directory and add the following environment variables:
+Create a `.env` file in the project root directory and add the following environment variables:
 
 ```env
 BREVO_API_KEY=
@@ -111,17 +74,15 @@ GROQ_API_KEY=
 GEMINI_API_KEY=
 ```
 
-## 1. Obtain Required API Keys
+#### Obtain Required API Keys
 
-### Brevo API Key
+##### Brevo API Key
 
 Used for sending emails and notifications.
 
-1. Visit: https://www.brevo.com
+1. Visit https://www.brevo.com
 2. Create an account and log in.
-3. Navigate to:
-
-   * Settings → SMTP & API → API Keys
+3. Navigate to **Settings → SMTP & API → API Keys**
 4. Generate a new API key.
 5. Copy the key and paste it into:
 
@@ -129,15 +90,13 @@ Used for sending emails and notifications.
 BREVO_API_KEY=your_brevo_api_key
 ```
 
----
-
-### Cloudinary Credentials
+##### Cloudinary Credentials
 
 Used for storing and managing uploaded files and images.
 
-1. Visit: https://cloudinary.com
+1. Visit https://cloudinary.com
 2. Create an account and log in.
-3. Open Dashboard.
+3. Open the Dashboard.
 4. Copy the following values:
 
 ```env
@@ -146,9 +105,7 @@ CLOUDINARY_API_KEY=your_api_key
 CLOUDINARY_API_SECRET=your_api_secret
 ```
 
----
-
-### Email User
+##### Email User
 
 Used as the sender email address for notifications.
 
@@ -156,18 +113,14 @@ Used as the sender email address for notifications.
 EMAIL_USER=your_email@example.com
 ```
 
----
-
-### Firebase Service Account
+##### Firebase Service Account
 
 Used for secure server-side access to Firebase services.
 
-1. Visit: https://console.firebase.google.com
+1. Visit https://console.firebase.google.com
 2. Select your Firebase project.
-3. Go to:
-
-   * Project Settings → Service Accounts
-4. Click **Generate New Private Key**.
+3. Navigate to **Project Settings → Service Accounts**
+4. Click **Generate New Private Key**
 5. Download the JSON file.
 6. Copy the entire JSON content and store it as:
 
@@ -175,62 +128,41 @@ Used for secure server-side access to Firebase services.
 FIREBASE_SERVICE_ACCOUNT='{"type":"service_account",...}'
 ```
 
-Alternatively, store the JSON file path and load it in your server configuration.
-
----
-
-### Groq API Key
+##### Groq API Key
 
 Used for AI-powered quiz generation and tutoring features.
 
-1. Visit: https://console.groq.com
+1. Visit https://console.groq.com
 2. Sign in or create an account.
-3. Navigate to API Keys.
+3. Navigate to **API Keys**
 4. Create a new API key.
 
 ```env
 GROQ_API_KEY=your_groq_api_key
 ```
 
----
-
-### Gemini API Key
+##### Gemini API Key
 
 Used for AI content generation and educational assistance.
 
-1. Visit: https://aistudio.google.com
+1. Visit https://aistudio.google.com
 2. Sign in with a Google account.
-3. Click **Get API Key**.
+3. Click **Get API Key**
 4. Create a new API key.
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key
 ```
 
+> **Important:** Never commit the `.env` file to version control. Add `.env` to your `.gitignore` file.
+
 ---
 
-## 2. Create the `.env` File
-
-Create a file named `.env` in the project root directory and add all the credentials:
-
-```env
-BREVO_API_KEY=
-CLOUDINARY_API_KEY=
-CLOUDINARY_API_SECRET=
-CLOUDINARY_CLOUD_NAME=
-EMAIL_USER=
-FIREBASE_SERVICE_ACCOUNT=
-GROQ_API_KEY=
-GEMINI_API_KEY=
-```
-
-> **Important:** Never commit the `.env` file to version control. Add `.env` to your `.gitignore` file to keep credentials secure.
-
-## Firebase Security Rules
+### 6. Firebase Security Rules
 
 If you are setting up the Smart Tutoring System for the first time, use the Firebase security rules provided in the `firebase-rules.txt` file included in the project.
 
-### Firestore Rules
+#### Firestore Rules
 
 1. Open the Firebase Console.
 2. Navigate to **Firestore Database → Rules**.
@@ -238,7 +170,7 @@ If you are setting up the Smart Tutoring System for the first time, use the Fire
 4. Paste the rules into the editor.
 5. Click **Publish**.
 
-### Storage Rules
+#### Storage Rules
 
 1. Navigate to **Storage → Rules**.
 2. Copy the Storage rules from `firebase-rules.txt`.
@@ -247,6 +179,7 @@ If you are setting up the Smart Tutoring System for the first time, use the Fire
 
 > **Important:** The Smart Tutoring System is designed to work with the rules provided in `firebase-rules.txt`. Modifying these rules may cause authentication, course management, enrollments, quizzes, file uploads, and other system features to function incorrectly.
 
+---
 
 ## Running the Smart Tutoring System
 
@@ -272,5 +205,4 @@ start.bat
 
 This will launch the Whisper model service required for automatic video lecture transcription and processing.
 
-> **Note:** Ensure that all dependencies are installed and the environment variables are properly configured before starting the server and transcription service.
-
+> **Note:** Ensure that all dependencies are installed, environment variables are configured, and Firebase rules have been published before starting the application.

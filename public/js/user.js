@@ -46,6 +46,7 @@ let quizTimer = null;
 let aiQuizUsed = false;
 let aiChartInstance = null;
 let courseChartInstance = null;
+let currentTranscript = "";
 
 
 /* ================= INIT ================= */
@@ -285,12 +286,10 @@ if (courseId) {
 
       const div = document.createElement("div");
 
-      div.innerHTML = `
+div.innerHTML = `
       <p>
       <strong>${data?.course || subjectName}</strong>
-      (${data?.department || department}
- - Sem
- ${data?.semester || semester})
+      (Sem-${data?.semester || semester})
       </p>
 
       <div class="unitContainer"></div>
@@ -331,8 +330,7 @@ file_open
       `;
       /* ===== LOAD UNITS ===== */
       const unitContainer = div.querySelector(".unitContainer");
-      if (!courseId) {
-  enrolledDiv.appendChild(div);
+if (!courseId) {
   continue;
 }
 
@@ -392,17 +390,47 @@ movie
         }
 
         /* ===== PDF ===== */
-        const pdfLink = unitDiv.querySelector(".pdfLink");
+const pdfLink = unitDiv.querySelector(".pdfLink");
 
 if (pdfLink) {
 
   if (!unit.pdfURL || unit.pdfURL === "undefined") {
-    console.error("❌ Missing PDF URL for unit:", unit.title, unit);
+    console.error("Missing PDF URL");
     pdfLink.style.display = "none";
-    return; // 🚨 STOP THIS UNIT FROM BREAKING
+    return;
   }
 
-  pdfLink.href = "/viewer.html?file=" + encodeURIComponent(unit.pdfURL);
+  pdfLink.href =
+    "/viewer.html?file=" +
+    encodeURIComponent(unit.pdfURL);
+
+  pdfLink.addEventListener("click", async () => {
+
+    try {
+
+      await addDoc(
+        collection(db, "learning_history"),
+        {
+          userId: auth.currentUser.uid,
+          courseId,
+          courseName: data?.course || subjectName,
+          unitId: unit.id,
+          unitTitle: unit.title,
+          pdfURL: unit.pdfURL,
+          openedAt: new Date()
+        }
+      );
+
+    } catch (err) {
+
+      console.error(
+        "Learning history save failed",
+        err
+      );
+
+    }
+
+  });
 
 }
 
@@ -419,40 +447,6 @@ if (pdfLink) {
         unitContainer.appendChild(unitDiv);
       });
       const video = div.querySelector("video");
-
-      /* ===== AUTO APPLY TRANSCRIPT ===== */
-
-      const transcriptRefAuto = doc(
-        db,
-        "transcripts",
-        courseId + "_" + auth.currentUser.uid
-      );
-
-      const transcriptSnapAuto = await getDoc(transcriptRefAuto);
-
-      if (transcriptSnapAuto.exists()) {
-
-        const saved = transcriptSnapAuto.data();
-        const segments = saved.segments;
-
-        const vttText = generateVTT(segments);
-        const blob = new Blob([vttText], { type: "text/vtt" });
-        const url = URL.createObjectURL(blob);
-
-        let track = video.querySelector("track");
-
-        if (!track) {
-          track = document.createElement("track");
-          track.kind = "subtitles";
-          track.label = "English";
-          track.srclang = "en";
-          video.appendChild(track);
-        }
-
-        track.src = url;
-        track.default = true;
-        track.mode = "showing";
-      }
 
       const playBtn = div.querySelector(".playVideoBtn");
       const videoWrapper = div.querySelector(".videoWrapper");
@@ -484,21 +478,11 @@ if (pdfLink) {
             return;
           }
 
-          const transcriptRef = doc(
-            db,
-            "transcripts",
-            courseId + "_" + auth.currentUser.uid
-          );
-
-          const transcriptSnap = await getDoc(transcriptRef);
-
-          if (!transcriptSnap.exists()) {
-            showMessage("Generate transcript first");
-            return;
-          }
-
           try {
-
+            if (!currentTranscript) {
+  showMessage("Generate transcript first");
+  return;
+}
             const token = await auth.currentUser.getIdToken();
 
             const res = await fetch("/generate-notes", {
@@ -508,20 +492,24 @@ if (pdfLink) {
                 "Authorization": "Bearer " + token
               },
               body: JSON.stringify({
-                transcript: transcriptSnap.data().text,
+               transcript: currentTranscript,
                 courseId
               })
             });
 
-            const data = await res.json();
+           const data = await res.json();
 
-            if (!res.ok || !data.questions || !Array.isArray(data.questions)) {
-              console.error("AI ERROR:", data);
-              showMessage(data.error || "AI quiz generation failed");
-              return;
-            }
+if (!res.ok) {
+  console.error("NOTES ERROR:", data);
+  showMessage(data.error || "Notes generation failed");
+  return;
+}
 
-            if (!data.notes) throw new Error("No notes");
+if (!data.notes) {
+  console.error("NO NOTES RETURNED:", data);
+  showMessage("Notes generation failed");
+  return;
+}
 
             await setDoc(notesRef, {
               userId: auth.currentUser.uid,
@@ -713,11 +701,11 @@ if (coursePdfLink && data.pdfURL) {
         let transcriptLoaded = false; // 🔥 ADD THIS
         transcriptBtn.onclick = null;
         transcriptBtn.onclick = async () => {
-          const lockRef = doc(
-            db,
-            "transcripts",
-            courseId + "_" + auth.currentUser.uid + "_lock"
-          );
+const lockRef = doc(
+  db,
+  "transcript_locks",
+  courseId + "_" + auth.currentUser.uid
+);
 
           const lockSnap = await getDoc(lockRef);
 
@@ -744,46 +732,9 @@ if (coursePdfLink && data.pdfURL) {
           transcriptBtn.innerHTML = `<span class="summarySpinner"></span> Generating...`;
 
           try {
-
-
-            // ✅ USE COURSE ID (FINAL FIX)
-            const transcriptRef = doc(
-              db,
-              "transcripts",
-              courseId + "_" + auth.currentUser.uid
-            );
-
-            let mergedSegments;
-            let fullTranscript;
-
-            const transcriptSnap = await getDoc(transcriptRef);
-            if (transcriptSnap.exists()) {
-
-              const saved = transcriptSnap.data();
-
-              // 🔥 CORRUPT CHECK
-              if (!saved.text || !saved.segments || saved.segments.length === 0) {
-
-                console.warn("Corrupted transcript → deleting");
-                await deleteDoc(transcriptRef);
-
-              } else {
-
-                transcriptLoaded = true;
-
-                showMessage("Transcript already exists");
-
-                mergedSegments = saved.segments;
-                fullTranscript = saved.text;
-
-                // 🔥 STOP EXECUTION HERE
-                transcriptRunning = false;
-                transcriptBtn.disabled = false;
-                transcriptBtn.innerHTML = originalText;
-
-                return; // ✅ VERY IMPORTANT
-              }
-            } else {
+let mergedSegments;
+let fullTranscript;
+ {
               await setDoc(lockRef, {
                 status: "processing",
                 createdAt: new Date()
@@ -887,6 +838,8 @@ if (coursePdfLink && data.pdfURL) {
               fullTranscript = mergedSegments
                 .map(s => s.text)
                 .join(" ");
+
+                currentTranscript = fullTranscript;
               if (!mergedSegments || !Array.isArray(mergedSegments)) {
                 throw new Error("Invalid transcript data");
               }
@@ -894,14 +847,6 @@ if (coursePdfLink && data.pdfURL) {
               if (!mergedSegments || mergedSegments.length === 0 || !fullTranscript.trim()) {
                 throw new Error("Transcript empty - not saving");
               }
-
-              await setDoc(transcriptRef, {
-                userId: auth.currentUser.uid,
-                courseId: courseId,
-                segments: mergedSegments,
-                text: fullTranscript,
-                createdAt: new Date()
-              });
               await setDoc(lockRef, {
                 status: "done",
                 createdAt: new Date()
@@ -1034,7 +979,7 @@ if (coursePdfLink && data.pdfURL) {
 
 let deptSection =
 document.querySelector(
- `[data-dept="${data?.department || department}"]`
+ `[data-dept="${department}"]`
 );
 
 
@@ -1045,14 +990,13 @@ document.querySelector(
 
         const title = document.createElement("h4");
         title.className = "dept-title";
-     title.textContent =
- data?.department || department;
+title.textContent = department;
 
         deptSection = document.createElement("div");
         deptSection.className = "dept-courses hidden";
-        deptSection.setAttribute(
+deptSection.setAttribute(
   "data-dept",
-  data?.department || department
+  department
 );
 
         title.onclick = () => {
@@ -1065,7 +1009,7 @@ document.querySelector(
         enrolledDiv.appendChild(folder);
 
       }
-
+if (!units.length) continue;
       deptSection.appendChild(div);
 
     }
@@ -1197,43 +1141,40 @@ async function loadLearningHistory(uid) {
 
   const historyDiv = document.getElementById("learningHistory");
 
-  const enrollQuery = query(
-    collection(db, "enrollments"),
-    where("userId", "==", uid)
-  );
+const historyQuery = query(
+  collection(db, "learning_history"),
+  where("userId", "==", uid),
+  orderBy("openedAt", "desc")
+);
 
-  const snap = await getDocs(enrollQuery);
+const snap = await getDocs(historyQuery);
 
   historyDiv.innerHTML = "";
 
-  for (const docSnap of snap.docs) {
+for (const docSnap of snap.docs) {
 
-    const courseId = docSnap.data().courseId;
+  const item = docSnap.data();
 
-    const courseDoc = await getDoc(doc(db, "courses", courseId));
+  const div = document.createElement("div");
 
-    if (!courseDoc.exists()) continue;
+  div.innerHTML = `
+    <strong>${item.courseName}</strong>
 
-    const data = courseDoc.data();
+    <p>Unit: ${item.unitTitle}</p>
 
-    const div = document.createElement("div");
+    <p>
+      Opened:
+      ${new Date(
+        item.openedAt.seconds * 1000
+      ).toLocaleString()}
+    </p>
 
-    div.innerHTML = `
+    <hr>
+  `;
 
-<strong>${data.course}</strong>
+  historyDiv.appendChild(div);
 
-<p>Department: ${data.department}</p>
-
-<p>Semester: ${data.semester}</p>
-
-
-<hr>
-
-`;
-
-    historyDiv.appendChild(div);
-
-  }
+}
 
 }
 
@@ -1389,7 +1330,8 @@ questionSnap.forEach(doc => {
 /* ================= AI QUIZ ================= */
 
 window.startTest = async function () {
-
+// REMOVE PREVIOUS AI QUIZ
+document.querySelectorAll(".aiQuizCard").forEach(el => el.remove());
   window.scrollTo({
     top: 0,
     behavior: "smooth"
@@ -1501,9 +1443,13 @@ function renderQuiz(questions, quizId, quizData) {
 
   const dashboard = document.querySelector(".dashboard");
 
-  const container = document.createElement("div");
+const container = document.createElement("div");
 
-  container.className = "card";
+container.className = "card";
+
+if (quizData.ai) {
+  container.classList.add("aiQuizCard");
+}
 
   container.innerHTML = `
 <h3>${quizData.title}</h3>

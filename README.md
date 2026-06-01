@@ -14,9 +14,7 @@ After installation, verify using:
 ```bash
 node -v
 npm -v
-````
 
----
 
 ## 2. Install Python
 

@@ -239,13 +239,15 @@ If you are setting up the Smart Tutoring System for the first time, use the Fire
 ```text
 smart-tutoring-system/
 ├── public/
+    ├──.html
+    ├──/css
+        ├──.css
+    ├──/js
+        ├──.js
 ├── uploads/
-├── transcripts/
 ├── server.js
 ├── firebase.js
 ├── package.json
-├── requirements.txt
-├── firebase-rules.txt
 ├── start.bat
 └── .env
 ```

@@ -40,6 +40,10 @@ pip --version
 # Install Dependencies, Libraries and Packages
 
 ## Install Backend Dependencies
+If package.json exists then use command in the terminal 
+```bash
+npm install
+```
 
 Install the required Node.js packages using npm:
 

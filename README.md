@@ -226,3 +226,51 @@ GEMINI_API_KEY=
 
 > **Important:** Never commit the `.env` file to version control. Add `.env` to your `.gitignore` file to keep credentials secure.
 
+## Firebase Security Rules
+
+If you are setting up the Smart Tutoring System for the first time, use the Firebase security rules provided in the `firebase-rules.txt` file included in the project.
+
+### Firestore Rules
+
+1. Open the Firebase Console.
+2. Navigate to **Firestore Database → Rules**.
+3. Copy the contents of `firebase-rules.txt`.
+4. Paste the rules into the editor.
+5. Click **Publish**.
+
+### Storage Rules
+
+1. Navigate to **Storage → Rules**.
+2. Copy the Storage rules from `firebase-rules.txt`.
+3. Paste them into the editor.
+4. Click **Publish**.
+
+> **Important:** The Smart Tutoring System is designed to work with the rules provided in `firebase-rules.txt`. Modifying these rules may cause authentication, course management, enrollments, quizzes, file uploads, and other system features to function incorrectly.
+
+
+## Running the Smart Tutoring System
+
+### 1. Start the Backend Server
+
+Open a terminal in the project root directory and run:
+
+```bash
+node server.js
+```
+
+This will start the Smart Tutoring System backend server.
+
+---
+
+### 2. Start the Whisper Transcription Service
+
+For video lecture transcription, run the provided batch file:
+
+```bash
+start.bat
+```
+
+This will launch the Whisper model service required for automatic video lecture transcription and processing.
+
+> **Note:** Ensure that all dependencies are installed and the environment variables are properly configured before starting the server and transcription service.
+

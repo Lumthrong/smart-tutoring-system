@@ -4,14 +4,13 @@ A web-based Smart Tutoring System that provides course management, AI-powered qu
 
 ## Features
 
-* Student Authentication and Authorization
-* Teacher and Admin Dashboards
+* Student/Teacher/Admin Authentication and Authorization
+* Teacher/Student and Admin Dashboards
 * Course and Subject Management
-* AI-Powered Quiz Generation
+* AI-Powered Quiz Generation and Course Summarisation/Ai Notes Generation
 * Video Lecture Upload and Transcription
 * Learning Material Distribution
 * Student Performance Analytics
-* Personalized Learning Recommendations
 * Notifications and Announcements
 * Cloud-Based File Storage
 

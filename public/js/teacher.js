@@ -570,21 +570,46 @@ for (const docSnap of subjectSnap.docs) {
 
           const courseId = course.id;
 
-          const div = document.createElement("div");
+const div = document.createElement("div");
+div.className = "lecture-card";
 
-          div.className = "lecture-card";
-
-          div.innerHTML = `
+// Course header
+const header = document.createElement("div");
+header.innerHTML = `
 <p>
 <strong>${course.course}</strong><br>
 <small>${course.semester === "general" ? "General" : `Semester ${course.semester}`}</small>
 </p>
-
 <button class="openDiscussion">Discussion</button>
 <button class="createQuiz">Create Quiz</button>
 <button class="latestQuiz">Latest Quiz</button>
 <button class="deleteCourse">Delete</button>
 `;
+div.appendChild(header);
+
+// Container for units
+const unitsContainer = document.createElement("div");
+unitsContainer.className = "units-container";
+unitsContainer.style.marginTop = "10px";
+unitsContainer.style.display = "none"; // initially hidden
+div.appendChild(unitsContainer);
+
+// Toggle to show/hide units
+const toggleUnitsBtn = document.createElement("button");
+toggleUnitsBtn.textContent = "📂 Show Units";
+toggleUnitsBtn.className = "toggle-units-btn";
+toggleUnitsBtn.onclick = () => {
+  const isHidden = unitsContainer.style.display === "none";
+  unitsContainer.style.display = isHidden ? "block" : "none";
+  toggleUnitsBtn.textContent = isHidden ? "📂 Hide Units" : "📂 Show Units";
+  if (isHidden) loadUnits(courseId, unitsContainer); // load on first open
+};
+div.prepend(toggleUnitsBtn); // add above the header
+
+// Keep existing buttons logic (attach after)
+// ...
+
+grid.appendChild(div);
 
           div.querySelector(".openDiscussion").onclick = () => {
 
@@ -641,6 +666,43 @@ for (const docSnap of subjectSnap.docs) {
     });
 
   }
+  async function loadUnits(courseId, container) {
+  // Show loading state
+  container.innerHTML = "<p>Loading units...</p>";
+
+  const unitsSnap = await getDocs(collection(db, "courses", courseId, "units"));
+  if (unitsSnap.empty) {
+    container.innerHTML = "<p>No units uploaded.</p>";
+    return;
+  }
+
+let html = "";
+unitsSnap.forEach(doc => {
+  const unit = doc.data();
+  html += `
+    <div class="unit-item" style="display:flex; justify-content:space-between; align-items:center; padding:6px 0; border-bottom:1px solid #eee;">
+      <span><strong>${unit.title}</strong> ${unit.pdfURL ? "📄" : ""} ${unit.videoURL ? "🎥" : ""}</span>
+      <button class="delete-unit-btn" data-unit-id="${doc.id}" data-course-id="${courseId}" data-title="${unit.title}">Delete</button>
+    </div>
+  `;
+});
+
+  container.innerHTML = html;
+
+  // Attach delete listeners
+  container.querySelectorAll(".delete-unit-btn").forEach(btn => {
+btn.onclick = async () => {
+  const unitId = btn.dataset.unitId;
+  const courseId = btn.dataset.courseId;
+  const title = btn.dataset.title; // clean title
+  if (!(await confirmDelete(`Delete unit "${title}"?`))) return;
+
+  await deleteDoc(doc(db, "courses", courseId, "units", unitId));
+  showMessage(`Unit "${title}" deleted.`);
+  loadUnits(courseId, container);
+};
+  });
+}
 
   /* ENROLLMENT STATS */
 
@@ -1195,6 +1257,14 @@ if (data.quizId) {
     quizTitle = quiz.title || "Untitled Quiz";  // ✅ assign here
 
 courseName = quiz.courseId || quiz.courseName;
+
+courseName = quiz.courseId || quiz.courseName;
+
+// 🔥 Skip if this course is not assigned to the current teacher
+const courseNameLower = String(courseName).trim().toLowerCase();
+if (!assignedSubjects.includes(courseNameLower)) {
+  continue; // or continue; depending on loop context
+}
 
 const subjectsSnap =
   await getDocs(

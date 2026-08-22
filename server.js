@@ -775,8 +775,8 @@ incorrect
 
     const [groq1, groq2, gemini] = await Promise.all([
 
-      askGroq("llama-3.3-70b-versatile", prompt),
-      askGroq("llama-3.1-8b-instant", prompt),
+      askGroq("groq/compound-mini", prompt),
+      askGroq("groq/compound-mini", prompt),
       verifyGemini(question, options, answer)
 
     ]);
@@ -811,7 +811,7 @@ Text:
 ${text}
 `;
 
-  const repaired = await askGroq("llama-3.3-70b-versatile", prompt);
+  const repaired = await askGroq("groq/compound-mini", prompt);
 
   if (!repaired || repaired === "incorrect") {
     return text;
@@ -890,7 +890,7 @@ if (words.length < 50) {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          model: "llama-3.1-8b-instant",
+          model: "groq/compound-mini",
           messages: [
             {
               role: "user",
@@ -1145,7 +1145,7 @@ app.post("/summarize-course", async (req, res) => {
     const text = pdfData.text.substring(0, 4000);
 
     const ai = await askGroq(
-      "llama-3.1-8b-instant",
+      "groq/compound-mini",
       `
 Summarize this course in simple.
 rule: 
@@ -1462,7 +1462,7 @@ const {
   try {
 
     const ai = await askGroq(
-      "llama-3.1-8b-instant",
+      "groq/compound-mini",
       `
 Convert this transcript into structured study notes.
 

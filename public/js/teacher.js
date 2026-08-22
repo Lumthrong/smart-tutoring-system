@@ -242,7 +242,7 @@ async function loadAssignedSubjects() {
     option.dataset.subject =
       subject.subjectName;
 option.dataset.courseId =
-  subject.subjectName.trim();
+  subject.subjectName.trim().toLowerCase();
     
 console.log(
   "Subject:",
@@ -379,10 +379,7 @@ formData.append(
   selected.dataset.semester
 );
 
-formData.append(
-  "course",
-  selected.dataset.subject
-);
+formData.append("course", selected.dataset.courseId);  
 
 const token =
   await auth.currentUser.getIdToken();
@@ -427,24 +424,6 @@ await setDoc(courseRef, {
   uploadedBy: auth.currentUser.uid,
   createdAt: new Date()
 }, { merge: true });
-
-/* ===== ADD UNIT ===== */
-await addDoc(
-  collection(
-    db,
-    "courses",
-    courseId,
-    "units"
-  ),
-  {
-    title: data.unitTitle || "Unit",
-    pdfURL: data.pdfURL,
-    videoURL: data.videoURL,
-    uploadedBy: auth.currentUser.uid,
-    courseId: courseId,
-    createdAt: new Date()
-  }
-);
 
       btn.classList.remove("loading");
       btn.disabled = false;

@@ -239,17 +239,18 @@ for (const subjectDoc of snapshot.docs) {
 
   const subject = subjectDoc.data();
 
-  const subjectName = subject.subjectName;
+const subjectName = subject.subjectName;
+const subjectNameLower = subjectName.trim().toLowerCase();  // 🔥 normalise
 
-  let courseId = null;
-  let data = null;
+let courseId = null;
+let data = null;
 
-  const courseSnap = await getDocs(
-    query(
-      collection(db, "courses"),
-      where("course", "==", subjectName)
-    )
-  );
+const courseSnap = await getDocs(
+  query(
+    collection(db, "courses"),
+    where("course", "==", subjectNameLower)   // ✅ use lowercase
+  )
+);
 
   if (!courseSnap.empty) {
     courseId = courseSnap.docs[0].id;

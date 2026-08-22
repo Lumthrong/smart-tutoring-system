@@ -1553,22 +1553,6 @@ app.post(
 
           const batch = db.batch();
 
-          // DELETE OLD TEACHERS
-          const existingTeachers =
-            await db.collection("teacher_master").get();
-
-          existingTeachers.forEach(docSnap => {
-            batch.delete(docSnap.ref);
-          });
-
-          // DELETE OLD SUBJECTS
-          const existingSubjects =
-            await db.collection("subjects").get();
-
-          existingSubjects.forEach(docSnap => {
-            batch.delete(docSnap.ref);
-          });
-
           for (const teacher of teachers) {
 
             const email =
@@ -1582,26 +1566,13 @@ app.post(
               db.collection("teacher_master")
                 .doc(email.trim().toLowerCase());
 
-        batch.set(teacherRef, {
-  name:
-    teacher.name ||
-    teacher.Name ||
-    "",
-
-  email:
-    email.trim().toLowerCase(),
-
-  department:
-    teacher.department ||
-    teacher.Department ||
-    "",
-
-  role: "teacher",
-
-  updatedAt: new Date()
-});
-
-
+      batch.set(teacherRef, {
+              name: teacher.name || teacher.Name || "",
+              email: email.trim().toLowerCase(),
+              department: teacher.department || teacher.Department || "",
+              role: "teacher",
+              updatedAt: new Date()
+            }, { merge: true });   // <-- add merge option
           }
 
           await batch.commit();
@@ -1644,52 +1615,27 @@ app.post(
 
           const batch = db.batch();
 
-          const existingSubjects =
-            await db.collection("subjects").get();
+                    assignments.forEach(row => {
+            const email = row.email || row.Email || row.EMAIL;
+            if (!email) return;
 
-          existingSubjects.forEach(docSnap => {
-            batch.delete(docSnap.ref);
-          });
+     const semester = (row.semester || row.Semester || "").trim();
+            const subjectName = (row.subject || row.Subject || "").trim();
+            const docId = `${email.trim().toLowerCase()}_${semester}_${subjectName}`
+              .replace(/[^a-z0-9_]/g, '_'); // sanitize for Firestore
 
-assignments.forEach(row => {
-
-  console.log("CSV ROW:", row);
-
-  const email =
-    row.email ||
-    row.Email ||
-    row.EMAIL;
-
-  if (!email) {
-    console.log("Skipping row:", row);
-    return;
-  }
 
   const ref =
     db.collection("subjects").doc();
 
-  batch.set(ref, {
-
-    teacherEmail:
-      email.trim().toLowerCase(),
-
-    semester:
-      row.semester ||
-      row.Semester ||
-      "",
-
-    subjectName:
-      row.subject ||
-      row.Subject ||
-      "",
-
-    updatedAt:
-      new Date()
-
-  });
-
-});
-
+ batch.set(ref, {
+              teacherEmail: email.trim().toLowerCase(),
+              semester: semester,
+              subjectName: subjectName,
+              updatedAt: new Date()
+            }, { merge: true });
+          });
+          
           await batch.commit();
 
           fs.unlinkSync(req.file.path);
@@ -1748,14 +1694,6 @@ app.post(
 
           const batch = db.batch();
 
-          // DELETE OLD STUDENTS
-          const existingStudents =
-            await db.collection("student_master").get();
-
-          existingStudents.forEach(docSnap => {
-            batch.delete(docSnap.ref);
-          });
-
           students.forEach(student => {
 
             const email =
@@ -1769,38 +1707,15 @@ app.post(
               db.collection("student_master")
                 .doc(email.trim().toLowerCase());
 
-            batch.set(ref, {
-
-              name:
-                student.name ||
-                student.Name ||
-                "",
-
-              email:
-                email.trim().toLowerCase(),
-
-              rollNo:
-                student.rollNo ||
-                student.RollNo ||
-                student.rollno ||
-                "",
-
-              semester:
-                student.semester ||
-                student.Semester ||
-                "",
-
-              department:
-                student.department ||
-                student.Department ||
-                "",
-
+  batch.set(ref, {
+              name: student.name || student.Name || "",
+              email: email.trim().toLowerCase(),
+              rollNo: student.rollNo || student.RollNo || student.rollno || "",
+              semester: student.semester || student.Semester || "",
+              department: student.department || student.Department || "",
               role: "student",
-
               updatedAt: new Date()
-
-            });
-
+            }, { merge: true });
           });
 
           await batch.commit();

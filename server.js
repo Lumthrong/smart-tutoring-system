@@ -444,14 +444,15 @@ app.post(
 
   try {
 
-const { department, semester, course, unitTitle } = req.body;
+const { department, semester, unitTitle } = req.body;
+const course = req.body.course.trim().toLowerCase();   // <-- normalise
 const teacherEmail =
   req.user.email.toLowerCase();
 
 const subjectSnap = await db
   .collection("subjects")
   .where("teacherEmail", "==", teacherEmail)
-  .where("subjectName", "==", course)
+  .where("subjectNameLower", "==", course)   // now case‑insensitive
   .get();
 
 if (subjectSnap.empty) {
@@ -531,14 +532,33 @@ await courseRef.set({
 }, { merge: true });
 
 // add unit
-await courseRef.collection("units").add({
-  title: unitTitle || "Untitled Unit",
-  videoURL: videoUpload ? videoUpload.secure_url : null,
-  pdfURL: pdfUpload.secure_url,
-  teacherEmail,
-  uploadedBy: req.user.uid,
-  createdAt: new Date()
-});
+// Upsert unit based on title
+const unitsRef = courseRef.collection("units");
+const existingUnitQuery = await unitsRef
+  .where("title", "==", unitTitle || "Untitled Unit")
+  .get();
+
+if (!existingUnitQuery.empty) {
+  // Update existing unit (overwrite with new files)
+  const unitDoc = existingUnitQuery.docs[0];
+  await unitDoc.ref.update({
+    videoURL: videoUpload ? videoUpload.secure_url : null,
+    pdfURL: pdfUpload.secure_url,
+    teacherEmail,
+    uploadedBy: req.user.uid,
+    updatedAt: new Date()
+  });
+} else {
+  // Add new unit
+  await unitsRef.add({
+    title: unitTitle || "Untitled Unit",
+    videoURL: videoUpload ? videoUpload.secure_url : null,
+    pdfURL: pdfUpload.secure_url,
+    teacherEmail,
+    uploadedBy: req.user.uid,
+    createdAt: new Date()
+  });
+}
 
     res.json({
       success: true,
@@ -1628,12 +1648,13 @@ app.post(
   const ref =
     db.collection("subjects").doc();
 
- batch.set(ref, {
-              teacherEmail: email.trim().toLowerCase(),
-              semester: semester,
-              subjectName: subjectName,
-              updatedAt: new Date()
-            }, { merge: true });
+batch.set(ref, {
+  teacherEmail: email.trim().toLowerCase(),
+  semester: semester,
+  subjectName: subjectName,                 // original case (for display)
+  subjectNameLower: subjectName.trim().toLowerCase(), // for querying
+  updatedAt: new Date()
+}, { merge: true });
           });
           
           await batch.commit();

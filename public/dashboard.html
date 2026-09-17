@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Dashboard</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+</head>
+
+<body data-role="student">
+
+  <div class="sidebar" id="sidebar">
+
+    <!-- USER MINI HEADER -->
+    <div class="profile-mini">
+      <div class="avatar-circle">
+        <img id="miniProfileImg" src="" alt="Avatar">
+        <span id="avatarCircle">U</span>
+      </div>
+      <div class="profile-info">
+        <p id="profileName">Guest</p>
+        <small id="profileEmail"></small>
+      </div>
+    </div>
+
+    <a href="index.html"><span class="material-symbols-outlined">home
+      </span> Home</a>
+
+    <!-- PROFILE DROPDOWN -->
+    <div class="profile-wrapper">
+      <div class="profile-toggle" id="profileToggle"><span class="material-symbols-outlined">
+          account_circle
+        </span>
+        Profile ▾
+      </div>
+      <div class="profile-dropdown" id="profileDropdown">
+        <a href="dashboard.html" id="dashboardLink"><span class="material-symbols-outlined">
+            dashboard
+          </span> Dashboard</a>
+        <a href="/accsettings.html"><span class="material-symbols-outlined">
+            settings
+          </span> Profile Settings</a>
+        <a href="#" id="logoutLink"><span class="material-symbols-outlined">
+            logout
+          </span> Logout</a>
+      </div>
+    </div>
+    <div class="book-wrapper">
+
+    </div>
+    <div class="footer">
+      <a href="department.html"><span class="material-symbols-outlined">newsstand</span>Department</a>
+      <a href="about.html"><span class="material-symbols-outlined">
+          info
+        </span> About</a>
+    </div>
+  </div>
+  <div class="overlay" id="overlay"></div>
+
+  <header>
+    <button class="menu-btn" id="menuBtn"><span class="material-symbols-outlined">
+        menu
+      </span></button>
+    <h1>Home</h1>
+
+    <div class="notify" id="notifyBell">
+      <span class="material-symbols-outlined">
+        notifications
+      </span>
+      <span id="notifyCount">0</span>
+      <div id="notificationPanel" class="notify-panel">
+        <div class="notify-header">
+          Notifications
+        </div>
+
+        <div id="notificationList"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= MAIN DASHBOARD ================= -->
+
+  <section class="dashboard">
+    <!-- USER HEADER ABOVE TABS -->
+    <div class="dashboard-user">
+      <div class="dash-user-card">
+
+        <div class="dash-avatar">
+          <img id="dashProfileImg" src="" alt="avatar" style="display:none;">
+          <span id="dashAvatarLetter">U</span>
+        </div>
+
+        <div class="dash-user-text">
+          <p class="greeting">Welcome back </p>
+          <h2 id="dashboardUserName">Guest</h2>
+        </div>
+
+      </div>
+    </div>
+    <div class="Tabs">
+      <button id="globalQuizBtn" class="dashbtn">
+        <span class="material-symbols-outlined">quiz</span>
+        Take Quiz (<span id="quizAvailableCount">0</span>)
+      </button>
+
+      <button id="globalNotesBtn" class="dashbtn">
+        <span class="material-symbols-outlined">
+          book_5
+        </span> Notes
+      </button>
+
+      <div id="quizListPanel" class="hidden"></div>
+
+    </div>
+    
+     <div id="departmentCourses"></div>
+    <!-- ===== STATS ===== -->
+
+    <div class="stats-grid">
+
+      <div class="stat-card">
+        <h4>Courses</h4>
+        <p id="courseCount">0</p>
+      </div>
+
+      <div class="stat-card">
+        <h4>AI Quizzes</h4>
+        <p id="aiQuizCount">0</p>
+      </div>
+
+      <div class="stat-card">
+        <h4>Course Quizzes</h4>
+        <p id="courseQuizCount">0</p>
+      </div>
+
+    </div>
+
+    <!-- ===== QUICK ACTION ===== -->
+
+    <div class="card quick-test">
+
+      <h3>Quick Quiz</h3>
+
+      <p>Generate a quiz automatically from the course.</p>
+
+      <select id="courseSelect"></select>
+      <select id="unitSelect"></select>
+
+      <button onclick="startTest()" class="dashbtn">
+        <span class="material-symbols-outlined">
+          network_intel_node
+        </span> Generate
+      </button>
+
+    </div>
+
+    <!-- ===== ENROLLED COURSES ===== -->
+    <div class="card">
+      <h3>Enrolled Courses</h3>
+
+      <div id="enrolledCourses"></div>
+    </div>
+
+    <!-- ================= DISCUSSION PANEL ================= -->
+    <section class="chat">
+      <div class="chatBox hidden" id="chatBox">
+
+        <div class="chatHeader">
+          <span>Course Discussion</span>
+          <div id="chatActions" class="chatActions hidden">
+            <button id="chatEditBtn">Edit</button>
+            <button id="chatDeleteBtn">Delete</button>
+          </div>
+
+          <div style="display:flex; gap:10px;">
+            <button class="chatClose" id="chatClose">✕</button>
+          </div>
+        </div>
+
+        <div class="chatMessages commentList"></div>
+
+        <div class="chatInput">
+
+          <input class="commentInput" placeholder="Ask a question...">
+
+          <button class="sendComment"><span class="material-symbols-outlined">
+              send
+            </span></button>
+
+        </div>
+
+      </div>
+    </section>
+        <!-- ===== ANALYTICS ===== -->
+
+    <div class="chart-grid">
+
+      <div class="card">
+
+        <h3>Course Quiz Activity</h3>
+        <select id="courseChartSelect"></select>
+        <div class="chart-container">
+          <canvas id="courseQuizChart"></canvas>
+        </div>
+
+      </div>
+
+      <div class="card">
+        <h3>AI Quiz Performance</h3>
+        <select id="aiChartSelect"></select>
+        <div class="chart-container">
+          <canvas id="aiQuizChart"></canvas>
+        </div>
+
+      </div>
+
+    </div>
+    <!-- ===== LEARNING HISTORY ===== -->
+
+    <div class="card">
+
+      <h3>Learning History</h3>
+
+      <div id="learningHistory">
+
+        <p>No learning history yet.</p>
+
+      </div>
+
+    </div>
+  </section>
+  <!-- ================= SCRIPTS ================= -->
+
+  <script type="module" src="js/script.js"></script>
+  <script type="module" src="js/user.js"></script>
+  <script type="module" src="js/auth.js"></script>
+  <script type="module" src="js/notification.js"></script>
+
+</body>
+
+</html>

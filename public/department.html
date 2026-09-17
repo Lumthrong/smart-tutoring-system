@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Tutor</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/department.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+</head>
+
+<body>
+
+  <div class="sidebar" id="sidebar">
+
+    <!-- USER MINI HEADER -->
+    <div class="profile-mini">
+      <div class="avatar-circle">
+        <img id="miniProfileImg" src="" alt="Avatar">
+        <span id="avatarCircle">U</span>
+      </div>
+      <div class="profile-info">
+        <p id="profileName">Guest</p>
+        <small id="profileEmail"></small>
+      </div>
+    </div>
+
+    <a href="index.html"><span class="material-symbols-outlined">home
+      </span> Home</a>
+
+    <!-- PROFILE DROPDOWN -->
+    <div class="profile-wrapper">
+      <div class="profile-toggle" id="profileToggle"><span class="material-symbols-outlined">
+          account_circle
+        </span>
+        Profile ▾
+      </div>
+      <div class="profile-dropdown" id="profileDropdown">
+        <a href="dashboard.html" id="dashboardLink"><span class="material-symbols-outlined">
+            dashboard
+          </span> Dashboard</a>
+        <a href="/accsettings.html"><span class="material-symbols-outlined">
+            settings
+          </span> Profile Settings</a>
+        <a href="#" id="logoutLink"><span class="material-symbols-outlined">
+            logout
+          </span> Logout</a>
+      </div>
+    </div>
+    <div class="book-wrapper">
+
+    </div>
+    <div class="footer">
+      <a href="department.html"><span class="material-symbols-outlined">newsstand</span>Department</a>
+      <a href="about.html"><span class="material-symbols-outlined">
+          info
+        </span> About</a>
+    </div>
+  </div>
+  <div class="overlay" id="overlay"></div>
+
+  <header>
+    <button class="menu-btn" id="menuBtn"><span class="material-symbols-outlined">
+        menu
+      </span></button>
+    <h1>Home</h1>
+
+    <div class="notify" id="notifyBell">
+      <span class="material-symbols-outlined">
+        notifications
+      </span>
+      <span id="notifyCount">0</span>
+      <div id="notificationPanel" class="notify-panel">
+        <div class="notify-header">
+          Notifications
+        </div>
+
+        <div id="notificationList"></div>
+      </div>
+    </div>
+  </header>
+
+  <section class="departments-section">
+
+  <div class="section-header">
+    <h2>Departments Offered</h2>
+    <p>
+      Explore a wide range of engineering and technology programs designed to
+      prepare students for industry, innovation, and research.
+    </p>
+  </div>
+
+  <div class="department-grid">
+
+    <!-- CSE -->
+    <div class="department-card">
+      <span class="material-symbols-outlined">computer</span>
+      <h3>Computer Science & Engineering (CSE)</h3>
+      <p>
+        Focuses on programming, software development, artificial intelligence,
+        databases, computer networks, cybersecurity, and modern computing
+        technologies.
+      </p>
+      <ul>
+        <li>Programming & Data Structures</li>
+        <li>Database Management Systems</li>
+        <li>Artificial Intelligence</li>
+        <li>Web & Software Development</li>
+      </ul>
+    </div>
+
+    <!-- IT -->
+    <div class="department-card">
+      <span class="material-symbols-outlined">devices</span>
+      <h3>Information Technology (IT)</h3>
+      <p>
+        Covers information systems, cloud computing, networking, software
+        engineering, and technology solutions for businesses and organizations.
+      </p>
+      <ul>
+        <li>Cloud Computing</li>
+        <li>System Administration</li>
+        <li>Software Engineering</li>
+        <li>Network Technologies</li>
+      </ul>
+    </div>
+
+    <!-- ECE -->
+    <div class="department-card">
+      <span class="material-symbols-outlined">memory</span>
+      <h3>Electronics & Communication Engineering (ECE)</h3>
+      <p>
+        Deals with electronic circuits, communication systems, embedded
+        technologies, signal processing, and wireless communication.
+      </p>
+      <ul>
+        <li>Digital Electronics</li>
+        <li>Communication Systems</li>
+        <li>Microprocessors</li>
+        <li>Embedded Systems</li>
+      </ul>
+    </div>
+
+    <!-- AET -->
+    <div class="department-card">
+      <span class="material-symbols-outlined">flight</span>
+      <h3>Agricultural Engineering Technology (AET)</h3>
+      <p>
+        Focuses on aircraft systems, aerodynamics, propulsion, aviation
+        maintenance, and aerospace technologies.
+      </p>
+      <ul>
+        <li>Aerodynamics</li>
+        <li>Aircraft Structures</li>
+        <li>Propulsion Systems</li>
+        <li>Aviation Maintenance</li>
+      </ul>
+    </div>
+
+    <!-- BT -->
+    <div class="department-card">
+      <span class="material-symbols-outlined">biotech</span>
+      <h3>Biotechnology (BT)</h3>
+      <p>
+        Combines biology and technology to develop innovative solutions in
+        healthcare, agriculture, genetics, and environmental science.
+      </p>
+      <ul>
+        <li>Genetics & Genomics</li>
+        <li>Microbiology</li>
+        <li>Bioprocess Engineering</li>
+        <li>Molecular Biology</li>
+      </ul>
+    </div>
+
+  </div>
+
+</section>
+<script type="module" src="js/department.js"></script>
+<script type="module" src="js/script.js"></script>
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/notification.js"></script>
+</body>
+</html>

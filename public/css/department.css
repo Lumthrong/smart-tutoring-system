@@ -1,0 +1,135 @@
+.departments-section {
+  padding: 80px 8%;
+  background: #f8fafc;
+}
+
+.section-header {
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.section-header h2 {
+  font-size: 2.3rem;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+.section-header p {
+  max-width: 700px;
+  margin: auto;
+  color: #6b7280;
+  line-height: 1.7;
+}
+
+.department-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 25px;
+}
+
+.department-card {
+  background: #fff;
+  border-radius: 18px;
+  padding: 28px;
+  box-shadow: 0 8px 25px rgba(0,0,0,.08);
+  transition: all .3s ease;
+}
+
+.department-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 35px rgba(0,0,0,.12);
+}
+
+.department-card .material-symbols-outlined {
+  font-size: 48px;
+  color: rgba(0,0,0,.45);
+  margin-bottom: 15px;
+}
+
+.department-card h3 {
+  font-size: 1.25rem;
+  margin-bottom: 12px;
+  color: #111827;
+}
+
+.department-card p {
+  color: #6b7280;
+  line-height: 1.7;
+  margin-bottom: 15px;
+}
+
+.department-card ul {
+  padding-left: 18px;
+}
+
+.department-card ul li {
+  color: #4b5563;
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+.department-card ul li::marker {
+  color: rgba(0,0,0,.45);
+}
+
+/* ===== TABLET ===== */
+
+@media (max-width: 768px) {
+
+  .departments-section {
+    padding: 60px 20px;
+  }
+
+  .section-header {
+    margin-bottom: 35px;
+  }
+
+  .section-header h2 {
+    font-size: 1.9rem;
+  }
+
+  .department-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .department-card {
+    padding: 24px;
+  }
+
+}
+
+/* ===== MOBILE ===== */
+
+@media (max-width: 480px) {
+
+  .departments-section {
+    padding: 50px 15px;
+  }
+
+  .section-header h2 {
+    font-size: 1.6rem;
+  }
+
+  .section-header p {
+    font-size: .95rem;
+  }
+
+  .department-card {
+    padding: 20px;
+    border-radius: 14px;
+  }
+
+  .department-card h3 {
+    font-size: 1.1rem;
+  }
+
+  .department-card p,
+  .department-card ul li {
+    font-size: .92rem;
+  }
+
+  .department-card .material-symbols-outlined {
+    font-size: 40px;
+  }
+
+}

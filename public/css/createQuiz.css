@@ -1,0 +1,265 @@
+.body-st{
+    padding:20px;
+}
+/* ================= QUIZ CONTAINER ================= */
+
+.create-quiz{
+  max-width:700px;
+  margin:40px auto;
+  padding:30px;
+
+  background:#ffffff;
+  border-radius:12px;
+
+  box-shadow:0 8px 25px rgba(0,0,0,0.08);
+}
+
+
+/* ================= TITLE ================= */
+
+.create-quiz h2{
+  margin-bottom:20px;
+  font-size:22px;
+  font-weight:600;
+  color:#333;
+}
+
+
+/* ================= INPUT FIELDS ================= */
+
+.create-quiz input{
+
+  width:100%;
+  padding:12px 14px;
+  margin-bottom:15px;
+
+  border:1px solid #ddd;
+  border-radius:8px;
+
+  font-size:14px;
+
+  transition:all .2s ease;
+}
+
+.create-quiz input:focus{
+  outline:none;
+  border-color:#4f46e5;
+  box-shadow:0 0 0 2px rgba(79,70,229,0.15);
+}
+
+
+/* ================= QUESTION BLOCK ================= */
+
+.question-block{
+
+  padding:15px;
+  margin-bottom:15px;
+
+  border:1px solid #eee;
+  border-radius:10px;
+
+  background:#fafafa;
+}
+
+
+/* ================= BUTTONS ================= */
+
+.create-quiz button{
+
+  padding:10px 16px;
+  margin-right:10px;
+
+  border:none;
+  border-radius:8px;
+
+  font-size:14px;
+  font-weight:500;
+
+  cursor:pointer;
+  transition:all .2s ease;
+}
+
+
+/* Add Question */
+
+.create-quiz button:first-of-type{
+  background:#6366f1;
+  color:white;
+}
+
+.create-quiz button:first-of-type:hover{
+  background:#4f46e5;
+}
+
+
+/* Save Quiz */
+
+.create-quiz button:last-of-type{
+  background:#16a34a;
+  color:white;
+}
+
+.create-quiz button:last-of-type:hover{
+  background:#15803d;
+}
+
+
+/* ================= QUESTIONS AREA ================= */
+
+#questions{
+  margin-top:10px;
+  margin-bottom:15px;
+}
+
+/* ================= QUIZ CREATOR CONTAINER ================= */
+
+h2{
+  margin-bottom:20px;
+  color:#333;
+}
+
+/* ================= INPUTS ================= */
+
+#quizTitle,
+#timeLimit{
+
+  width:100%;
+  max-width:500px;
+
+  padding:12px 14px;
+  margin-bottom:15px;
+
+  border:1px solid #ddd;
+  border-radius:8px;
+
+  font-size:14px;
+
+  transition:0.2s;
+}
+
+#quizTitle:focus,
+#timeLimit:focus{
+  outline:none;
+  border-color:#4f46e5;
+  box-shadow:0 0 0 2px rgba(79,70,229,0.15);
+}
+
+
+/* ================= QUESTION BLOCK ================= */
+
+.question-block{
+
+  background:#ffffff;
+
+  padding:20px;
+  margin-bottom:18px;
+
+  border-radius:10px;
+
+  border:1px solid #e6e6e6;
+
+  box-shadow:0 4px 12px rgba(0,0,0,0.05);
+}
+
+
+/* ================= QUESTION INPUTS ================= */
+
+.question-block input{
+
+  width:100%;
+  padding:10px 12px;
+  margin-bottom:10px;
+
+  border:1px solid #ddd;
+  border-radius:6px;
+
+  font-size:14px;
+
+  transition:0.2s;
+}
+
+.question-block input:focus{
+  outline:none;
+  border-color:#4f46e5;
+}
+
+
+/* ================= BUTTONS ================= */
+
+.quiz-btn{
+
+  padding:10px 16px;
+  margin-right:10px;
+
+  border:none;
+  border-radius:8px;
+
+  font-size:14px;
+  font-weight:500;
+
+  cursor:pointer;
+
+  transition:0.2s;
+}
+
+
+/* Add Question Button */
+
+.quiz-btn:nth-of-type(1){
+  background: rgba(0, 5, 0, 0.45);
+  backdrop-filter: blur(12px);
+  color:white;
+}
+
+.quiz-btn:nth-of-type(1):hover{
+  background:#4f46e5;
+}
+
+
+/* Save Quiz Button */
+
+.quiz-btn:nth-of-type(2){
+  background:#16a34a;
+  color:white;
+}
+
+.quiz-btn:nth-of-type(2):hover{
+  background:#15803d;
+}
+
+
+/* ================= QUESTIONS AREA ================= */
+
+#questions{
+  margin-top:10px;
+  margin-bottom:15px;
+}
+
+
+/* ================= DIVIDER ================= */
+
+.question-block hr{
+  border:none;
+  border-top:1px solid #eee;
+  margin-top:12px;
+}
+
+.msg{
+  display:none;
+  margin-bottom:15px;
+  padding:12px 16px;
+  border-radius:8px;
+  font-size:14px;
+}
+
+.msg.success{
+  background:#e6f9ed;
+  color:#0f5132;
+  border:1px solid #badbcc;
+}
+
+.msg.error{
+  background:#fde2e2;
+  color:#842029;
+  border:1px solid #f5c2c7;
+}

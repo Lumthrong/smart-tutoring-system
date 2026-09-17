@@ -1,0 +1,1235 @@
+/* ================= SYSTEM MESSAGE ================= */
+
+#systemMessage {
+  position: fixed;
+  bottom: 30px;
+  left: 50%;
+  transform: translateX(-50%);
+
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+
+  color: white;
+  padding: 12px 22px;
+  border-radius: 10px;
+
+  font-size: 14px;
+  font-weight: 500;
+
+  z-index: 9999;
+  display: none;
+
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+
+  animation: fadeIn .3s ease;
+}
+
+.quiz-card{
+  background:#fff;
+  border:1px solid #e5e7eb;
+  border-radius:14px;
+  padding:18px;
+  margin-bottom:16px;
+  box-shadow:0 4px 12px rgba(0,0,0,.05);
+}
+
+.quiz-card h4{
+  margin-bottom:10px;
+}
+
+.aiQuestion{
+  width:100%;
+  min-height:70px;
+  border:1px solid #d1d5db;
+  border-radius:8px;
+  padding:10px;
+}
+
+.quiz-options{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:15px;
+}
+
+.quiz-option{
+  background:#f8fafc;
+  border:1px solid #dbeafe;
+  border-radius:8px;
+  padding:10px;
+}
+
+.quiz-answer{
+  margin-top:15px;
+  color:#16a34a;
+  font-weight:600;
+}
+/* ===== FLOATING UPLOAD BUTTON ===== */
+.top-actions{
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 15px;
+}
+.upload-toggle-btn{
+  position: relative; 
+  border:#4338ca;
+  margin-bottom: 10px;
+  width: fit-content;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(12px);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.upload-toggle-btn:hover{
+background: #717171;
+}
+.secondary-btn {
+  position: relative; 
+  border:#4338ca;
+  margin-bottom: 10px;
+  width: fit-content;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 10px;
+  background: rgba(0,0,0,0.45);
+  backdrop-filter: blur(12px);
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  
+}
+
+.secondary-btn:hover {
+  background: #717171;
+}
+/* ===== DROPDOWN FORM ===== */
+
+.upload-dropdown{
+  position: relative;
+  width: 100%;
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+/* header */
+
+.upload-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.upload-header button{
+  border: none;
+  background: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+.file-upload{
+position:relative;
+margin-bottom:12px;
+display: flex;
+}
+
+.file-upload input{
+opacity:0;
+position:absolute;
+width:100%;
+height:100%;
+cursor:pointer;
+}
+
+.file-preview{
+border:2px dashed #d1d5db;
+padding:12px;
+border-radius:8px;
+text-align:center;
+background:#fafafa;
+font-size:14px;
+color:#555;
+transition:0.2s;
+}
+.file-preview .material-symbols-outlined{
+  color:#333;
+}
+.file-preview img{
+width:240px;
+height:320px;
+object-fit:cover;
+border-radius:6px;
+display:block;
+margin:auto;
+}
+
+.file-preview.ready{
+border-color:#4f46e5;
+background:#eef2ff;
+color:#4f46e5;
+}
+#placeholder{
+  padding:10px;
+  border-radius: 8px;
+}
+/* ================= CONFIRM MODAL ================= */
+
+.confirm-modal{
+
+position:fixed;
+top:0;
+left:0;
+
+width:100%;
+height:100%;
+
+background:rgba(0,0,0,.4);
+
+display:flex;
+align-items:center;
+justify-content:center;
+
+z-index:9999;
+
+}
+
+.confirm-box{
+
+background:white;
+
+padding:25px 30px;
+
+border-radius:12px;
+
+min-width:300px;
+
+text-align:center;
+
+box-shadow:0 20px 40px rgba(0,0,0,.2);
+
+}
+
+.confirm-box h3{
+margin-bottom:10px;
+}
+
+.confirm-actions{
+
+margin-top:15px;
+
+display:flex;
+justify-content:center;
+gap:10px;
+
+}
+
+.confirm-actions button{
+
+padding:8px 16px;
+
+border:none;
+border-radius:6px;
+
+cursor:pointer;
+font-weight:500;
+
+}
+
+#confirmCancel{
+background:#ddd;
+}
+
+#confirmOk{
+
+background: rgba(0,0,0,0.45);
+backdrop-filter: blur(12px);
+
+color:white;
+
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* ================= LOADER ================= */
+
+.loader {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 45px;
+  height: 45px;
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  border-top: 4px solid #4f46e5;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  z-index: 9999;
+}
+
+.hidden {
+  display: none;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* ================= DASHBOARD ================= */
+
+.dashboard {
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+/* ================= CARD ================= */
+
+.card {
+  background: #fafafa;
+
+  border-radius: 18px;
+  padding: 25px;
+  margin-bottom: 40px;
+
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+
+  animation: fadeUp .6s ease forwards;
+}
+
+.card h3 {
+  margin-bottom: 18px;
+  font-size: 20px;
+  font-weight: 600;
+}
+/* ================= QUIZ RESULTS FOLDER VIEW ================= */
+
+/* ===== DEPARTMENT ===== */
+
+.dept-folder {
+  margin-bottom: 25px;
+}
+
+.dept-title {
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  margin-top: 15px;
+}
+
+/* ===== COURSE ===== */
+
+.course-title {
+  background: #eef2ff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  margin-top: 10px;
+  margin-left: 15px;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.course-content {
+  margin-left: 25px;
+  margin-top: 10px;
+}
+
+/* ===== QUIZ TITLE ===== */
+
+.quiz-title {
+  background: #ddd6fe;
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-top: 10px;
+  margin-left: 30px;
+  font-weight: 600;
+}
+
+.quiz-content {
+  margin-left: 40px;
+  margin-top: 6px;
+}
+
+/* ===== HEADER ===== */
+
+.results-header {
+  display: grid;
+  grid-template-columns: minmax(0,2fr) 1fr minmax(0,2fr);
+  font-weight: 600;
+  color: #444;
+  border-bottom: 2px solid #eee;
+  margin-bottom: 8px;
+  padding: 8px 12px;
+}
+
+/* ===== RESULT ITEM ===== */
+
+.result-item {
+  display: grid;
+  grid-template-columns: minmax(0,2fr) 1fr minmax(0,2fr);
+  align-items: center;
+
+  background: white;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 6px;
+
+  box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+  gap: 10px;
+}
+
+/* prevent overflow */
+.result-item span {
+  font-weight: 600;
+  color: #4f46e5;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* allow email to wrap */
+.result-item span:first-child {
+  white-space: normal;
+  word-break: break-word;
+}
+
+/* score styling */
+.result-score {
+  color: #4f46e5;
+  text-align: center;
+}
+
+/* ===== UTIL ===== */
+
+.hidden {
+  display: none;
+}
+/* ================= FORM ================= */
+
+#uploadLectureForm {
+  display: grid;
+  gap: 15px;
+}
+
+#uploadLectureForm select,
+#uploadLectureForm input[type="text"],
+#uploadLectureForm input[type="file"] {
+
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  font-size: 14px;
+
+  transition: .25s;
+}
+
+#uploadLectureForm select:focus,
+#uploadLectureForm input[type="text"]:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 10px rgba(79, 70, 229, .25);
+}
+
+#uploadLectureForm label {
+  font-size: 13px;
+  font-weight: 500;
+  margin-top: 8px;
+}
+
+/* ================= UPLOAD BUTTON ================= */
+
+.upload-btn {
+  position: relative;
+  display: flex;
+  padding: 12px;
+  border-radius: 12px;
+  border: none;
+
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(12px);
+
+  color: white;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  transition: .25s;
+}
+
+.upload-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 25px rgba(79, 70, 229, .35);
+}
+
+/* loader */
+
+.btn-loader {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin .7s linear infinite;
+  display: none;
+}
+
+.upload-btn.loading .btn-loader {
+  display: block;
+}
+
+.upload-btn.loading .btn-text {
+  opacity: .7;
+}
+/* ================= MY UPLOADED LECTURES (FOLDER STYLE) ================= */
+
+#myLectures{
+margin-top:10px;
+}
+
+/* department folder */
+
+.dept-section{
+margin-bottom:15px;
+}
+
+/* department header */
+
+.dept-section .dept-title{
+
+background: rgba(0,0,0,0.45);
+backdrop-filter: blur(12px);
+
+color:white;
+padding:12px 16px;
+border-radius:10px;
+
+cursor:pointer;
+font-weight:600;
+
+display:flex;
+align-items:center;
+gap:6px;
+
+transition:.2s;
+}
+
+.dept-section .dept-title:hover{
+transform:translateX(3px);
+}
+
+/* courses container */
+
+.dept-courses{
+margin-left:20px;
+margin-top:10px;
+}
+
+/* course folder */
+
+.lecture-card{
+
+background:#fff;
+
+padding:12px 14px;
+border-radius:8px;
+
+margin-bottom:8px;
+
+box-shadow:0 3px 10px rgba(0,0,0,0.08);
+
+transition:.25s;
+}
+
+.lecture-card:hover{
+transform:translateY(-2px);
+box-shadow:0 8px 20px rgba(0,0,0,0.12);
+}
+
+/* course title */
+
+.lecture-card strong{
+font-size:15px;
+color:#333;
+}
+
+/* semester text */
+
+.lecture-card small{
+color:#777;
+}
+
+/* buttons */
+
+.lecture-card button{
+
+margin-top:6px;
+margin-right:6px;
+
+padding:6px 10px;
+
+border:none;
+border-radius:6px;
+
+background: rgba(0,0,0,0.45);
+backdrop-filter: blur(12px);
+
+color:white;
+font-size:13px;
+cursor:pointer;
+
+transition:.2s;
+}
+
+.lecture-card button:hover{
+background:#666;
+}
+
+/* delete */
+
+.lecture-card .deleteCourse{
+background:#ef4444;
+}
+
+.lecture-card .deleteCourse:hover{
+background:#dc2626;
+}
+/* ================= ENROLLED COURSES ================= */
+
+#enrolledCourses div {
+  padding: 12px 14px;
+  border-radius: 10px;
+
+  background: white;
+  margin-bottom: 10px;
+
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.06);
+}
+
+/* ================= ENROLLMENT STATS ================= */
+
+#enrollmentStats {
+  display: none;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 18px;
+  margin-top: 10px;
+  margin-bottom: 15px;
+}
+#enrollmentStats.show {
+  display: grid;
+}
+/* each course stat card */
+
+.enrollment-card {
+  background: white;
+  border-radius: 14px;
+  padding: 16px 18px;
+
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+
+  transition: .25s;
+}
+
+.enrollment-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 28px rgba(0,0,0,0.12);
+}
+
+/* course name */
+
+.enrollment-course {
+  font-weight: 600;
+  font-size: 15px;
+  color: #333;
+}
+
+/* number of students */
+
+.enrollment-count {
+  background: rgba(0, 0, 0, 0.45);
+backdrop-filter: blur(12px);
+  color: white;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  padding: 6px 12px;
+  border-radius: 20px;
+
+  min-width: 45px;
+  text-align: center;
+}
+
+/* optional label */
+
+.enrollment-label {
+  font-size: 12px;
+  color: #777;
+  margin-top: 3px;
+}
+
+.clickable {
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.clickable:hover {
+  transform: scale(1.02);
+  background: #f3f4f6;
+}
+
+.student-card {
+  padding: 12px;
+  margin: 8px 0;
+  background: #fff;
+  border-radius: 8px;
+}
+/* ================= PERFORMANCE SECTION ================= */
+
+#courseSelect {
+  padding: 10px;
+  border-radius: 10px;
+  border: 1px solid #ddd;
+  margin-bottom: 15px;
+  width: 100%;
+}
+
+#performanceList div {
+  background: white;
+  padding: 12px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+/* ================= QUIZZES ================= */
+
+#teacherQuizzes div {
+  background: white;
+  padding: 14px;
+  border-radius: 10px;
+  margin-bottom: 12px;
+
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+#teacherQuizzes button {
+  margin-top: 8px;
+  margin-right: 6px;
+
+  padding: 6px 10px;
+  border: none;
+  border-radius: 6px;
+
+  background: rgba(0, 0, 0, 0.45);
+backdrop-filter: blur(12px);
+  color: white;
+  cursor: pointer;
+}
+
+/* ================= CHAT ================= */
+
+.chatBox {
+  margin-top: 15px;
+  border: 1px solid #e4e4e4;
+  border-radius: 10px;
+  background: #fff;
+
+  display: flex;
+  flex-direction: column;
+  height: 320px;
+}
+
+.chatBox.hidden {
+  display: none;
+}
+
+.chatHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+  padding: 10px 12px;
+
+background: rgba(0, 0, 0, 0.45);
+backdrop-filter: blur(12px);
+  color: white;
+
+  border-radius: 10px 10px 0 0;
+}
+
+.chatClose {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+.chatMessages {
+  flex: 1;
+  padding: 12px;
+  overflow-y: auto;
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.chatMsg {
+  max-width: 75%;
+  padding: 10px 12px;
+
+  border-radius: 10px;
+  font-size: 14px;
+
+  display: flex;
+  flex-direction: column;
+}
+
+.chatMsg.student {
+  background: #e8f0ff;
+  align-self: flex-start;
+}
+
+.chatMsg.teacher {
+  background: #e6ffe9;
+  align-self: flex-end;
+}
+
+.chatMsg strong {
+  font-size: 12px;
+  margin-bottom: 3px;
+  color: #444;
+}
+
+.chatMsg p {
+  margin: 0;
+}
+
+.chatInput {
+  display: flex;
+  border-top: 1px solid #eee;
+}
+
+.chatInput input {
+  flex: 1;
+  border: none;
+  padding: 10px;
+  font-size: 14px;
+}
+
+.chatInput input:focus {
+  outline: none;
+}
+
+.chatInput button {
+  border: none;
+  background: rgba(0, 0, 0, 0.45);
+backdrop-filter: blur(12px);
+  color: white;
+  padding: 0 16px;
+  cursor: pointer;
+}
+
+.chatInput button:hover {
+  background: #4338ca;
+}
+
+/* ================= ANIMATION ================= */
+
+@keyframes fadeUp {
+  from {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+.mentorship-box{
+margin:15px 0;
+padding:12px;
+background:#f8f9ff;
+border-radius:10px;
+}
+
+.mentor-item{
+margin:6px 0;
+font-weight:500;
+}
+
+.student-link{
+cursor:pointer;
+color:#4f46e5;
+font-weight:600;
+}
+
+.student-link:hover{
+text-decoration:underline;
+}
+
+/* =========================
+   AI QUIZ GENERATOR
+========================= */
+
+.ai-quiz-card{
+  padding:20px;
+}
+
+.ai-quiz-card h3{
+  margin-bottom:15px;
+  color:#1e293b;
+}
+
+.ai-quiz-card select,
+.ai-quiz-card input{
+  width:100%;
+  padding:12px;
+  margin-top:8px;
+  margin-bottom:12px;
+  border:1px solid #dbe3ef;
+  border-radius:10px;
+  font-size:14px;
+}
+
+.ai-quiz-card label{
+  display:block;
+  font-weight:600;
+  margin-top:10px;
+  color:#475569;
+}
+
+/* BUTTON GROUP */
+
+.ai-quiz-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:15px;
+}
+
+.ai-quiz-actions button{
+  flex:1;
+  min-width:150px;
+  padding:12px;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-weight:600;
+  transition:.2s;
+}
+
+.ai-quiz-actions button:hover{
+  transform:translateY(-2px);
+}
+
+/* INDIVIDUAL BUTTONS */
+
+#generateAIQuizBtn{
+  background:#2563eb;
+  color:#fff;
+}
+
+#regenerateAIQuizBtn{
+  background:#f59e0b;
+  color:#fff;
+}
+
+#saveAIQuizBtn{
+  background:#10b981;
+  color:#fff;
+}
+
+#sendAIQuizBtn{
+  background:#7c3aed;
+  color:#fff;
+}
+
+/* GENERATED QUESTIONS */
+
+#generatedQuizPreview{
+  margin-top:20px;
+  display:flex;
+  flex-direction:column;
+  gap:15px;
+}
+
+.quiz-card{
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  border-radius:12px;
+  padding:16px;
+}
+
+.quiz-card h4{
+  margin-bottom:10px;
+}
+
+.aiQuestion{
+  width:100%;
+  min-height:90px;
+  border:1px solid #dbe3ef;
+  border-radius:8px;
+  padding:10px;
+  resize:vertical;
+  margin-bottom:12px;
+}
+
+.quiz-options{
+  display:grid;
+  gap:8px;
+  margin-bottom:12px;
+}
+
+.quiz-option{
+  padding:10px;
+  background:#fff;
+  border:1px solid #e2e8f0;
+  border-radius:8px;
+}
+
+.quiz-answer{
+  background:#dcfce7;
+  border:1px solid #86efac;
+  color:#166534;
+  padding:10px;
+  border-radius:8px;
+  font-weight:600;
+}
+
+/* MOBILE */
+
+@media(max-width:768px){
+
+  .ai-quiz-actions{
+    flex-direction:column;
+  }
+
+  .ai-quiz-actions button{
+    width:100%;
+  }
+
+}
+/*RESPONSIVE DESIGNS*/
+/* ================= LARGE DESKTOP ================= */
+
+@media (max-width: 1400px){
+
+.dashboard{
+grid-template-columns: repeat(2,1fr);
+gap:20px;
+}
+
+}
+
+
+/* ================= LAPTOP ================= */
+
+@media (max-width: 1100px){
+
+.dashboard{
+grid-template-columns:1fr;
+}
+
+.card{
+padding:20px;
+}
+
+.file-preview img{
+width:110px;
+height:150px;
+}
+
+}
+
+
+/* ================= TABLET ================= */
+
+@media (max-width: 900px){
+
+header h1{
+font-size:20px;
+}
+
+.sidebar{
+width:260px;
+}
+
+.file-preview img{
+width:100px;
+height:140px;
+}
+
+.upload-btn{
+width:100%;
+}
+
+}
+
+
+/* ================= LARGE PHONE ================= */
+
+@media (max-width: 700px){
+
+.card{
+padding:18px;
+}
+
+select,
+input{
+font-size:14px;
+}
+
+.file-preview{
+padding:10px;
+}
+
+.file-preview img{
+width:90px;
+height:130px;
+}
+
+.dashboard{
+gap:16px;
+}
+
+}
+
+
+/* ================= PHONE ================= */
+
+@media (max-width: 520px){
+
+header{
+padding:10px 14px;
+}
+
+header h1{
+font-size:18px;
+}
+
+.card{
+padding:16px;
+border-radius:10px;
+}
+
+.file-preview img{
+width:80px;
+height:115px;
+}
+
+select,
+input{
+font-size:13px;
+padding:8px;
+}
+
+.upload-btn{
+font-size:14px;
+padding:10px;
+}
+
+}
+
+
+/* ================= SMALL PHONE ================= */
+
+@media (max-width: 400px){
+
+header h1{
+font-size:16px;
+}
+
+.card{
+padding:14px;
+}
+
+.file-preview img{
+width:70px;
+height:100px;
+}
+
+select,
+input{
+font-size:12px;
+}
+
+.upload-btn{
+font-size:13px;
+}
+
+}
+
+
+/* ================= VERY SMALL DEVICES ================= */
+
+@media (max-width: 320px){
+
+header h1{
+font-size:15px;
+}
+
+.card{
+padding:12px;
+}
+
+.file-preview img{
+width:60px;
+height:90px;
+}
+
+.file-preview{
+font-size:12px;
+}
+
+select,
+input{
+font-size:11px;
+padding:6px;
+}
+
+.upload-btn{
+font-size:12px;
+padding:8px;
+}
+
+}

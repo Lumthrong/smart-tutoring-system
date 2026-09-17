@@ -1,0 +1,338 @@
+rules_version = '2';
+
+service cloud.firestore {
+
+  match /databases/{database}/documents {
+
+    /* ================= FUNCTIONS ================= */
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+
+    function isAdmin() {
+      return isSignedIn() && userDoc().data.role == "admin";
+    }
+
+    function isTeacher() {
+      return isSignedIn() && userDoc().data.role == "teacher";
+    }
+
+    function isTeacherOrAdmin() {
+      return isTeacher() || isAdmin();
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /* ================= USERS ================= */
+
+   match /users/{userId} {
+
+  allow read: if isOwner(userId) || isTeacherOrAdmin();
+
+  allow create: if isOwner(userId);
+
+  allow update: if (isOwner(userId)
+                    && request.resource.data.role == resource.data.role)
+                    || isAdmin();
+
+  allow delete: if isAdmin();
+}
+
+
+    /* ================= COURSES ================= */
+
+    match /courses/{courseId} {
+
+  allow read: if true;
+
+  allow create, update, delete: if isTeacherOrAdmin();
+
+  match /units/{unitId} {
+
+    allow read: if true;
+
+    allow create, update, delete: if isTeacherOrAdmin();
+
+  }
+}
+
+
+    /* ================= ENROLLMENTS ================= */
+    /* FIXED: allow students to query their enrollments */
+
+    match /enrollments/{docId} {
+
+      allow read: if isSignedIn();
+
+      allow create: if isOwner(request.resource.data.userId);
+
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+
+    /* ================= RESULTS ================= */
+
+    match /results/{docId} {
+
+      allow read: if isOwner(resource.data.userId) || isTeacherOrAdmin();
+
+      allow create: if isOwner(request.resource.data.userId);
+
+      allow update, delete: if isTeacherOrAdmin();
+    }
+
+
+    /* ================= QUIZZES ================= */
+
+   match /quizzes/{quizId} {
+
+  allow read: if request.auth != null;
+
+  allow create, update, delete: if
+    request.auth != null &&
+    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+      in ["teacher","admin"];
+}
+
+    /* ================= QUIZ QUESTIONS ================= */
+match /quiz_questions/{questionId} {
+
+  allow read: if request.auth != null;
+
+  allow create, update, delete: if
+    request.auth != null &&
+    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+      in ["teacher","admin"];
+}
+
+    /* ================= QUIZ RESULTS ================= */
+    /* FIXED: allow students to submit quiz results */
+
+   match /quiz_results/{resultId} {
+
+  allow read: if request.auth != null;
+
+  allow create: if request.auth != null;
+
+  allow delete: if
+    request.auth != null &&
+    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+      in ["teacher","admin"];
+}
+/* ================= COURSE QUIZ RESULTS ================= */
+
+match /course_quiz_results/{resultId} {
+
+  allow read: if request.auth != null;
+
+  allow create: if request.auth != null;
+
+  allow delete: if
+    request.auth != null &&
+    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+      in ["teacher","admin"];
+}
+
+/* ================= AI GENERATED QUIZZES ================= */
+
+match /ai_generated_quizzes/{quizId} {
+
+  allow read: if request.auth != null;
+
+  allow create: if request.auth != null;
+
+  allow delete: if request.auth != null
+    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+       in ["teacher","admin"];
+
+}
+
+
+/* ================= AI QUIZ QUESTIONS ================= */
+
+match /ai_quiz_questions/{questionId} {
+
+  allow read: if request.auth != null;
+
+  allow create: if request.auth != null;
+
+  allow delete: if request.auth != null
+    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+       in ["teacher","admin"];
+
+}
+/* ================= AI QUIZ RESULTS ================= */
+
+match /ai_quiz_results/{resultId} {
+
+  allow read: if request.auth != null;
+
+  allow create: if request.auth != null;
+
+  allow delete: if
+    request.auth != null &&
+    get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+      in ["teacher","admin"];
+}
+/* ================= Transcript ================= */
+match /transcripts/{docId} {
+
+  allow read: if request.auth != null;
+
+  allow create: if request.auth != null;
+
+  allow update: if request.auth != null;
+
+  allow delete: if request.auth != null;
+}
+match /transcript_locks/{docId} {
+
+  allow read: if request.auth != null;
+
+  allow create: if request.auth != null;
+
+  allow update: if request.auth != null;
+
+  allow delete: if request.auth != null;
+
+}
+/* ================= NOTES ================= */
+
+match /notes/{docId} {
+
+  allow read: if request.auth != null;
+
+  allow create: if request.auth != null;
+
+  allow update: if request.auth != null;
+
+  allow delete: if request.auth != null;
+}
+    /* ================= COURSE COMMENTS ================= */
+
+match /course_comments/{commentId} {
+
+  allow read: if isSignedIn();
+
+  allow create: if isSignedIn();
+
+  allow update: if isOwner(resource.data.userId); // ✅ ADD THIS
+
+  allow delete: if isOwner(resource.data.userId) || isAdmin();
+}
+
+/* ================= LEARNING ACTIVITY ================= */
+
+match /learning_activity/{activityId} {
+
+  allow read: if request.auth != null;
+
+  allow create: if request.auth != null;
+
+  allow delete: if request.auth != null
+    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+       in ["admin","teacher"];
+
+}
+
+/* ================= LEARNING HISTORY ================= */
+
+match /learning_history/{historyId} {
+
+  allow read: if request.auth != null;
+
+  allow create: if request.auth != null;
+
+  allow delete: if request.auth != null
+    && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+       in ["admin","teacher"];
+
+}
+/* ================= TEACHER REQUESTS ================= */
+
+match /teacher_requests/{requestId} {
+
+  allow create: if request.auth != null;
+
+  allow read: if isOwner(resource.data.userId) || isAdmin();
+
+  allow update: if isAdmin();
+
+  allow delete: if isAdmin();
+
+}
+/* ================= NOTIFICATIONS ================= */
+
+    match /notifications/{notifId} {
+
+      allow read: if isOwner(resource.data.userId);
+
+      allow create: if isTeacherOrAdmin();
+
+      allow update: if isOwner(resource.data.userId);
+
+      allow delete: if isAdmin();
+    }
+/* ================= TEACHER MASTER ================= */
+
+match /teacher_master/{teacherId} {
+
+  allow read: if true;
+
+  allow create, update, delete: if true;
+
+}
+
+/* ================= STUDENT MASTER ================= */
+
+match /student_master/{studentId} {
+
+  allow read: if true;
+
+  allow create, update, delete: if true;
+
+}
+
+/* ================= SUBJECTS ================= */
+
+match /subjects/{subjectId} {
+
+  allow read: if true;
+
+  allow create, update, delete: if true;
+
+}
+
+match /course_quiz/{quizId} {
+
+  allow read: if request.auth != null;
+
+  allow create, update, delete: if
+    request.auth != null &&
+    get(
+      /databases/$(database)/documents/users/$(request.auth.uid)
+    ).data.role in ["teacher","admin"];
+
+}
+
+match /course_quiz_questions/{questionId} {
+
+  allow read: if request.auth != null;
+
+  allow create, update, delete: if
+    request.auth != null &&
+    get(
+      /databases/$(database)/documents/users/$(request.auth.uid)
+    ).data.role in ["teacher","admin"];
+
+}
+  }
+
+}

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lecture Viewer</title>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js"></script>
+</head>
+<style>
+    body {
+        margin: 0;
+        background: #111;
+        user-select: none;
+        height: 100vh;
+        overflow: auto;
+    }
+
+    #pdfCanvas {
+        display: block;
+        margin: auto;
+    }
+
+    /* Watermark */
+
+    .watermark {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-wrap: wrap;
+        pointer-events: none;
+        z-index: 9999;
+    }
+
+    .watermark span {
+        margin: 100px;
+        font-size: 40px;
+        color: rgba(255, 255, 255, 0.06);
+        transform: rotate(-30deg);
+    }
+</style>
+
+</head>
+
+<body>
+
+    <div class="watermark" id="watermark"></div>
+
+    <canvas id="pdfCanvas"></canvas>
+
+    <script>
+
+        /* ================= DISABLE DRAG ================= */
+
+        document.addEventListener("dragstart", e => e.preventDefault());
+
+        /* ================= BLOCK PRINT / SAVE ================= */
+
+        document.addEventListener("keydown", (e) => {
+            if (e.ctrlKey && (e.key === "p" || e.key === "s")) {
+                e.preventDefault();
+            }
+        });
+
+        /* ================= DISABLE RIGHT CLICK ================= */
+
+        document.addEventListener("contextmenu", e => e.preventDefault());
+
+        /* ================= GET FILE PARAM ================= */
+
+        const params = new URLSearchParams(window.location.search);
+        const file = params.get("file");
+
+        const token = localStorage.getItem("token");
+
+        const url = "/secure-pdf?file=" + file + "&token=" + token;
+
+        const container = document.createElement("div");
+        document.body.appendChild(container);
+
+        pdfjsLib.getDocument(url).promise.then(async function (pdf) {
+
+            const totalPages = pdf.numPages;
+
+            for (let pageNum = 1; pageNum <= totalPages; pageNum++) {
+
+                const page = await pdf.getPage(pageNum);
+
+                const viewport = page.getViewport({ scale: 1.5 });
+
+                const canvas = document.createElement("canvas");
+                const ctx = canvas.getContext("2d");
+
+                canvas.width = viewport.width;
+                canvas.height = viewport.height;
+
+                canvas.style.display = "block";
+                canvas.style.margin = "20px auto";
+
+                container.appendChild(canvas);
+
+                await page.render({
+                    canvasContext: ctx,
+                    viewport: viewport
+                }).promise;
+
+            }
+
+        });
+        /* ================= WATERMARK ================= */
+
+        const email = localStorage.getItem("userEmail") || "Student";
+
+        const wm = document.getElementById("watermark");
+
+        for (let i = 0; i < 20; i++) {
+
+            const span = document.createElement("span");
+            span.innerText = email;
+
+            wm.appendChild(span);
+
+        }
+
+        /* ================= BLUR WHEN TAB HIDDEN ================= */
+
+        document.addEventListener("visibilitychange", () => {
+
+            if (document.hidden) {
+                document.body.style.filter = "blur(25px)";
+            } else {
+                document.body.style.filter = "none";
+            }
+
+        });
+
+    </script>
+</body>
+
+</html>

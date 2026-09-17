@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Smart Tutor</title>
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/accsettings.css">
+<link rel="stylesheet" href="https://unpkg.com/cropperjs/dist/cropper.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet">
+</head>
+
+<body>
+
+  <div class="sidebar" id="sidebar">
+
+    <!-- USER MINI HEADER -->
+    <div class="profile-mini">
+      <div class="avatar-circle">
+        <img id="miniProfileImg" src="" alt="Avatar">
+        <span id="avatarCircle">U</span>
+      </div>
+      <div class="profile-info">
+        <p id="profileName">Guest</p>
+        <small id="profileEmail"></small>
+      </div>
+    </div>
+
+    <a href="index.html"><span class="material-symbols-outlined">home
+      </span> Home</a>
+
+    <!-- PROFILE DROPDOWN -->
+    <div class="profile-wrapper">
+      <div class="profile-toggle" id="profileToggle"><span class="material-symbols-outlined">
+          account_circle
+        </span>
+        Profile ▾
+      </div>
+      <div class="profile-dropdown" id="profileDropdown">
+        <a href="dashboard.html" id="dashboardLink"><span class="material-symbols-outlined">
+            dashboard
+          </span> Dashboard</a>
+        <a href="/accsettings.html"><span class="material-symbols-outlined">
+            settings
+          </span> Profile Settings</a>
+        <a href="#" id="logoutLink"><span class="material-symbols-outlined">
+            logout
+          </span> Logout</a>
+      </div>
+    </div>
+    <div class="book-wrapper">
+
+    </div>
+    <div class="footer">
+      <a href="department.html"><span class="material-symbols-outlined">newsstand</span>Department</a>
+      <a href="about.html"><span class="material-symbols-outlined">
+          info
+        </span> About</a>
+    </div>
+  </div>
+  <div class="overlay" id="overlay"></div>
+
+  <header>
+    <button class="menu-btn" id="menuBtn"><span class="material-symbols-outlined">
+        menu
+      </span></button>
+    <h1>Home</h1>
+
+    <div class="notify" id="notifyBell">
+      <span class="material-symbols-outlined">
+        notifications
+      </span>
+      <span id="notifyCount">0</span>
+      <div id="notificationPanel" class="notify-panel">
+        <div class="notify-header">
+          Notifications
+        </div>
+
+        <div id="notificationList"></div>
+      </div>
+    </div>
+  </header>
+<section class="profile-section" id="profileSection" style="display:none;">
+  <div class="profile-card">
+
+    <h3>My Profile</h3>
+
+    <div class="profile-display">
+      <p><strong>Name:</strong> <span id="displayName">-</span></p>
+      <p><strong>Email:</strong> <span id="displayEmail">-</span></p>
+      <p><strong>Department:</strong> <span id="displayDepartment">-</span></p>
+    </div>
+
+    <hr>
+  </div>
+</section>
+
+<section class="settings-section">
+
+  <div class="settings-card">
+
+    <h2>Profile Settings</h2>
+
+    <!-- PROFILE PICTURE -->
+    <div class="profile-pic-wrapper">
+      <img id="profilePreview" src="" alt="Profile Picture">
+      <input type="file" id="profilePicInput" accept="image/*">
+    </div>
+
+    <!-- NAME -->
+    <label>First Name *</label>
+    <input type="text" id="firstName">
+
+    <label>Last Name</label>
+    <input type="text" id="lastName">
+
+    <!-- DOB -->
+    <label>Date of Birth</label>
+    <input type="date" id="dob">
+
+    <!-- GENDER -->
+    <label>Gender</label>
+    <select id="gender">
+      <option value="">Select</option>
+      <option value="Male">Male</option>
+      <option value="Female">Female</option>
+      <option value="Other">Other</option>
+    </select>
+
+    <!-- DEPARTMENT -->
+    <label>Department</label>
+    <select id="department">
+      <option value="">Select Department</option>
+      <option value="CSE">CSE</option>
+      <option value="ECE">ECE</option>
+      <option value="IT">IT</option>
+      <option value="ME">ME</option>
+    </select>
+
+    <!-- READ ONLY -->
+    <label>Email</label>
+    <input type="text" id="emailDisplay" disabled>
+
+    <label>Role</label>
+    <input type="text" id="roleDisplay" disabled>
+
+    <button id="saveProfileBtn">Save Profile</button>
+
+  </div>
+
+</section>
+<script type="module" src="js/script.js"></script>
+<script type="module" src="js/auth.js"></script>
+<script type="module" src="js/accsettings.js"></script>
+<script src="https://unpkg.com/cropperjs/dist/cropper.js"></script>
+</body>
+</html>

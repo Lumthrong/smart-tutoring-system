@@ -1,0 +1,614 @@
+import { auth, db } from "./firebase.js";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+import {
+  doc,
+  setDoc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+/* ================= MESSAGE SYSTEM ================= */
+
+function showMessage(message, type = "error") {
+
+  const box = document.getElementById("formMessage");
+
+  if (!box) return;
+
+  box.innerText = message;
+  box.className = "form-message " + type;
+  box.style.display = "block";
+
+}
+
+/* ================= PASSWORD STRENGTH ================= */
+
+const passwordInput = document.getElementById("studentPassword");
+const strengthText = document.getElementById("passwordStrength");
+/* ===== ROLE TAB SWITCH ===== */
+
+const studentTab = document.getElementById("studentTab");
+const teacherTab = document.getElementById("teacherTab");
+
+const studentForm = document.getElementById("studentForm");
+const teacherForm = document.getElementById("teacherForm");
+
+let isTeacher = false;
+
+if(studentTab && teacherTab){
+
+  studentTab.onclick = () => {
+    isTeacher = false;
+
+    studentTab.classList.add("active");
+    teacherTab.classList.remove("active");
+
+    studentForm.style.display = "block";
+    teacherForm.style.display = "none";
+  };
+
+  teacherTab.onclick = () => {
+    isTeacher = true;
+
+    teacherTab.classList.add("active");
+    studentTab.classList.remove("active");
+
+    studentForm.style.display = "none";
+    teacherForm.style.display = "block";
+  };
+
+}
+
+if (passwordInput && strengthText) {
+
+  passwordInput.addEventListener("input", () => {
+
+    const val = passwordInput.value;
+
+    if (val.length < 6) {
+      strengthText.innerText = "Weak password";
+      strengthText.style.color = "red";
+    }
+    else if (/^(?=.*[A-Za-z])(?=.*\d)/.test(val)) {
+      strengthText.innerText = "Medium password";
+      strengthText.style.color = "orange";
+    }
+    else if (/^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])/.test(val)) {
+      strengthText.innerText = "Strong password";
+      strengthText.style.color = "green";
+    }
+
+  });
+
+}
+
+/* ================= OTP TIMER ================= */
+
+let otpTimer;
+let resendCooldown = false;
+
+function startOTPTimer() {
+
+  const message = document.getElementById("formMessage");
+
+  let time = 600;
+
+  clearInterval(otpTimer);
+
+  otpTimer = setInterval(() => {
+
+    const minutes = Math.floor(time / 60);
+    const seconds = time % 60;
+
+    message.innerText =
+      "OTP expires in " + minutes + ":" + (seconds < 10 ? "0" : "") + seconds;
+
+    time--;
+
+    if (time <= 0) {
+
+      clearInterval(otpTimer);
+      message.innerText = "OTP expired. Request again.";
+
+    }
+
+  }, 1000);
+
+}
+
+/* ================= SEND OTP ================= */
+
+window.sendOTP = async function () {
+
+  if (resendCooldown) {
+    showMessage("Please wait before requesting another OTP");
+    return;
+  }
+let email;
+
+if(isTeacher){
+  email = document.getElementById("teacherEmail")?.value;
+}else{
+  email = document.getElementById("studentEmail")?.value;
+}
+  const btn = document.getElementById("sendOtpBtn");
+
+  if (!email) {
+    showMessage("Enter email first");
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = `Sending <span class="btn-spinner"></span>`;
+
+  try {
+
+    const res = await fetch("/send-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email })
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+
+      showMessage("OTP sent successfully", "success");
+
+      document.getElementById("otpInput").style.display = "block";
+      document.getElementById("verifyBtn").style.display = "block";
+
+      startOTPTimer();
+
+      resendCooldown = true;
+
+      setTimeout(() => { resendCooldown = false }, 60000);
+
+    } else {
+      showMessage("Failed to send OTP");
+    }
+
+  } catch (err) {
+    showMessage("Server error");
+  }
+
+  btn.disabled = false;
+  btn.innerHTML = "Send OTP";
+
+}
+
+/* ================= VERIFY OTP + SIGNUP ================= */
+window.verifyOTP = async function () {
+
+  let teacherToggle = isTeacher;
+  let teacherData = null;
+
+  let email, password;
+
+  if(isTeacher){
+    email = document.getElementById("teacherEmail")?.value;
+    password = document.getElementById("teacherPassword")?.value;
+  }else{
+    email = document.getElementById("studentEmail")?.value;
+    password = document.getElementById("studentPassword")?.value;
+  }
+
+  const otp = document.getElementById("otpInput")?.value;
+
+  let confirmPassword;
+
+if(isTeacher){
+  confirmPassword = document.getElementById("teacherConfirmPassword")?.value;
+}else{
+  confirmPassword = document.getElementById("studentConfirmPassword")?.value;
+}
+
+if(!email || !password){
+  showMessage("Fill all required fields");
+  return;
+}
+
+if(password.length < 6){
+  showMessage("Password must be at least 6 characters");
+  return;
+}
+
+if(password !== confirmPassword){
+  showMessage("Passwords do not match");
+  return;
+}
+if(isTeacher){
+  teacherData = {
+    email
+  };
+}
+
+  if (!otp) {
+    showMessage("Enter verification code");
+    return;
+  }
+
+  try {
+
+    const verify = await fetch("/verify-otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, otp })
+    });
+
+    const result = await verify.json();
+
+    if (!result.success) {
+      showMessage("Invalid OTP");
+      return;
+    }
+let rollNo = "";
+let department = "";
+let semester = "";
+
+if(isTeacher){
+
+  department =
+    document.getElementById(
+      "teacherDepartment"
+    )?.value;
+
+}else{
+
+  const isAdminSignup =
+    email.trim().toLowerCase() ===
+    "iamrein22@gmail.com";
+
+  rollNo =
+    document.getElementById(
+      "studentRollNo"
+    )?.value || "";
+
+  department =
+    document.getElementById(
+      "studentDepartment"
+    )?.value || "";
+
+  semester =
+    document.getElementById(
+      "studentSemester"
+    )?.value || "";
+
+  if(!isAdminSignup && !rollNo){
+    showMessage("Enter Roll Number");
+    return;
+  }
+}
+
+
+const validation =
+  await fetch("/validate-signup",
+    {
+      method:"POST",
+      headers:{
+        "Content-Type":
+        "application/json"
+      },
+      body: JSON.stringify({
+
+        role:
+          isTeacher
+            ? "teacher"
+            : "student",
+
+        email,
+
+        rollNo:
+          rollNo || "",
+
+        department,
+
+        semester:
+          semester || ""
+
+      })
+    }
+  );
+
+const text = await validation.text();
+console.log("VALIDATE RESPONSE:", text);
+
+let validationResult;
+
+try{
+  validationResult = JSON.parse(text);
+}catch(err){
+  console.error("NOT JSON:", text);
+  showMessage("Server returned HTML instead of JSON");
+  return;
+}
+
+if(!validationResult.valid){
+
+  showMessage(
+    validationResult.message ||
+    "Not authorized"
+  );
+
+  return;
+}
+const userCred = await createUserWithEmailAndPassword(auth, email, password);
+
+let role;
+
+if(
+  email.trim().toLowerCase() ===
+  "iamrein22@gmail.com"
+){
+  role = "admin";
+}else{
+  role = isTeacher ? "teacher" : "student";
+}
+await setDoc(
+ doc(db,"users",userCred.user.uid),
+ {
+   email,
+   role,
+
+   rollNo:
+     rollNo || null,
+
+   department:
+     department || null,
+
+   semester:
+     semester || null,
+
+   requestedAt:
+     new Date()
+ }
+);
+    if(teacherData){
+  await setDoc(doc(db, "teacher_requests", userCred.user.uid), {
+    ...teacherData,
+    status: "pending",
+    createdAt: new Date()
+  });
+   await fetch("/notify-teacher-request", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(teacherData)
+  });
+}
+
+    await fetch("/set-role", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        uid: userCred.user.uid,
+        role: role
+      })
+    });
+
+    /* FORCE TOKEN REFRESH AFTER CLAIM SET */
+  showMessage(
+  "Account created successfully. Please login.",
+  "success"
+);
+
+await signOut(auth);
+
+setTimeout(() => {
+  window.location.href = "/login.html";
+}, 1500);
+
+  } catch (err) {
+
+ if(err.code === "auth/email-already-in-use"){
+  showMessage("Email already registered");
+}else{
+console.error(err);
+
+if(err.code === "auth/email-already-in-use"){
+  showMessage("Email already registered");
+}else if(err.code === "auth/invalid-email"){
+  showMessage("Invalid email");
+}else if(err.code === "auth/weak-password"){
+  showMessage("Weak password (min 6 characters)");
+}else{
+  showMessage(err.message);
+}
+}
+
+  }
+
+}
+
+/* ================= LOGIN ================= */
+
+window.login = async function () {
+
+  const roleType = document.getElementById("loginRole").value;
+const rollNo = document.getElementById("rollNo")?.value;
+  const email = document.getElementById("email")?.value;
+  const password = document.getElementById("password")?.value;
+  const loginBtn = document.getElementById("loginBtn");
+
+  loginBtn.disabled = true;
+  loginBtn.innerHTML = `Logging in <span class="btn-spinner"></span>`;
+
+  try {
+let result = { valid:true };
+
+if(
+  email.trim().toLowerCase() !==
+  "iamrein22@gmail.com"
+){
+
+  const validation =
+    await fetch("/validate-login", {
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json"
+      },
+      body:JSON.stringify({
+        role: roleType,
+        email,
+        rollNo
+      })
+    });
+
+  result = await validation.json();
+}
+
+if(!result.valid){
+  showMessage("Not authorized");
+  loginBtn.disabled = false;
+  loginBtn.innerHTML = "Login";
+  return;
+}
+    await signInWithEmailAndPassword(auth, email, password);
+
+    /* refresh token to get latest role */
+    await auth.currentUser.getIdToken(true);
+
+    const tokenResult = await auth.currentUser.getIdTokenResult();
+    let role = tokenResult.claims.role;
+
+    if (!role) {
+
+      // check Firestore role if claim missing
+      const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+
+      if (userDoc.exists()) {
+        role = userDoc.data().role;
+      }
+
+    }
+
+    if (!role) role = "student";
+
+    const token = await auth.currentUser.getIdToken();
+
+    if (role === "admin")
+      window.location.href = `/admin.html?token=${token}`;
+
+    else if (role === "teacher")
+      window.location.href = `/teacher.html?token=${token}`;
+
+    else
+      window.location.href = `/dashboard.html?token=${token}`;
+
+  } catch (err) {
+
+    loginBtn.disabled = false;
+    loginBtn.innerHTML = "Login";
+
+    if (err.code === "auth/invalid-credential")
+      showMessage("Wrong email or password");
+    else
+      showMessage("Login failed");
+
+  }
+
+}
+
+/* ================= LOGOUT ================= */
+
+window.logout = async function () {
+
+  await signOut(auth);
+  window.location.href = "/login.html";
+
+}
+
+/* ================= UNIVERSAL ROLE GUARD ================= */
+
+onAuthStateChanged(auth, async (user) => {
+
+  const path = window.location.pathname;
+
+  if (!user) {
+
+    if (!path.includes("login") && !path.includes("signup"))
+      window.location.href = "/login.html";
+
+    return;
+
+  }
+  const token = await user.getIdToken();
+
+  localStorage.setItem("token", token);
+  localStorage.setItem("userEmail", user.email);
+  if (!path.includes("login") && !path.includes("signup")) {
+
+    const token = await user.getIdToken();
+
+    const res = await fetch(`${path}?token=${token}`, {
+      headers: { Authorization: "Bearer " + token }
+    });
+
+    if (res.status === 401) {
+      window.location.href = "/login.html";
+      return;
+    }
+
+    if (res.status === 403) {
+
+      await auth.currentUser.getIdToken(true);
+
+      const tokenResult = await auth.currentUser.getIdTokenResult();
+      let role = tokenResult.claims.role;
+
+      if (!role) role = "student";
+
+      const token = await auth.currentUser.getIdToken();
+
+      if (role === "admin")
+        window.location.href = `/admin.html?token=${token}`;
+
+      else if (role === "teacher" || role === "pending_teacher")
+        window.location.href = `/teacher.html?token=${token}`;
+
+      else
+        window.location.href = `/dashboard.html?token=${token}`;
+
+      return;
+    }
+
+  }
+
+  /* ===== DASHBOARD LINK FIX ===== */
+
+  const dashboardLink = document.getElementById("dashboardLink");
+
+  if (dashboardLink) {
+
+    let role = "student";
+
+    try {
+
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+
+      if (userDoc.exists()) {
+        role = userDoc.data().role;
+      }
+
+    } catch (err) {
+      console.error("ROLE FETCH ERROR:", err);
+    }
+
+    const token = await user.getIdToken();
+
+    if (role === "admin")
+      dashboardLink.href = `/admin.html?token=${token}`;
+
+    else if (role === "teacher")
+      dashboardLink.href = `/teacher.html?token=${token}`;
+
+    else
+      dashboardLink.href = `/dashboard.html?token=${token}`;
+
+  }
+
+});
